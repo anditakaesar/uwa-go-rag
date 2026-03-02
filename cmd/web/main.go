@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -23,8 +24,17 @@ func main() {
 	svr := server.SetupServer(&server.ServerDependency{
 		DB: db,
 	})
+
+	go func(xlogger *slog.Logger) {
+		xlogger.Info("river client started")
+		workerErr := svr.RiverClient.Start(context.Background())
+		if workerErr != nil {
+			xlogger.Error(fmt.Sprintf("worker client error: %v", err))
+		}
+	}(xlog.Logger)
+
 	xlog.Logger.Info(fmt.Sprintf("server listened at port: %s", env.Values.Port))
-	err = http.ListenAndServe(env.Values.Port, svr)
+	err = http.ListenAndServe(env.Values.Port, svr.Mux)
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("failed to start server: %v", err))
 		os.Exit(1)

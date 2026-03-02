@@ -22,3 +22,11 @@ type IPasswordChecker interface {
 	HashPassword(password string) (string, error)
 	CheckPassword(password string, hash string) (bool, error)
 }
+
+type IChatBot interface {
+	SendPrompt(ctx context.Context, prompt string) (string, error)
+}
+
+type IJobQueue interface {
+	EnqueueChat(ctx context.Context, words []string) error
+}

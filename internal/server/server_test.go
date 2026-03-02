@@ -6,7 +6,6 @@ import (
 
 	"github.com/anditakaesar/uwa-go-rag/internal/mocks"
 	"github.com/anditakaesar/uwa-go-rag/internal/server"
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +20,7 @@ func TestSetupServer(test *testing.T) {
 			DB: mockDB,
 		})
 
-		assert.Equal(t, reflect.TypeOf(&chi.Mux{}), reflect.TypeOf(got))
+		assert.Equal(t, reflect.TypeOf(&server.Executor{}), reflect.TypeOf(got))
 		mockDB.AssertExpectations(t)
 	})
 }

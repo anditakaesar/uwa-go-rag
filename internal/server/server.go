@@ -14,7 +14,9 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
 )
 
 type IDatabase interface {
@@ -26,7 +28,12 @@ type ServerDependency struct {
 	DB IDatabase
 }
 
-func SetupServer(dep *ServerDependency) *chi.Mux {
+type Executor struct {
+	Mux         *chi.Mux
+	RiverClient *river.Client[pgx.Tx]
+}
+
+func SetupServer(dep *ServerDependency) *Executor {
 	router := chi.NewRouter()
 	infraSvc := infra.NewInfra(dep.DB.Get())
 
@@ -66,6 +73,10 @@ func SetupServer(dep *ServerDependency) *chi.Mux {
 		UserService: infraSvc.UserService,
 	})
 
+	chatApi := handler.NewChatApi(handler.ChatApiDeps{
+		ChatService: infraSvc.ChatService,
+	})
+
 	router.Group(func(r chi.Router) {
 		// middlewares
 		r.Use(middlewares.GlobalErrorMiddleware)
@@ -98,7 +109,11 @@ func SetupServer(dep *ServerDependency) *chi.Mux {
 		r.Use(middlewares.ResolveUser(infraSvc.UserService))
 
 		handler.SetupUserApiRoutes(r, userApi)
+		handler.SetupChatApiRoutes(r, chatApi)
 	})
 
-	return router
+	return &Executor{
+		Mux:         router,
+		RiverClient: infraSvc.RiverClient,
+	}
 }
