@@ -1,0 +1,164 @@
+{{define "title"}}Home - My App{{end}}
+{{define "content"}}
+<article class="prose prose-slate lg:prose-xl max-w-none">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-6">Welcome!</h1>
+    <p class="text-lg text-gray-700 leading-relaxed mb-4">
+        Typography is more than just choosing a font. It is the art and technique of arranging type to make written language legible, readable, and appealing when displayed. In the digital age, this involves a careful balance between aesthetics and functional performance.
+    </p>
+    
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">Why Hierarchy Matters</h2>
+    <p class="text-gray-600 mb-4">
+        A strong typographic hierarchy guides the reader's eye to the most important information first. By using different scales, weights, and colors, we can create a visual path that makes long-form content digestible. Without it, even the most insightful prose becomes a daunting "wall of text."
+    </p>
+
+    <blockquote class="border-l-4 border-blue-500 pl-4 italic text-gray-700 my-8">
+        "Design is intelligence made visible." — Alina Wheeler
+    </blockquote>
+
+    <p class="text-gray-600">
+        As you build out this layout, consider how whitespace (or "negative space") acts as a breathing room for your content. In this 1200px container, the margins ensure that the lines of text don't stretch too wide, which maintains optimal readability for the human eye.
+    </p>
+</article>
+
+<section>
+    <div class="sm:flex sm:items-center mb-6">
+        <div class="sm:flex-auto">
+            <h2 class="text-xl font-bold text-gray-900">User Management</h2>
+            <p class="mt-2 text-sm text-gray-600">A list of all users in your account including their name, role, and status.</p>
+        </div>
+        <div class="mt-4 sm:ml-16 sm:mt-0">
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm">Add user</button>
+        </div>
+    </div>
+
+    <div class="overflow-hidden border border-gray-200 rounded-xl shadow-sm bg-white">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 flex-shrink-0 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold">JD</div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">John Doe</div>
+                                <div class="text-sm text-gray-500">john@example.com</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">Administrator</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="#" class="text-blue-600 hover:text-blue-900">Edit</a>
+                    </td>
+                </tr>
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold">AS</div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">Alice Smith</div>
+                                <div class="text-sm text-gray-500">alice@example.com</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">Editor</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="#" class="text-blue-600 hover:text-blue-900">Edit</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section>
+    <div class="text-center mb-10">
+        <h2 class="text-3xl font-extrabold text-gray-900">Simple, Transparent Pricing</h2>
+        <p class="mt-4 text-lg text-gray-600">Choose the plan that's right for your business.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-900">Starter</h3>
+            <p class="mt-4 text-gray-500 text-sm">Perfect for individuals and side projects.</p>
+            <p class="mt-8 flex items-baseline">
+                <span class="text-4xl font-bold tracking-tight text-gray-900">$0</span>
+                <span class="ml-1 text-sm font-semibold text-gray-500">/month</span>
+            </p>
+            <ul class="mt-8 space-y-4 flex-grow">
+                <li class="flex items-center text-sm text-gray-600">
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                    Up to 5 Projects
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                    Basic Analytics
+                </li>
+            </ul>
+            <button class="mt-8 w-full bg-gray-50 text-gray-900 py-2 rounded-lg font-semibold hover:bg-gray-100 transition border border-gray-200">Get Started</button>
+        </div>
+
+        <div class="bg-white border-2 border-blue-600 rounded-2xl p-8 flex flex-col shadow-lg relative">
+            <div class="absolute top-0 right-6 transform -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase">Most Popular</div>
+            <h3 class="text-lg font-semibold text-gray-900">Professional</h3>
+            <p class="mt-4 text-gray-500 text-sm">For growing teams that need more power.</p>
+            <p class="mt-8 flex items-baseline">
+                <span class="text-4xl font-bold tracking-tight text-gray-900">$29</span>
+                <span class="ml-1 text-sm font-semibold text-gray-500">/month</span>
+            </p>
+            <ul class="mt-8 space-y-4 flex-grow">
+                <li class="flex items-center text-sm text-gray-600">
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                    Unlimited Projects
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                    Advanced Security
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                    Priority Support
+                </li>
+            </ul>
+            <button class="mt-8 w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Start Free Trial</button>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-900">Enterprise</h3>
+            <p class="mt-4 text-gray-500 text-sm">Custom solutions for large organizations.</p>
+            <p class="mt-8 flex items-baseline">
+                <span class="text-4xl font-bold tracking-tight text-gray-900">Contact</span>
+            </p>
+            <ul class="mt-8 space-y-4 flex-grow">
+                <li class="flex items-center text-sm text-gray-600">
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                    Dedicated Server
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                    Custom SLA
+                </li>
+            </ul>
+            <button class="mt-8 w-full bg-gray-900 text-white py-2 rounded-lg font-semibold hover:bg-black transition">Contact Sales</button>
+        </div>
+    </div>
+</section>
+
+<article class="prose prose-slate lg:prose-xl max-w-none mt-8">
+    {{if .Token}}
+        <textarea disabled rows="8" cols="60">{{.Token}}</textarea>
+    {{end}}
+</article>
+{{end}}

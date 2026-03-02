@@ -1,0 +1,31 @@
+services:
+  backendpostgres:
+    image: postgres:18-alpine
+    container_name: pg18-uwarag
+    environment:
+      POSTGRES_DB: backend_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_ROOT_PASSWORD: password
+    env_file:
+      - .env
+    ports:
+      - "${EXPOSEPORT:-5432}:5432"
+    volumes:
+      - data-volume-uwarag:/var/lib/postgresql/data
+  swaggereditor:
+    image: docker.swagger.io/swaggerapi/swagger-editor
+    container_name: swaggereditor
+    environment:
+      - SWAGGER_FILE=/tmp/user.yaml
+      - PORT=80
+    env_file:
+      - .env
+    ports:
+      - "8080:80"
+    volumes:
+      - ../docs/swagger:/tmp
+
+volumes:
+  data-volume-uwarag:
+    driver: local

@@ -1,0 +1,69 @@
+openapi: '3.0.3'
+info:
+  title: User API
+  version: '1.0'
+servers:
+  - url: http://localhost:3000/api
+paths:
+  /users:
+    post:
+      summary: Create a new user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleUserResponse'
+
+components:
+  schemas:
+    CreateUserRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "newuser"
+        password:
+          type: string
+          format: password
+          example: "examplepassword"
+    SingleUserResponse:
+      type: "object"
+      properties:
+        data:
+          type: "object"
+          properties:
+            id:
+              type: "integer"
+            username:
+              type: "string"
+            role:
+              type: "string"
+            createdAt:
+              type: "string"
+          required:
+            - "id"
+            - "username"
+            - "role"
+            - "createdAt"
+      required:
+        - "data"
+        
+  
+  securitySchemes:
+    BearerAuth:            # Logical name for the scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # Optional, tells the client it's a JWT

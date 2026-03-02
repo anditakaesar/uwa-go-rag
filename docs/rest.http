@@ -1,0 +1,18 @@
+### global
+@base = http://localhost:3000
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIzMzgyOTYsInN1YiI6MX0.5wXmdnkRLNEhHkt56J_H5zZtW6BntubfLIEfK6gJSII
+### UPDATE
+###
+POST {{base}}/api/users/6
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "oldPassword": "examplepassword",
+    "password": "newpassword"
+}
+
+### FetchAll
+###
+GET {{base}}/api/users HTTP/1.1
+Authorization: Bearer {{token}}

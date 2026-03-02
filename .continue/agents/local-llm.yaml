@@ -1,0 +1,30 @@
+# This is an example configuration file
+# To learn more, see the full config.yaml reference: https://docs.continue.dev/reference
+
+name: Workspace Config
+version: 1.0.0
+schema: v1
+
+# Define which models can be used
+# https://docs.continue.dev/customization/models
+models:
+  # - name: Autodetect
+  #   provider: lmstudio
+  #   model: AUTODETECT
+  #   apiBase: http://localhost:1234/v1/
+  - name: mistral-3-14b-reasoning
+    provider: lmstudio
+    model: mistralai/ministral-3-14b-reasoning
+    apiBase: http://localhost:1234/v1/
+  - name: qwen2.5-coder-1.5b-instruct
+    provider: lmstudio
+    model: qwen2.5-coder-1.5b-instruct
+    apiBase: http://localhost:1234/v1/
+    roles:
+      - autocomplete
+
+
+# MCP Servers that Continue can access
+# https://docs.continue.dev/customization/mcp-tools
+# mcpServers:
+#   - uses: anthropic/memory-mcp

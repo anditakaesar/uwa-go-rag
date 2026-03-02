@@ -1,0 +1,38 @@
+all: false
+dir: 'internal/mocks'
+filename: '{{.InterfaceName}}.go'
+force-file-write: true
+formatter: goimports
+include-auto-generated: false
+log-level: info
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: 'mocks'
+recursive: false
+require-template-schema-exists: true
+template: testify
+template-schema: '{{.Template}}.schema.json'
+packages:
+  # github.com/anditakaesar/uwa-go-rag/internal: # use this to generate all
+  #   config:
+  #     all: true
+  #     recursive: true
+  github.com/anditakaesar/uwa-go-rag/internal/handler:
+    config:
+      all: true
+      recursive: true
+  github.com/anditakaesar/uwa-go-rag/internal/infra:
+    config:
+      all: false
+    interfaces:
+      ICookieService:
+      IJWTService:
+  github.com/anditakaesar/uwa-go-rag/internal/server:
+    config:
+      all: true
+  github.com/anditakaesar/uwa-go-rag/internal/service:
+    config:
+      all: false
+    interfaces:
+      IUserRepository:
+      IPasswordChecker:
+      IUserService:

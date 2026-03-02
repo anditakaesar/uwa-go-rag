@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {{block "meta" .}}{{end}}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{{block "title" .}}Default Title{{end}}</title>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen font-sans">
+
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center">
+              <img src="/static/simple-logo.png" 
+                  alt="Brand Logo" 
+                  class="h-10 w-auto object-contain hover:opacity-90 transition">
+              <span class="ml-3 text-xl font-bold text-gray-900 hidden sm:block">UWA RAG</span>
+          </a>
+            {{if .IsLoggedIn}}
+            <nav aria-label="top navigation" class="space-x-8 font-medium text-gray-600">
+                <a href="/" class="hover:text-blue-600 transition">Home</a>
+                <a href="/upload" class="hover:text-blue-600 transition">Upload</a>
+                <a href="/logout" class="hover:text-blue-600 transition">Logout</a>
+            </nav>
+            {{else}}
+            <nav aria-label="top navigation" class="space-x-8 font-medium text-gray-600">
+                <a href="/" class="hover:text-blue-600 transition">Home</a>
+                <a href="/login" class="hover:text-blue-600 transition">Login</a>
+            </nav>
+            {{end}}
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <div class="max-w-[1200px] w-full mx-auto px-6 py-12">  
+        {{block "content" .}}{{end}}
+        </div>
+    </main>
+
+    <footer class="bg-gray-900 text-white mt-auto">
+        <div class="max-w-[1200px] mx-auto px-6 py-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">About the Project</h3>
+                    <p class="text-gray-400 max-w-sm">A clean, focused base layout built with Tailwind CSS for high-performance desktop applications.</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-gray-500">&copy; 2026 Uwa-RAG. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
