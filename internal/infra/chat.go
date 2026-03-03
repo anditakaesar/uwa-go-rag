@@ -34,7 +34,10 @@ func (b *ChatBot) SendPrompt(ctx context.Context, prompt string) (string, error)
 			OfString: openai.String(prompt),
 		},
 		// Model: "deepseek/deepseek-r1-0528-qwen3-8b",
-		Model: "google/gemma-3-12b",
+		// Model: "google/gemma-3-12b",
+		// Model: "openrouter/free",
+		Model: "openai/gpt-oss-20b:free",
+
 		// Reasoning: shared.ReasoningParam{ // not compatible with local llm
 		// 	Effort: openai.ReasoningEffortLow,
 		// },

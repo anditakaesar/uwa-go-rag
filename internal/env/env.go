@@ -14,6 +14,8 @@ type values struct {
 	PassSecret   string
 	UploadDir    string
 	HostName     string
+	AIBaseURL    string
+	AIAPIKey     string
 }
 
 func init() {
@@ -27,6 +29,8 @@ func init() {
 		PassSecret:   os.Getenv("PASS_SECRET"),
 		UploadDir:    os.Getenv("UPLOAD_DIR"),
 		HostName:     os.Getenv("HOSTNAME"),
+		AIBaseURL:    os.Getenv("AI_BASE_URL"),
+		AIAPIKey:     os.Getenv("AI_API_KEY"),
 	}
 }
 

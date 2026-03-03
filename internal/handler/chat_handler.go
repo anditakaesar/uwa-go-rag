@@ -40,19 +40,22 @@ func (h *ChatApi) SendMessage(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorBadRequest{Message: "prompt required"}
 	}
 
-	// resp, err := h.ChatService.SendPrompt(r.Context(), req.Propmt)
+	resp, err := h.ChatService.SendPrompt(r.Context(), req.Propmt)
+	if err != nil {
+		return err
+	}
+	data := map[string]string{
+		"message": resp,
+	}
+
+	// err = h.ChatService.SendSortJob(r.Context(), []string{"Cobra", "Bear", "Anchovie"})
 	// if err != nil {
 	// 	return err
 	// }
 
-	err = h.ChatService.SendSortJob(r.Context(), []string{"Cobra", "Bear", "Anchovie"})
-	if err != nil {
-		return err
-	}
-
-	data := map[string]string{
-		"message": "sending job",
-	}
+	// data := map[string]string{
+	// 	"message": "sending job",
+	// }
 
 	transport.SendJSON(w, http.StatusOK, data, transport.WithMeta(req))
 	return nil

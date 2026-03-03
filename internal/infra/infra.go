@@ -29,8 +29,8 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 	uow := NewUnitOfWork(pool)
 	riverQueue := NewRiverQueue()
 	chatBot := NewChatBot(ChatBotDeps{
-		BaseURL: "http://127.0.0.1:1234/v1",
-		ApiKey:  "sk-lm-u4kWMIXx:0HtPZQkZqKgYQKR1PzXQ",
+		BaseURL: env.Values.AIBaseURL,
+		ApiKey:  env.Values.AIAPIKey,
 	})
 
 	userSvc := service.NewUserService(service.UserServiceDeps{
@@ -54,7 +54,7 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 
 	var riverClient *river.Client[pgx.Tx]
 	if pool != nil {
-		riverClient, err := NewRiverClient(pool, workers)
+		riverClient, err = NewRiverClient(pool, workers)
 		if err != nil {
 			xlog.Logger.Error(fmt.Sprintf("error setup worker client: %v", err))
 			os.Exit(1)

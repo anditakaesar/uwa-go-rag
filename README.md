@@ -13,6 +13,8 @@ Libraries:
 
 Run `$ go mod vendor` to resolve references
 
+Prepare [`mockery`](https://github.com/vektra/mockery/releases) and [`migrate`](https://github.com/golang-migrate/migrate/releases). Place those under `./tools`
+
 ### Database
 Database can be deployed using podman/docker on `development` folder.
 `~/development$ docker compose up -d`
@@ -20,6 +22,8 @@ Database that is used is `PostgreSQL`. PostgreSQL is used here with these reason
 - I expect the schema of this project to evolve given time.
 - I rely on complex queries such as to aggregate. This means that I pushed logic near the data related to it.
 - This is the safer long-term database because its extensibility. Who knows I might need it to use extension like PostGIS (geospatial) or simply use its capability for full-text search and query-able JSONB data type.
+- Install `river`: `$ go install github.com/riverqueue/river/cmd/river@latest`
+- Migrate river: `$ river migrate-up --database-url "$DATABASE_URL"`
 
 ### Migration
 Check `Makefile`
