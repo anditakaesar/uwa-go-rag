@@ -25,6 +25,7 @@ type IPasswordChecker interface {
 
 type IChatBot interface {
 	SendPrompt(ctx context.Context, prompt string) (string, error)
+	SendTextForEmbedding(ctx context.Context, text string) ([]float64, error)
 }
 
 type IJobQueue interface {

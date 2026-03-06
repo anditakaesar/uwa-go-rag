@@ -2,6 +2,7 @@ package infra
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -56,4 +57,24 @@ func (b *ChatBot) SendPrompt(ctx context.Context, prompt string) (string, error)
 	}
 
 	return resp.OutputText(), nil
+}
+
+func (b *ChatBot) SendTextForEmbedding(ctx context.Context, text string) ([]float64, error) {
+	resp, err := b.client.Embeddings.New(ctx, openai.EmbeddingNewParams{
+		Input: openai.EmbeddingNewParamsInputUnion{
+			OfString: openai.String(text),
+		},
+		Model:          "text-embedding-bge-m3",
+		Dimensions:     openai.Int(1536),
+		EncodingFormat: openai.EmbeddingNewParamsEncodingFormatFloat,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for i, data := range resp.Data {
+		fmt.Printf("response: %d\n%v\n", i, data.Embedding)
+	}
+
+	return nil, nil
 }

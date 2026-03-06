@@ -25,7 +25,7 @@ func NewChatApi(dep ChatApiDeps) *ChatApi {
 }
 
 type ChatReq struct {
-	Propmt string `json:"prompt"`
+	Prompt string `json:"prompt"`
 }
 
 func (h *ChatApi) SendMessage(w http.ResponseWriter, r *http.Request) error {
@@ -36,18 +36,20 @@ func (h *ChatApi) SendMessage(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorDecodingRequest{Err: err}
 	}
 
-	if strings.TrimSpace(req.Propmt) == "" {
+	if strings.TrimSpace(req.Prompt) == "" {
 		return &xerror.ErrorBadRequest{Message: "prompt required"}
 	}
 
-	resp, err := h.ChatService.SendPrompt(r.Context(), req.Propmt)
-	if err != nil {
-		return err
-	}
-	data := map[string]string{
-		"message": resp,
-	}
+	// test prompt
+	// resp, err := h.ChatService.SendPrompt(r.Context(), req.Prompt)
+	// if err != nil {
+	// 	return err
+	// }
+	// data := map[string]string{
+	// 	"message": resp,
+	// }
 
+	// test job queue
 	// err = h.ChatService.SendSortJob(r.Context(), []string{"Cobra", "Bear", "Anchovie"})
 	// if err != nil {
 	// 	return err
@@ -56,6 +58,12 @@ func (h *ChatApi) SendMessage(w http.ResponseWriter, r *http.Request) error {
 	// data := map[string]string{
 	// 	"message": "sending job",
 	// }
+
+	err = h.ChatService.SendTextIntoEmbedding(r.Context(), req.Prompt)
+
+	data := map[string]string{
+		"message": "sending embed request",
+	}
 
 	transport.SendJSON(w, http.StatusOK, data, transport.WithMeta(req))
 	return nil

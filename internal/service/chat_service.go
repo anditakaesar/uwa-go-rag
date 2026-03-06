@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"time"
 )
 
 type ChatService struct {
@@ -14,6 +15,7 @@ type ChatService struct {
 type IChatService interface {
 	SendPrompt(ctx context.Context, prompt string) (string, error)
 	SendSortJob(ctx context.Context, words []string) error
+	SendTextIntoEmbedding(ctx context.Context, text string) error
 	DoSort(ctx context.Context, words []string) ([]string, error)
 }
 
@@ -30,6 +32,19 @@ func (s *ChatService) SendPrompt(ctx context.Context, prompt string) (string, er
 
 func (s *ChatService) SendSortJob(ctx context.Context, words []string) error {
 	return s.JobQueue.EnqueueChat(ctx, words)
+}
+
+func (s *ChatService) SendTextIntoEmbedding(ctx context.Context, text string) error {
+	if text == "" {
+		return nil
+	}
+
+	newCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	_, err := s.Bot.SendTextForEmbedding(newCtx, text)
+
+	return err
 }
 
 func (s *ChatService) DoSort(ctx context.Context, words []string) ([]string, error) {

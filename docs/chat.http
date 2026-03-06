@@ -6,7 +6,16 @@ POST {{baseUrl}}/chat/raw HTTP/1.1
 Content-Type: application/json
 
 {
-    "prompt": "hello what is a BPJS Kesehatan?"
+    "prompt": "my"
+}
+
+###
+
+POST {{baseUrl}}/chat/raw HTTP/1.1
+Content-Type: application/json
+
+{
+    "prompt": "# Informasi Terkait Prosedur Layanan\n## Prosedur Layanan\n### Pendaftaran Online\n1. Klik portal layanan pendaftaran [di sini](https://pom.bpjsketenagakerjaan.go.id/pu)\n2. Pilih : “Pendaftaran Peserta” dan pilih Penerima Upah\n3. Masukkan alamat email dan kode captcha, klik DAFTAR\n4. Cek email dan klik aktivasi pendaftaran\n5. Isi data yang tampil pada layar monitor sesuai data perusahaan anda.\n6. Lakukan pembayaran setelah mendapatkan kode iuran melalui email\n7. Peserta mendapatkan kartu digital melalui email atau diambil di Kantor Cabang terdekat"
 }
 
 ###
