@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"log/slog"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra"
@@ -14,29 +14,26 @@ import (
 )
 
 func main() {
-	db, err := infra.NewDatabase(context.Background(), env.Values.DBUrl)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	manager := &ServiceManager{}
+
+	db, err := infra.NewDatabase(ctx, env.Values.DBUrl)
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("unable to connect to database: %v", err))
 		os.Exit(1)
 	}
-	defer db.Close()
 
-	svr := server.SetupServer(&server.ServerDependency{
+	executor := server.SetupServer(&server.ServerDependency{
 		DB: db,
 	})
+	manager.Register(NewDBServer(db))
+	manager.Register(NewWebServer("web-server", executor.Mux, env.Values.Port))
+	manager.Register(NewWorkerServer("river-worker", executor.RiverClient))
 
-	go func(xlogger *slog.Logger) {
-		xlogger.Info("river client started")
-		workerErr := svr.RiverClient.Start(context.Background())
-		if workerErr != nil {
-			xlogger.Error(fmt.Sprintf("worker client error: %v", err))
-		}
-	}(xlog.Logger)
-
-	xlog.Logger.Info(fmt.Sprintf("server listened at port: %s", env.Values.Port))
-	err = http.ListenAndServe(env.Values.Port, svr.Mux)
-	if err != nil {
-		xlog.Logger.Error(fmt.Sprintf("failed to start server: %v", err))
+	if err := manager.Start(ctx); err != nil {
+		xlog.Logger.Error(fmt.Sprintf("error starting services: %v", err))
 		os.Exit(1)
 	}
 }
