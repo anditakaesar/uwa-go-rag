@@ -8,6 +8,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/repo"
 	"github.com/anditakaesar/uwa-go-rag/internal/service"
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
+	"github.com/anditakaesar/uwa-go-rag/internal/worker"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -28,7 +29,7 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 	userRepo := repo.NewUserRepository(pool)
 	uow := NewUnitOfWork(pool)
 	riverQueue := NewRiverQueue()
-	chatBot := NewChatBot(ChatBotDeps{
+	aiClient := NewAIClient(AIClientDep{
 		BaseURL: env.Values.AIBaseURL,
 		ApiKey:  env.Values.AIAPIKey,
 	})
@@ -41,10 +42,10 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 	jwtSvc := NewJWTService(env.Values.JWTSecret)
 	cookieService := NewCookieService(env.Values.IsDevelopment(), env.Values.CookieSecret)
 	fileSvc := service.NewFileService(env.Values.UploadDir, env.UPLOAD_ALLOWED_TYPES)
-	chatSvc := service.NewChatService(chatBot, riverQueue)
+	chatSvc := service.NewChatService(aiClient, riverQueue)
 
 	// queue workers
-	workers, err := RegisterWorkers(RegisterWorkerDep{
+	workers, err := worker.RegisterWorkers(worker.RegisterWorkerDep{
 		ChatService: chatSvc,
 	})
 	if err != nil {

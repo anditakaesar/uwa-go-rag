@@ -23,7 +23,7 @@ type IPasswordChecker interface {
 	CheckPassword(password string, hash string) (bool, error)
 }
 
-type IChatBot interface {
+type AIClient interface {
 	SendPrompt(ctx context.Context, prompt string) (string, error)
 	SendTextForEmbedding(ctx context.Context, text string) ([]float64, error)
 }

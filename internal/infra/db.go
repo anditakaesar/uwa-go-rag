@@ -39,6 +39,10 @@ func (d *database) Close() {
 	d.db.Close()
 }
 
+func (d *database) Ping(ctx context.Context) error {
+	return d.db.Ping(ctx)
+}
+
 // Unit of work
 type IInfraDB interface {
 	Begin(ctx context.Context) (pgx.Tx, error)

@@ -59,7 +59,11 @@ func (h *ChatApi) SendMessage(w http.ResponseWriter, r *http.Request) error {
 	// 	"message": "sending job",
 	// }
 
-	err = h.ChatService.SendTextIntoEmbedding(r.Context(), req.Prompt)
+	// test generate embedding
+	// err = h.ChatService.SendTextIntoEmbedding(r.Context(), req.Prompt)
+
+	// simulate long running
+	// time.Sleep(10 * time.Second)
 
 	data := map[string]string{
 		"message": "sending embed request",

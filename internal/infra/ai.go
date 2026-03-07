@@ -2,34 +2,34 @@ package infra
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/responses"
 )
 
-type ChatBot struct {
+type AIClient struct {
 	client openai.Client
 }
 
-type ChatBotDeps struct {
+type AIClientDep struct {
 	BaseURL string
 	ApiKey  string
 }
 
-func NewChatBot(dep ChatBotDeps) *ChatBot {
+func NewAIClient(dep AIClientDep) *AIClient {
 	client := openai.NewClient(
 		option.WithBaseURL(dep.BaseURL),
 		option.WithAPIKey(dep.ApiKey),
 	)
 
-	return &ChatBot{
+	return &AIClient{
 		client: client,
 	}
 }
 
-func (b *ChatBot) SendPrompt(ctx context.Context, prompt string) (string, error) {
+func (b *AIClient) SendPrompt(ctx context.Context, prompt string) (string, error) {
 	resp, err := b.client.Responses.New(ctx, responses.ResponseNewParams{
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String(prompt),
@@ -59,7 +59,7 @@ func (b *ChatBot) SendPrompt(ctx context.Context, prompt string) (string, error)
 	return resp.OutputText(), nil
 }
 
-func (b *ChatBot) SendTextForEmbedding(ctx context.Context, text string) ([]float64, error) {
+func (b *AIClient) SendTextForEmbedding(ctx context.Context, text string) ([]float64, error) {
 	resp, err := b.client.Embeddings.New(ctx, openai.EmbeddingNewParams{
 		Input: openai.EmbeddingNewParamsInputUnion{
 			OfString: openai.String(text),
@@ -72,9 +72,9 @@ func (b *ChatBot) SendTextForEmbedding(ctx context.Context, text string) ([]floa
 		return nil, err
 	}
 
-	for i, data := range resp.Data {
-		fmt.Printf("response: %d\n%v\n", i, data.Embedding)
+	if len(resp.Data) == 0 {
+		return resp.Data[0].Embedding, nil
 	}
 
-	return nil, nil
+	return nil, errors.New("no response from embedding endpoint")
 }

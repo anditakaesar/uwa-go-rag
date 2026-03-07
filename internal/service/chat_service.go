@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 )
 
 type ChatService struct {
-	Bot      IChatBot
+	AIClient AIClient
 	JobQueue IJobQueue
 }
 
@@ -19,15 +21,15 @@ type IChatService interface {
 	DoSort(ctx context.Context, words []string) ([]string, error)
 }
 
-func NewChatService(bot IChatBot, jobQueue IJobQueue) *ChatService {
+func NewChatService(aiClient AIClient, jobQueue IJobQueue) *ChatService {
 	return &ChatService{
-		Bot:      bot,
+		AIClient: aiClient,
 		JobQueue: jobQueue,
 	}
 }
 
 func (s *ChatService) SendPrompt(ctx context.Context, prompt string) (string, error) {
-	return s.Bot.SendPrompt(ctx, prompt)
+	return s.AIClient.SendPrompt(ctx, prompt)
 }
 
 func (s *ChatService) SendSortJob(ctx context.Context, words []string) error {
@@ -42,13 +44,13 @@ func (s *ChatService) SendTextIntoEmbedding(ctx context.Context, text string) er
 	newCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	_, err := s.Bot.SendTextForEmbedding(newCtx, text)
+	_, err := s.AIClient.SendTextForEmbedding(newCtx, text)
 
 	return err
 }
 
 func (s *ChatService) DoSort(ctx context.Context, words []string) ([]string, error) {
 	sort.Strings(words)
-	fmt.Printf("service sorted the strings: %v", words)
+	xlog.Logger.Info(fmt.Sprintf("chat service sort method called: %v", words))
 	return words, nil
 }
