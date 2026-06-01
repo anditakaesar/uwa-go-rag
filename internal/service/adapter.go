@@ -14,6 +14,10 @@ type IUserRepository interface {
 	FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, error)
 }
 
+type IRagRepository interface {
+	//CreateRagFile(ctx context.Context, ragFile domain.RagFile) (*domain.RagFile, error)
+}
+
 type IUnitOfWork interface {
 	Do(ctx context.Context, fn func(ctx context.Context) error) error
 }
@@ -30,4 +34,5 @@ type AIClient interface {
 
 type IJobQueue interface {
 	EnqueueChat(ctx context.Context, words []string) error
+	EnqueueRagFile(ctx context.Context, ragFileID int64) error
 }

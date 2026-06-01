@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
@@ -171,7 +172,7 @@ func (h *MainHandler) PostUpload(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Render(r.Context(), w, uploadHTML, map[string]any{
 			"CSRF":  csrf.Token(r),
-			"Error": "error while performing save file request",
+			"Error": fmt.Sprintf("error while performing save file request: %v", err),
 		})
 		return
 	}

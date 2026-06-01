@@ -35,7 +35,7 @@ Pemberi kerja mempersiapkan kelengkapan dokumen sebagai syarat pendaftaran peser
 5. Isi data pendaftaran seperti: data pemberi kerja, kontak PIC Perusahaan, Program yang didaftar, data tenaga kerja
 6. Lakukan pembayaran setelah mendapatkan kode iuran melalui email
 7. Pembayaran iuran dapat dilakukan di kanal pembayaran yang telah ditentukan
-8. Kartu Peserta dan Sertifikat diberikan paling lama 7 (tujuh) hari setelah pembayaran iuran melalui fasilitas perbankan baik secara langsung melalui teller maupun transaksi elektronik (ATM/EDC/Online Banking/Autodebet dan sebagainya Lakukan registrasi SIPP Online untuk pelaporan dan pengelolaan data kepesertaan setiap bulannya. SIPP Online merupakan website pelaporan peserta online yang dikembangkan sebagai alat bantu perusahaan untuk melakukan pengelolan data kepesertaan berupa data Perusahaan, data Tenaga Kerja, data upah dan penghitungan iuran secara cepat dan akurat.
+8. Kartu Peserta dan Sertifikat diberikan paling lama 7 (tujuh) hari setelah pembayaran iuran melalui fasilitas perbankan baik secara langsung melalui teller maupun transaksi elektronik (ATM/EDC/Online Banking/Autodebet) dan sebagainya Lakukan registrasi SIPP Online untuk pelaporan dan pengelolaan data kepesertaan setiap bulannya. SIPP Online merupakan website pelaporan peserta online yang dikembangkan sebagai alat bantu perusahaan untuk melakukan pengelolan data kepesertaan berupa data Perusahaan, data Tenaga Kerja, data upah dan penghitungan iuran secara cepat dan akurat.
 ### Kantor Cabang
 1. Datang ke kantor cabang.
 2. Isi formulir dan lengkapi dokumen pendaftaran kepesertaan
@@ -45,7 +45,7 @@ Pemberi kerja mempersiapkan kelengkapan dokumen sebagai syarat pendaftaran peser
 6. Petugas akan memberitahukan jumlah iuran yang harus dibayarkan dan kode iuran untuk melakukan pembayaran
 7. Menerima tanda terima dokumen pendaftaran
 8. Lakukan pembayaran iuran melalui kanal pembayaran iuran
-9. Tanda bukti kepesertaan (sertifikat dan kartu kepesertaan) diterima paling lama 7 (tujuh) hari setelah pembayaran iuran melalui fasilitas perbankan baik secara langsung melalui teller maupun transaksi elektronik (ATM/EDC/Online Banking/Autodebet dan sebagainya
+9. Tanda bukti kepesertaan (sertifikat dan kartu kepesertaan) diterima paling lama 7 (tujuh) hari setelah pembayaran iuran melalui fasilitas perbankan baik secara langsung melalui teller maupun transaksi elektronik (ATM/EDC/Online Banking/Autodebet) dan sebagainya
 10. Petugas akan memberitahukan tentang proses registrasi SIPP Online untuk pelaporan dan pengelolaan data kepesertaan setiap bulannya
 11. Berikan penilaian kepuasan melalui e-suvey
 ## Perhitungan Iuran

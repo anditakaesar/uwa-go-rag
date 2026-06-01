@@ -47,9 +47,10 @@ const (
 
 var (
 	UPLOAD_ALLOWED_TYPES = map[string]bool{
-		"image/jpeg": true,
-		"image/png":  true,
-		"image/gif":  true,
-		"image/webp": true,
+		"image/jpeg":                true,
+		"image/png":                 true,
+		"image/gif":                 true,
+		"image/webp":                true,
+		"text/plain; charset=utf-8": true,
 	}
 )

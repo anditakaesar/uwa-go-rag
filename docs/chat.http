@@ -19,3 +19,23 @@ Content-Type: application/json
 }
 
 ###
+
+POST {{baseUrl}}/chat/raw HTTP/1.1
+Content-Type: application/json
+
+{
+    "prompt": "only-for-test",
+    "ragFileID": 1
+}
+
+###
+
+POST {{baseUrl}}/chat/rag-files HTTP/1.1
+Content-Type: application/json
+
+{
+    "filename": "1773025157_small-bpjs-sample-info.md",
+    "path": "1773025157_small-bpjs-sample-info.md"
+}
+
+###

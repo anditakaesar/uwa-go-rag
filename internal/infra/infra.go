@@ -27,6 +27,7 @@ type Services struct {
 
 func NewInfra(pool *pgxpool.Pool) *Services {
 	userRepo := repo.NewUserRepository(pool)
+	ragRepo := repo.NewRagRepository(pool)
 	uow := NewUnitOfWork(pool)
 	riverQueue := NewRiverQueue()
 	aiClient := NewAIClient(AIClientDep{
@@ -42,11 +43,18 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 	jwtSvc := NewJWTService(env.Values.JWTSecret)
 	cookieService := NewCookieService(env.Values.IsDevelopment(), env.Values.CookieSecret)
 	fileSvc := service.NewFileService(env.Values.UploadDir, env.UPLOAD_ALLOWED_TYPES)
-	chatSvc := service.NewChatService(aiClient, riverQueue)
+	chatSvc := service.NewChatService(service.ChatServiceDep{
+		RagRepo:   ragRepo,
+		AIClient:  aiClient,
+		JobQueue:  riverQueue,
+		UploadDir: env.Values.UploadDir,
+	})
+	ragSvc := service.NewRagService()
 
 	// queue workers
 	workers, err := worker.RegisterWorkers(worker.RegisterWorkerDep{
 		ChatService: chatSvc,
+		RagService:  ragSvc,
 	})
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("error setup worker client: %v", err))

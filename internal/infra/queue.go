@@ -44,3 +44,10 @@ func (r *RiverQueue) EnqueueChat(ctx context.Context, words []string) error {
 	}, nil)
 	return err
 }
+
+func (r *RiverQueue) EnqueueRagFile(ctx context.Context, ragFileID int64) error {
+	_, err := r.client.Insert(ctx, worker.ProccessDocArgs{
+		RagFileID: ragFileID,
+	}, nil)
+	return err
+}

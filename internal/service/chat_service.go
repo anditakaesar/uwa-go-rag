@@ -10,21 +10,34 @@ import (
 )
 
 type ChatService struct {
-	AIClient AIClient
-	JobQueue IJobQueue
+	RagRepo   IRagRepository
+	AIClient  AIClient
+	JobQueue  IJobQueue
+	UploadDir string
 }
 
 type IChatService interface {
 	SendPrompt(ctx context.Context, prompt string) (string, error)
 	SendSortJob(ctx context.Context, words []string) error
+	SendProcessDocJob(ctx context.Context, ragFileID int64) error
 	SendTextIntoEmbedding(ctx context.Context, text string) error
 	DoSort(ctx context.Context, words []string) ([]string, error)
+	//CreateRagFile(ctx context.Context, ragFile domain.RagFile) (*domain.RagFile, error)
 }
 
-func NewChatService(aiClient AIClient, jobQueue IJobQueue) *ChatService {
+type ChatServiceDep struct {
+	RagRepo   IRagRepository
+	AIClient  AIClient
+	JobQueue  IJobQueue
+	UploadDir string
+}
+
+func NewChatService(dep ChatServiceDep) *ChatService {
 	return &ChatService{
-		AIClient: aiClient,
-		JobQueue: jobQueue,
+		RagRepo:   dep.RagRepo,
+		AIClient:  dep.AIClient,
+		JobQueue:  dep.JobQueue,
+		UploadDir: dep.UploadDir,
 	}
 }
 
@@ -34,6 +47,10 @@ func (s *ChatService) SendPrompt(ctx context.Context, prompt string) (string, er
 
 func (s *ChatService) SendSortJob(ctx context.Context, words []string) error {
 	return s.JobQueue.EnqueueChat(ctx, words)
+}
+
+func (s *ChatService) SendProcessDocJob(ctx context.Context, ragFileID int64) error {
+	return s.JobQueue.EnqueueRagFile(ctx, ragFileID)
 }
 
 func (s *ChatService) SendTextIntoEmbedding(ctx context.Context, text string) error {
