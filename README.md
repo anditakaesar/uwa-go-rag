@@ -3,6 +3,11 @@ Based on uwa go fullstack to implement the RAG server.
 
 ## Setup
 Use golang 1.25
+
+### Using goenv
+- Install `curl -sfL https://raw.githubusercontent.com/go-nv/goenv/main/install.sh | bash`
+- Install the required golang version `goenv install 1.25.5`
+
 Libraries:
 - github.com/go-chi/chi/v5
 - github.com/gorilla/csrf
