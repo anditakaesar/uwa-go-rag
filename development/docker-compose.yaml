@@ -7,10 +7,10 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_ROOT_PASSWORD: password
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
     ports:
-      - "${EXPOSEPORT:-5432}:5432"
+      - "${EXPOSEPORT:-5435}:5432"
     volumes:
       - data-volume-uwarag:/var/lib/postgresql
   # swaggereditor:

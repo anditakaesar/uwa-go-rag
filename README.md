@@ -22,8 +22,9 @@ Prepare [`mockery`](https://github.com/vektra/mockery/releases) and [`migrate`](
 
 ### Database
 Database can be deployed using podman/docker on `development` folder.
-`~/development$ docker compose up -d`
-Database that is used is `PostgreSQL`. PostgreSQL is used here with these reasons:
+- Run `~/development$ docker compose up -d`. It uses port 5435, same as `Makefile` for migration
+
+Database that is use is `PostgreSQL`. PostgreSQL is used here with these reasons:
 - I expect the schema of this project to evolve given time.
 - I rely on complex queries such as to aggregate. This means that I pushed logic near the data related to it.
 - This is the safer long-term database because its extensibility. Who knows I might need it to use extension like PostGIS (geospatial) or simply use its capability for full-text search and query-able JSONB data type.
