@@ -21,8 +21,10 @@ seed-database:
 mockery:
 	$(TOOLS_MOCKERY)
 
+TEST_LOG=test_$(shell date +%Y-%m-%d_%H-%M-%S).log
+
 test:
-	go test -v ./internal/...
+	go test -v ./internal/... >> $(TEST_LOG) 2>&1
 
 run:
 	go run ./cmd/web

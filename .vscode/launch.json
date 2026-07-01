@@ -17,9 +17,9 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/seed",
+            "cwd": "${workspaceFolder}",
             "args": ["--check-go-version=false"],
             "envFile": "${workspaceFolder}/.env",
-
         }
     ]
 }
