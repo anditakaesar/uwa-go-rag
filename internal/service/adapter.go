@@ -12,6 +12,7 @@ type IUserRepository interface {
 	FetchUserByParam(ctx context.Context, param domain.FetchUserParam) (*domain.User, error)
 	Update(ctx context.Context, id int64, param domain.UpdateUserParam) (*domain.User, error)
 	FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, error)
+	Delete(ctx context.Context, id int64) (*domain.User, error)
 }
 
 type IRagRepository interface {

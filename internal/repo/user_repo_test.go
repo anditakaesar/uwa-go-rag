@@ -3,6 +3,7 @@ package repo_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 	"testing"
 	"time"
@@ -32,6 +33,8 @@ func setupMocks() (*mockItems, error) {
 		now:    time.Now(),
 	}, nil
 }
+
+const userColumns = "id, username, password, role_id, created_at, updated_at, deleted_at"
 
 func TestUserRepository_GetExecutor(test *testing.T) {
 	test.Parallel()
@@ -67,11 +70,12 @@ func TestUserRepository_GetExecutor(test *testing.T) {
 func TestUserRepository_CreateUser(test *testing.T) {
 	test.Parallel()
 
-	const query = `
+	query := `
 			INSERT INTO users (username, password)
 			VALUES ($1, $2)
-			RETURNING id, username, created_at, updated_at, deleted_at;
+			RETURNING %s;
 		`
+	query = fmt.Sprintf(query, userColumns)
 	newUser := domain.User{
 		Username: "user1",
 		Password: "password1",
@@ -82,8 +86,8 @@ func TestUserRepository_CreateUser(test *testing.T) {
 		assert.NoError(t, err)
 		defer m.mockDB.Close()
 
-		rows := m.mockDB.NewRows([]string{"id", "username", "created_at", "updated_at", "deleted_at"}).
-			AddRow(int64(1), newUser.Username, m.now, nil, nil)
+		rows := m.mockDB.NewRows([]string{"id", "username", "password", "role_id", "created_at", "updated_at", "deleted_at"}).
+			AddRow(int64(1), newUser.Username, "pass", int64(1), m.now, nil, nil)
 		m.mockDB.ExpectQuery(regexp.QuoteMeta(query)).
 			WithArgs(newUser.Username, newUser.Password).
 			WillReturnRows(rows)
@@ -115,59 +119,6 @@ func TestUserRepository_CreateUser(test *testing.T) {
 	})
 
 }
-
-// func TestUserRepository_CreateAdminUser(test *testing.T) {
-// 	test.Parallel()
-
-// 	const query = `
-// 			INSERT INTO users (username, password, role)
-// 			VALUES ($1, $2, $3)
-// 			RETURNING id, username, role, created_at, updated_at, deleted_at;
-// 		`
-// 	newUser := domain.User{
-// 		Username: "user1",
-// 		Password: "password1",
-// 	}
-
-// 	test.Run("success", func(t *testing.T) {
-// 		m, err := setupMocks()
-// 		assert.NoError(t, err)
-// 		defer m.mockDB.Close()
-
-// 		rows := m.mockDB.NewRows([]string{"id", "username", "role", "created_at", "updated_at", "deleted_at"}).
-// 			AddRow(int64(1), newUser.Username, domain.RoleAdmin, m.now, nil, nil)
-// 		m.mockDB.ExpectQuery(regexp.QuoteMeta(query)).
-// 			WithArgs(newUser.Username, newUser.Password, domain.RoleAdmin).
-// 			WillReturnRows(rows)
-
-// 		r := repo.NewUserRepository(m.mockDB)
-// 		res, err := r.CreateUserAdmin(m.ctx, newUser)
-
-// 		assert.NoError(t, err)
-// 		assert.Equal(t, "user1", res.Username)
-// 		assert.Equal(t, domain.RoleAdmin, res.Role)
-// 		assert.Equal(t, res.CreatedAt, m.now)
-// 		assert.NoError(t, m.mockDB.ExpectationsWereMet())
-// 	})
-
-// 	test.Run("error", func(t *testing.T) {
-// 		m, err := setupMocks()
-// 		assert.NoError(t, err)
-// 		defer m.mockDB.Close()
-
-// 		m.mockDB.ExpectQuery(regexp.QuoteMeta(query)).
-// 			WithArgs(newUser.Username, newUser.Password, domain.RoleAdmin).
-// 			WillReturnError(errors.New("query_error"))
-
-// 		r := repo.NewUserRepository(m.mockDB)
-// 		res, err := r.CreateUserAdmin(m.ctx, newUser)
-
-// 		assert.Error(t, err)
-// 		assert.Nil(t, res)
-// 		assert.NoError(t, m.mockDB.ExpectationsWereMet())
-// 	})
-
-// }
 
 func TestUserRepository_FetchUserByParam(test *testing.T) {
 	test.Parallel()
@@ -216,11 +167,12 @@ func TestUserRepository_FetchUserByParam(test *testing.T) {
 
 		userID := int64(1)
 
-		const query = `
-			SELECT id, username, password, role_id, created_at, updated_at, deleted_at
+		query := `
+			SELECT %s
 			FROM users
 			WHERE deleted_at IS NULL AND id = $1
 		`
+		query = fmt.Sprintf(query, userColumns)
 
 		rows := m.mockDB.NewRows([]string{
 			"id", "username", "password", "role_id", "created_at", "updated_at", "deleted_at",
@@ -371,11 +323,13 @@ func TestUserRepository_Update(test *testing.T) {
 func TestUserRepository_FindAll(test *testing.T) {
 	test.Parallel()
 
-	const query = `
-		SELECT id, username, password, role, created_at, updated_at, deleted_at
+	query := `
+		SELECT %s
         FROM users
         WHERE deleted_at IS NULL
 		LIMIT $1 OFFSET $2`
+
+	query = fmt.Sprintf(query, userColumns)
 
 	expectUser := domain.User{
 		Base: domain.Base{

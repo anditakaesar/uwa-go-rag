@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
@@ -30,41 +31,14 @@ func (r *UserRepository) GetExecutor(ctx context.Context) IDBExecutor {
 	return r.db
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, newUser domain.User) (*domain.User, error) {
-	const query = `
-        INSERT INTO users (username, password)
-        VALUES ($1, $2)
-        RETURNING id, username, created_at, updated_at, deleted_at;
-    `
+const userColumns = "id, username, password, role_id, created_at, updated_at, deleted_at"
 
+func scanUser(row pgx.Row) (*domain.User, error) {
 	var model domain.User
-
-	err := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password).Scan(
+	err := row.Scan(
 		&model.ID,
 		&model.Username,
-		&model.CreatedAt,
-		&model.UpdatedAt,
-		&model.DeletedAt,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model, nil
-}
-
-func (r *UserRepository) CreateUserWithRole(ctx context.Context, newUser domain.User, role string) (*domain.User, error) {
-	const query = `
-        INSERT INTO users (username, password, role_id)
-        VALUES ($1, $2, (select id from roles where name = $3))
-        RETURNING id, username, role_id, created_at, updated_at, deleted_at;
-    `
-
-	var model domain.User
-
-	err := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password, role).Scan(
-		&model.ID,
-		&model.Username,
+		&model.Password,
 		&model.RoleID,
 		&model.CreatedAt,
 		&model.UpdatedAt,
@@ -77,22 +51,54 @@ func (r *UserRepository) CreateUserWithRole(ctx context.Context, newUser domain.
 	return &model, nil
 }
 
-func (r *UserRepository) FetchUserByParam(ctx context.Context, param domain.FetchUserParam) (*domain.User, error) {
+func (r *UserRepository) CreateUser(ctx context.Context, newUser domain.User) (*domain.User, error) {
 	query := `
-		SELECT id, username, password, role_id, created_at, updated_at, deleted_at
-        FROM users
-        WHERE deleted_at IS NULL `
+        INSERT INTO users (username, password)
+        VALUES ($1, $2)
+        RETURNING %s;
+    `
+	query = fmt.Sprintf(query, userColumns)
+
+	row := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password)
+	user, err := scanUser(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *UserRepository) CreateUserWithRole(ctx context.Context, newUser domain.User, role string) (*domain.User, error) {
+	query := `
+        INSERT INTO users (username, password, role_id)
+        VALUES ($1, $2, (select id from roles where name = $3))
+        RETURNING %s;
+    `
+	query = fmt.Sprintf(query, userColumns)
+
+	row := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password, role)
+
+	return scanUser(row)
+}
+
+func (r *UserRepository) FetchUserByParam(ctx context.Context, param domain.FetchUserParam) (*domain.User, error) {
+	qb := strings.Builder{}
+
 	var args []any
+	fmt.Fprintf(&qb, `
+		SELECT %s
+        FROM users
+        WHERE deleted_at IS NULL `, userColumns)
 	argCount := 1
 
 	if param.ID != nil {
-		query += fmt.Sprintf("AND id = $%d ", argCount)
+		fmt.Fprintf(&qb, "AND id = $%d ", argCount)
 		args = append(args, *param.ID)
 		argCount++
 	}
 
 	if param.Username != nil {
-		query += fmt.Sprintf("AND username = $%d ", argCount)
+		fmt.Fprintf(&qb, "AND username = $%d ", argCount)
 		args = append(args, *param.Username)
 		argCount++
 	}
@@ -102,34 +108,22 @@ func (r *UserRepository) FetchUserByParam(ctx context.Context, param domain.Fetc
 	}
 
 	if param.ForUpdate {
-		query += "FOR UPDATE"
+		qb.WriteString("FOR UPDATE")
 	}
 
-	var model domain.User
+	row := r.GetExecutor(ctx).QueryRow(ctx, qb.String(), args...)
 
-	err := r.GetExecutor(ctx).QueryRow(ctx, query, args...).Scan(
-		&model.ID,
-		&model.Username,
-		&model.Password,
-		&model.RoleID,
-		&model.CreatedAt,
-		&model.UpdatedAt,
-		&model.DeletedAt,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model, nil
+	return scanUser(row)
 }
 
 func (r *UserRepository) Update(ctx context.Context, id int64, param domain.UpdateUserParam) (*domain.User, error) {
-	query := "UPDATE users SET "
+	qb := strings.Builder{}
+	qb.WriteString("UPDATE users SET ")
 	var args []any
 	argCount := 1
 
 	if param.Password != nil {
-		query += fmt.Sprintf("password = $%d, ", argCount)
+		qb.WriteString(fmt.Sprintf("password = $%d, ", argCount))
 		args = append(args, *param.Password)
 		argCount++
 	}
@@ -138,35 +132,24 @@ func (r *UserRepository) Update(ctx context.Context, id int64, param domain.Upda
 		return nil, errors.New("nothing to update")
 	}
 
-	query += "updated_at = NOW() "
-	query += fmt.Sprintf("WHERE id = $%d AND deleted_at IS NULL ", argCount)
+	qb.WriteString("updated_at = NOW() ")
+	fmt.Fprintf(&qb, "WHERE id = $%d AND deleted_at IS NULL ", argCount)
 	args = append(args, id)
-	query += "RETURNING id, username, password, role_id, created_at, updated_at, deleted_at"
+	fmt.Fprintf(&qb, "RETURNING %s", userColumns)
 
-	var model domain.User
+	row := r.GetExecutor(ctx).QueryRow(ctx, qb.String(), args...)
 
-	err := r.GetExecutor(ctx).QueryRow(ctx, query, args...).Scan(
-		&model.ID,
-		&model.Username,
-		&model.Password,
-		&model.RoleID,
-		&model.CreatedAt,
-		&model.UpdatedAt,
-		&model.DeletedAt,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model, nil
+	return scanUser(row)
 }
 
 func (r *UserRepository) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, error) {
-	const query = `
-		SELECT id, username, password, role, created_at, updated_at, deleted_at
+	query := `
+		SELECT %s
         FROM users
         WHERE deleted_at IS NULL
 		LIMIT $1 OFFSET $2`
+
+	query = fmt.Sprintf(query, userColumns)
 
 	rows, err := r.GetExecutor(ctx).Query(ctx,
 		query, param.Pagination.Size, param.Pagination.GetOffset())
@@ -178,21 +161,21 @@ func (r *UserRepository) FindAll(ctx context.Context, param domain.FindAllUsersP
 	users := []domain.User{}
 
 	for rows.Next() {
-		var u domain.User
-		err := rows.Scan(
-			&u.ID,
-			&u.Username,
-			&u.Password,
-			&u.RoleID,
-			&u.CreatedAt,
-			&u.UpdatedAt,
-			&u.DeletedAt,
-		)
+		u, err := scanUser(rows)
 		if err != nil {
 			return nil, err
 		}
-		users = append(users, u)
+		users = append(users, *u)
 	}
 
 	return users, rows.Err()
+}
+
+func (r *UserRepository) Delete(ctx context.Context, id int64) (*domain.User, error) {
+	query := "UPDATE users SET deleted_at = NOW() WHERE id = $1 RETURNING %s"
+	query = fmt.Sprintf(query, userColumns)
+
+	row := r.GetExecutor(ctx).QueryRow(ctx, query, id)
+
+	return scanUser(row)
 }

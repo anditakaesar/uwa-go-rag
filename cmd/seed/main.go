@@ -33,8 +33,8 @@ func main() {
 	}
 
 	services := infra.NewInfra(pool)
-	seedUsers(ctx, services)
 	seedSQL(ctx, pool)
+	seedUsers(ctx, services)
 }
 
 type UserSeed struct {
