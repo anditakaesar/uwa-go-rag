@@ -33,7 +33,7 @@ func TestUserApi_CreateUser(test *testing.T) {
 				ID: 1,
 			},
 			Username: "newuser",
-			Role:     domain.RoleUser,
+			RoleID:   int64(3),
 		}, nil).Once()
 
 		userReq := `{"username":"newuser","password":"newpassword"}`
@@ -151,7 +151,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 				ID: 1,
 			},
 			Username: "user1",
-			Role:     domain.RoleUser,
+			RoleID:   int64(3),
 		}, nil).Once()
 
 		userReq := `{"oldPassword":"old-pass","password":"new-pass"}`
@@ -414,7 +414,7 @@ func TestUserApi_FetchUsers(test *testing.T) {
 				},
 				Username: "user1",
 				Password: "pass",
-				Role:     domain.RoleUser,
+				RoleID:   int64(3),
 			},
 			{
 				Base: domain.Base{
@@ -422,7 +422,7 @@ func TestUserApi_FetchUsers(test *testing.T) {
 				},
 				Username: "user1",
 				Password: "pass",
-				Role:     domain.RoleUser,
+				RoleID:   int64(3),
 			},
 		}, &domain.FindAllUsersParam{
 			Pagination: common.Pagination{
@@ -460,7 +460,7 @@ func TestUserApi_FetchUsers(test *testing.T) {
 				},
 				Username: "user1",
 				Password: "pass",
-				Role:     domain.RoleUser,
+				RoleID:   int64(3),
 			},
 			{
 				Base: domain.Base{
@@ -468,7 +468,7 @@ func TestUserApi_FetchUsers(test *testing.T) {
 				},
 				Username: "user1",
 				Password: "pass",
-				Role:     domain.RoleUser,
+				RoleID:   int64(3),
 			},
 		}, &domain.FindAllUsersParam{
 			Pagination: common.Pagination{
@@ -506,7 +506,7 @@ func TestUserApi_FetchUsers(test *testing.T) {
 				},
 				Username: "user1",
 				Password: "pass",
-				Role:     domain.RoleUser,
+				RoleID:   int64(3),
 			},
 			{
 				Base: domain.Base{
@@ -514,7 +514,7 @@ func TestUserApi_FetchUsers(test *testing.T) {
 				},
 				Username: "user1",
 				Password: "pass",
-				Role:     domain.RoleUser,
+				RoleID:   int64(3),
 			},
 		}, &domain.FindAllUsersParam{
 			Pagination: common.Pagination{

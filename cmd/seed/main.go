@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
@@ -33,11 +34,13 @@ func main() {
 
 	services := infra.NewInfra(pool)
 	seedUsers(ctx, services)
+	seedSQL(ctx, pool)
 }
 
 type UserSeed struct {
 	Username string
 	Password string
+	Role     string
 }
 
 func readUserFromCSV(path string) ([]UserSeed, error) {
@@ -70,6 +73,7 @@ func readUserFromCSV(path string) ([]UserSeed, error) {
 		users = append(users, UserSeed{
 			Username: record[0],
 			Password: record[1],
+			Role:     record[2],
 		})
 	}
 
@@ -78,7 +82,7 @@ func readUserFromCSV(path string) ([]UserSeed, error) {
 
 func seedUsers(ctx context.Context, services *infra.Services) {
 	// users, err := readUserFromCSV("users.csv") // for debug use this
-	users, err := readUserFromCSV("./cmd/seed/users.csv")
+	users, err := readUserFromCSV(filepath.Join("db", "seed", "users.csv"))
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("error reading user seed file: %v", err))
 		return
@@ -92,7 +96,7 @@ func seedUsers(ctx context.Context, services *infra.Services) {
 		}
 
 		if i == 0 { // the first one is user admin
-			_, seedErr := services.UserService.CreateUserAdmin(ctx, newUser)
+			_, seedErr := services.UserService.CreateUserWithRole(ctx, newUser, u.Role)
 			if seedErr != nil {
 				seedErrs = append(seedErrs, fmt.Sprintf("error processing admin roled user (%s): %v", u.Username, seedErr))
 			}
@@ -102,6 +106,34 @@ func seedUsers(ctx context.Context, services *infra.Services) {
 		_, seedErr := services.UserService.CreateUser(ctx, newUser)
 		if seedErr != nil {
 			seedErrs = append(seedErrs, fmt.Sprintf("error processing (%s): %v", u.Username, seedErr))
+		}
+	}
+
+	if len(seedErrs) > 0 {
+		xlog.Logger.Error(strings.Join(seedErrs, "\n"))
+	}
+}
+
+func seedSQL(ctx context.Context, pool *pgxpool.Pool) {
+	// list file on db/seed/*.sql
+	var seedErrs []string
+	pattern := filepath.Join("db", "seed", "*.sql")
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		xlog.Logger.Error("error get seed sql files")
+		return
+	}
+	// run each sql file
+	for _, file := range files {
+		content, err := os.ReadFile(file)
+		if err != nil {
+			seedErrs = append(seedErrs, fmt.Sprintf("error reading file: %s with error: %v", file, err))
+			continue
+		}
+
+		_, err = pool.Exec(ctx, string(content))
+		if err != nil {
+			seedErrs = append(seedErrs, fmt.Sprintf("error executing sql file: %s with error: %v", file, err))
 		}
 	}
 

@@ -53,19 +53,19 @@ func (r *UserRepository) CreateUser(ctx context.Context, newUser domain.User) (*
 	return &model, nil
 }
 
-func (r *UserRepository) CreateUserAdmin(ctx context.Context, newUser domain.User) (*domain.User, error) {
+func (r *UserRepository) CreateUserWithRole(ctx context.Context, newUser domain.User, role string) (*domain.User, error) {
 	const query = `
-        INSERT INTO users (username, password, role)
-        VALUES ($1, $2, $3)
-        RETURNING id, username, role, created_at, updated_at, deleted_at;
+        INSERT INTO users (username, password, role_id)
+        VALUES ($1, $2, (select id from roles where name = $3))
+        RETURNING id, username, role_id, created_at, updated_at, deleted_at;
     `
 
 	var model domain.User
 
-	err := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password, domain.RoleAdmin).Scan(
+	err := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password, role).Scan(
 		&model.ID,
 		&model.Username,
-		&model.Role,
+		&model.RoleID,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 		&model.DeletedAt,
@@ -79,7 +79,7 @@ func (r *UserRepository) CreateUserAdmin(ctx context.Context, newUser domain.Use
 
 func (r *UserRepository) FetchUserByParam(ctx context.Context, param domain.FetchUserParam) (*domain.User, error) {
 	query := `
-		SELECT id, username, password, role, created_at, updated_at, deleted_at
+		SELECT id, username, password, role_id, created_at, updated_at, deleted_at
         FROM users
         WHERE deleted_at IS NULL `
 	var args []any
@@ -111,7 +111,7 @@ func (r *UserRepository) FetchUserByParam(ctx context.Context, param domain.Fetc
 		&model.ID,
 		&model.Username,
 		&model.Password,
-		&model.Role,
+		&model.RoleID,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 		&model.DeletedAt,
@@ -141,7 +141,7 @@ func (r *UserRepository) Update(ctx context.Context, id int64, param domain.Upda
 	query += "updated_at = NOW() "
 	query += fmt.Sprintf("WHERE id = $%d AND deleted_at IS NULL ", argCount)
 	args = append(args, id)
-	query += "RETURNING id, username, password, role, created_at, updated_at, deleted_at"
+	query += "RETURNING id, username, password, role_id, created_at, updated_at, deleted_at"
 
 	var model domain.User
 
@@ -149,7 +149,7 @@ func (r *UserRepository) Update(ctx context.Context, id int64, param domain.Upda
 		&model.ID,
 		&model.Username,
 		&model.Password,
-		&model.Role,
+		&model.RoleID,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 		&model.DeletedAt,
@@ -183,7 +183,7 @@ func (r *UserRepository) FindAll(ctx context.Context, param domain.FindAllUsersP
 			&u.ID,
 			&u.Username,
 			&u.Password,
-			&u.Role,
+			&u.RoleID,
 			&u.CreatedAt,
 			&u.UpdatedAt,
 			&u.DeletedAt,

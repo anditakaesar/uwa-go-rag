@@ -37,9 +37,9 @@ Check `Makefile`
 - To create migration: `$ make create-migration name=new_migration`
 - To migrate all pending migration: `$ make migrate`
 - To migrate down one previous migration: `$ make migrate-down`
-- To seed initial users: run `$ make seed-database` OR run manually
-`$ DB_URL="postgres://here" go run ./cmd/seed/main.go`. Seed file can be done using separate `.csv` files:
-    - `cmd/seed/users.csv` contains seed data for `users` table
+- To seed initial users: run `$ make seed-database`. Seed file can be done using separate `.csv` files:
+    - `db/seed/users.csv` contains seed data for `users` table
+    - `db/seed/*.sql` contains seed data that executed directly into the database.
 - To generate new mocks `$ make mockery`
 - To test the code `$ make test`
 

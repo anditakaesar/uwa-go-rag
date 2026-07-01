@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"slices"
 	"strings"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
@@ -106,24 +105,24 @@ func ResolveUser(userService service.IUserService) Middleware {
 	}
 }
 
-func RequireRole(roles []domain.Role) Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			user, ok := domain.UserFromContext(r.Context())
-			if !ok {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
-				return
-			}
+// func RequireRole(roles []domain.Role) Middleware {
+// 	return func(next http.Handler) http.Handler {
+// 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 			user, ok := domain.UserFromContext(r.Context())
+// 			if !ok {
+// 				http.Error(w, "unauthorized", http.StatusUnauthorized)
+// 				return
+// 			}
 
-			if user != nil && !slices.Contains(roles, user.Role) {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
-				return
-			}
+// 			if user != nil && !slices.Contains(roles, user.Role) {
+// 				http.Error(w, "unauthorized", http.StatusUnauthorized)
+// 				return
+// 			}
 
-			next.ServeHTTP(w, r)
-		})
-	}
-}
+// 			next.ServeHTTP(w, r)
+// 		})
+// 	}
+// }
 
 func RequireAuth() Middleware {
 	return func(next http.Handler) http.Handler {

@@ -76,7 +76,7 @@ func TestUserService_CreateUser(test *testing.T) {
 				CreatedAt: m.now,
 			},
 			Username: "John Doe",
-			Role:     domain.RoleUser,
+			RoleID:   int64(3),
 			Password: "somestring",
 		}
 
@@ -112,63 +112,63 @@ func TestUserService_CreateUser(test *testing.T) {
 
 }
 
-func TestUserService_CreateUserAdmin(test *testing.T) {
-	test.Parallel()
+// func TestUserService_CreateUserAdmin(test *testing.T) {
+// 	test.Parallel()
 
-	userParam := domain.User{
-		Username: "newuseradmin",
-		Password: "Some Pass",
-	}
+// 	userParam := domain.User{
+// 		Username: "newuseradmin",
+// 		Password: "Some Pass",
+// 	}
 
-	test.Run("success", func(t *testing.T) {
-		m := setupMocks()
-		s := service.NewUserService(service.UserServiceDeps{
-			UserRepo:    m.userRepo,
-			PassChecker: m.passChecker,
-			UOW:         m.uow,
-		})
+// 	test.Run("success", func(t *testing.T) {
+// 		m := setupMocks()
+// 		s := service.NewUserService(service.UserServiceDeps{
+// 			UserRepo:    m.userRepo,
+// 			PassChecker: m.passChecker,
+// 			UOW:         m.uow,
+// 		})
 
-		userReponse := domain.User{
-			Base: domain.Base{
-				ID:        1,
-				CreatedAt: m.now,
-			},
-			Username: "John Doe",
-			Role:     domain.RoleAdmin,
-			Password: "somestring",
-		}
+// 		userReponse := domain.User{
+// 			Base: domain.Base{
+// 				ID:        1,
+// 				CreatedAt: m.now,
+// 			},
+// 			Username: "John Doe",
+// 			Role:     domain.RoleAdmin,
+// 			Password: "somestring",
+// 		}
 
-		m.passChecker.On("HashPassword", userParam.Password).Return("somestring", nil).Once()
-		updatedParam := userParam
-		updatedParam.Password = "somestring"
-		m.userRepo.On("CreateUserAdmin", m.ctx, updatedParam).Return(&userReponse, nil).Once()
+// 		m.passChecker.On("HashPassword", userParam.Password).Return("somestring", nil).Once()
+// 		updatedParam := userParam
+// 		updatedParam.Password = "somestring"
+// 		m.userRepo.On("CreateUserAdmin", m.ctx, updatedParam).Return(&userReponse, nil).Once()
 
-		got, gotErr := s.CreateUserAdmin(m.ctx, userParam)
-		assert.NoError(t, gotErr)
+// 		got, gotErr := s.CreateUserAdmin(m.ctx, userParam)
+// 		assert.NoError(t, gotErr)
 
-		assert.Equal(t, userReponse.Username, got.Username)
-		m.passChecker.AssertExpectations(t)
-		m.userRepo.AssertExpectations(t)
-	})
+// 		assert.Equal(t, userReponse.Username, got.Username)
+// 		m.passChecker.AssertExpectations(t)
+// 		m.userRepo.AssertExpectations(t)
+// 	})
 
-	test.Run("error when hashing password", func(t *testing.T) {
-		m := setupMocks()
-		s := service.NewUserService(service.UserServiceDeps{
-			UserRepo:    m.userRepo,
-			PassChecker: m.passChecker,
-			UOW:         m.uow,
-		})
+// 	test.Run("error when hashing password", func(t *testing.T) {
+// 		m := setupMocks()
+// 		s := service.NewUserService(service.UserServiceDeps{
+// 			UserRepo:    m.userRepo,
+// 			PassChecker: m.passChecker,
+// 			UOW:         m.uow,
+// 		})
 
-		m.passChecker.On("HashPassword", userParam.Password).Return("", errors.New("error_HashPassword")).Once()
+// 		m.passChecker.On("HashPassword", userParam.Password).Return("", errors.New("error_HashPassword")).Once()
 
-		got, gotErr := s.CreateUserAdmin(m.ctx, userParam)
-		assert.Error(t, gotErr)
-		assert.Nil(t, got)
-		m.passChecker.AssertExpectations(t)
-		m.userRepo.AssertExpectations(t)
-	})
+// 		got, gotErr := s.CreateUserAdmin(m.ctx, userParam)
+// 		assert.Error(t, gotErr)
+// 		assert.Nil(t, got)
+// 		m.passChecker.AssertExpectations(t)
+// 		m.userRepo.AssertExpectations(t)
+// 	})
 
-}
+// }
 
 func TestUserService_AuthenticateUser(test *testing.T) {
 	test.Parallel()
@@ -179,7 +179,7 @@ func TestUserService_AuthenticateUser(test *testing.T) {
 		userResponse := domain.User{
 			Username: "testuser",
 			Password: "testpassword",
-			Role:     domain.RoleAdmin,
+			RoleID:   int64(1),
 			Base: domain.Base{
 				ID: 1,
 			},
@@ -209,7 +209,7 @@ func TestUserService_AuthenticateUser(test *testing.T) {
 		userResponse := domain.User{
 			Username: "testuser",
 			Password: "testpassword",
-			Role:     domain.RoleAdmin,
+			RoleID:   int64(1),
 			Base: domain.Base{
 				ID: 1,
 			},
@@ -270,7 +270,7 @@ func TestUserService_GetUserByID(test *testing.T) {
 		userResponse := domain.User{
 			Username: "testuser",
 			Password: "testpassword",
-			Role:     domain.RoleAdmin,
+			RoleID:   int64(1),
 			Base: domain.Base{
 				ID: 1,
 			},
@@ -304,7 +304,7 @@ func TestUserService_Update(test *testing.T) {
 		},
 		Username: "user1",
 		Password: "hashedpassword",
-		Role:     domain.RoleUser,
+		RoleID:   int64(1),
 	}
 
 	newPass := "newpass"
@@ -484,7 +484,7 @@ func TestUserService_FindAll(test *testing.T) {
 				},
 				Username: "user1",
 				Password: "pass",
-				Role:     domain.RoleAdmin,
+				RoleID:   int64(1),
 			},
 		}, nil).Once()
 

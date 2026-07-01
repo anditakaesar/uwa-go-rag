@@ -75,7 +75,7 @@ type MockIUserService_AuthenticateUser_Call struct {
 //   - ctx context.Context
 //   - username string
 //   - password string
-func (_e *MockIUserService_Expecter) AuthenticateUser(ctx interface{}, username interface{}, password interface{}) *MockIUserService_AuthenticateUser_Call {
+func (_e *MockIUserService_Expecter) AuthenticateUser(ctx any, username any, password any) *MockIUserService_AuthenticateUser_Call {
 	return &MockIUserService_AuthenticateUser_Call{Call: _e.mock.On("AuthenticateUser", ctx, username, password)}
 }
 
@@ -148,7 +148,7 @@ type MockIUserService_CreateUser_Call struct {
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - user domain.User
-func (_e *MockIUserService_Expecter) CreateUser(ctx interface{}, user interface{}) *MockIUserService_CreateUser_Call {
+func (_e *MockIUserService_Expecter) CreateUser(ctx any, user any) *MockIUserService_CreateUser_Call {
 	return &MockIUserService_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, user)}
 }
 
@@ -224,7 +224,7 @@ type MockIUserService_FindAll_Call struct {
 // FindAll is a helper method to define mock.On call
 //   - ctx context.Context
 //   - param domain.FindAllUsersParam
-func (_e *MockIUserService_Expecter) FindAll(ctx interface{}, param interface{}) *MockIUserService_FindAll_Call {
+func (_e *MockIUserService_Expecter) FindAll(ctx any, param any) *MockIUserService_FindAll_Call {
 	return &MockIUserService_FindAll_Call{Call: _e.mock.On("FindAll", ctx, param)}
 }
 
@@ -292,7 +292,7 @@ type MockIUserService_GetUserByID_Call struct {
 // GetUserByID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int64
-func (_e *MockIUserService_Expecter) GetUserByID(ctx interface{}, id interface{}) *MockIUserService_GetUserByID_Call {
+func (_e *MockIUserService_Expecter) GetUserByID(ctx any, id any) *MockIUserService_GetUserByID_Call {
 	return &MockIUserService_GetUserByID_Call{Call: _e.mock.On("GetUserByID", ctx, id)}
 }
 
@@ -361,7 +361,7 @@ type MockIUserService_Update_Call struct {
 //   - ctx context.Context
 //   - id int64
 //   - update *domain.UpdateUserParam
-func (_e *MockIUserService_Expecter) Update(ctx interface{}, id interface{}, update interface{}) *MockIUserService_Update_Call {
+func (_e *MockIUserService_Expecter) Update(ctx any, id any, update any) *MockIUserService_Update_Call {
 	return &MockIUserService_Update_Call{Call: _e.mock.On("Update", ctx, id, update)}
 }
 

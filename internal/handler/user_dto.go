@@ -34,9 +34,9 @@ type UserResponse struct {
 
 func UserDomainToResponse(user *domain.User) UserResponse {
 	return UserResponse{
-		ID:        user.ID,
-		Username:  user.Username,
-		Role:      string(user.Role),
+		ID:       user.ID,
+		Username: user.Username,
+		//Role:      string(user.Role),
 		CreatedAt: user.CreatedAt,
 	}
 }

@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
 	"github.com/go-chi/chi/v5"
 )
@@ -47,7 +46,7 @@ func SetupMainRoutes(router chi.Router, h *MainHandler) {
 			},
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
-				middlewares.RequireRole([]domain.Role{domain.RoleAdmin}),
+				//middlewares.RequireRole([]domain.Role{domain.RoleAdmin}),
 				middlewares.CSRFMiddleware(),
 			},
 		},
@@ -88,7 +87,7 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 			},
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
-				middlewares.RequireRole([]domain.Role{domain.RoleAdmin}),
+				//middlewares.RequireRole([]domain.Role{domain.RoleAdmin}),
 			},
 		},
 		{
@@ -99,7 +98,7 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 			},
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
-				middlewares.RequireRole([]domain.Role{domain.RoleAdmin}),
+				//middlewares.RequireRole([]domain.Role{domain.RoleAdmin}),
 			},
 		},
 		{

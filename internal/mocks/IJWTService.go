@@ -70,7 +70,7 @@ type MockIJWTService_IssueJWT_Call struct {
 // IssueJWT is a helper method to define mock.On call
 //   - userID int64
 //   - secret []byte
-func (_e *MockIJWTService_Expecter) IssueJWT(userID interface{}, secret interface{}) *MockIJWTService_IssueJWT_Call {
+func (_e *MockIJWTService_Expecter) IssueJWT(userID any, secret any) *MockIJWTService_IssueJWT_Call {
 	return &MockIJWTService_IssueJWT_Call{Call: _e.mock.On("IssueJWT", userID, secret)}
 }
 
@@ -135,7 +135,7 @@ type MockIJWTService_Verify_Call struct {
 
 // Verify is a helper method to define mock.On call
 //   - token string
-func (_e *MockIJWTService_Expecter) Verify(token interface{}) *MockIJWTService_Verify_Call {
+func (_e *MockIJWTService_Expecter) Verify(token any) *MockIJWTService_Verify_Call {
 	return &MockIJWTService_Verify_Call{Call: _e.mock.On("Verify", token)}
 }
 

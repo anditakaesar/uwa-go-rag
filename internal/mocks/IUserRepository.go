@@ -74,7 +74,7 @@ type MockIUserRepository_CreateUser_Call struct {
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - newUser domain.User
-func (_e *MockIUserRepository_Expecter) CreateUser(ctx interface{}, newUser interface{}) *MockIUserRepository_CreateUser_Call {
+func (_e *MockIUserRepository_Expecter) CreateUser(ctx any, newUser any) *MockIUserRepository_CreateUser_Call {
 	return &MockIUserRepository_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, newUser)}
 }
 
@@ -106,47 +106,48 @@ func (_c *MockIUserRepository_CreateUser_Call) RunAndReturn(run func(ctx context
 	return _c
 }
 
-// CreateUserAdmin provides a mock function for the type MockIUserRepository
-func (_mock *MockIUserRepository) CreateUserAdmin(ctx context.Context, newUser domain.User) (*domain.User, error) {
-	ret := _mock.Called(ctx, newUser)
+// CreateUserWithRole provides a mock function for the type MockIUserRepository
+func (_mock *MockIUserRepository) CreateUserWithRole(ctx context.Context, newUser domain.User, role string) (*domain.User, error) {
+	ret := _mock.Called(ctx, newUser, role)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CreateUserAdmin")
+		panic("no return value specified for CreateUserWithRole")
 	}
 
 	var r0 *domain.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.User) (*domain.User, error)); ok {
-		return returnFunc(ctx, newUser)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.User, string) (*domain.User, error)); ok {
+		return returnFunc(ctx, newUser, role)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.User) *domain.User); ok {
-		r0 = returnFunc(ctx, newUser)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.User, string) *domain.User); ok {
+		r0 = returnFunc(ctx, newUser, role)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*domain.User)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.User) error); ok {
-		r1 = returnFunc(ctx, newUser)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.User, string) error); ok {
+		r1 = returnFunc(ctx, newUser, role)
 	} else {
 		r1 = ret.Error(1)
 	}
 	return r0, r1
 }
 
-// MockIUserRepository_CreateUserAdmin_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateUserAdmin'
-type MockIUserRepository_CreateUserAdmin_Call struct {
+// MockIUserRepository_CreateUserWithRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateUserWithRole'
+type MockIUserRepository_CreateUserWithRole_Call struct {
 	*mock.Call
 }
 
-// CreateUserAdmin is a helper method to define mock.On call
+// CreateUserWithRole is a helper method to define mock.On call
 //   - ctx context.Context
 //   - newUser domain.User
-func (_e *MockIUserRepository_Expecter) CreateUserAdmin(ctx interface{}, newUser interface{}) *MockIUserRepository_CreateUserAdmin_Call {
-	return &MockIUserRepository_CreateUserAdmin_Call{Call: _e.mock.On("CreateUserAdmin", ctx, newUser)}
+//   - role string
+func (_e *MockIUserRepository_Expecter) CreateUserWithRole(ctx any, newUser any, role any) *MockIUserRepository_CreateUserWithRole_Call {
+	return &MockIUserRepository_CreateUserWithRole_Call{Call: _e.mock.On("CreateUserWithRole", ctx, newUser, role)}
 }
 
-func (_c *MockIUserRepository_CreateUserAdmin_Call) Run(run func(ctx context.Context, newUser domain.User)) *MockIUserRepository_CreateUserAdmin_Call {
+func (_c *MockIUserRepository_CreateUserWithRole_Call) Run(run func(ctx context.Context, newUser domain.User, role string)) *MockIUserRepository_CreateUserWithRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -156,20 +157,25 @@ func (_c *MockIUserRepository_CreateUserAdmin_Call) Run(run func(ctx context.Con
 		if args[1] != nil {
 			arg1 = args[1].(domain.User)
 		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
 }
 
-func (_c *MockIUserRepository_CreateUserAdmin_Call) Return(user *domain.User, err error) *MockIUserRepository_CreateUserAdmin_Call {
+func (_c *MockIUserRepository_CreateUserWithRole_Call) Return(user *domain.User, err error) *MockIUserRepository_CreateUserWithRole_Call {
 	_c.Call.Return(user, err)
 	return _c
 }
 
-func (_c *MockIUserRepository_CreateUserAdmin_Call) RunAndReturn(run func(ctx context.Context, newUser domain.User) (*domain.User, error)) *MockIUserRepository_CreateUserAdmin_Call {
+func (_c *MockIUserRepository_CreateUserWithRole_Call) RunAndReturn(run func(ctx context.Context, newUser domain.User, role string) (*domain.User, error)) *MockIUserRepository_CreateUserWithRole_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -210,7 +216,7 @@ type MockIUserRepository_FetchUserByParam_Call struct {
 // FetchUserByParam is a helper method to define mock.On call
 //   - ctx context.Context
 //   - param domain.FetchUserParam
-func (_e *MockIUserRepository_Expecter) FetchUserByParam(ctx interface{}, param interface{}) *MockIUserRepository_FetchUserByParam_Call {
+func (_e *MockIUserRepository_Expecter) FetchUserByParam(ctx any, param any) *MockIUserRepository_FetchUserByParam_Call {
 	return &MockIUserRepository_FetchUserByParam_Call{Call: _e.mock.On("FetchUserByParam", ctx, param)}
 }
 
@@ -278,7 +284,7 @@ type MockIUserRepository_FindAll_Call struct {
 // FindAll is a helper method to define mock.On call
 //   - ctx context.Context
 //   - param domain.FindAllUsersParam
-func (_e *MockIUserRepository_Expecter) FindAll(ctx interface{}, param interface{}) *MockIUserRepository_FindAll_Call {
+func (_e *MockIUserRepository_Expecter) FindAll(ctx any, param any) *MockIUserRepository_FindAll_Call {
 	return &MockIUserRepository_FindAll_Call{Call: _e.mock.On("FindAll", ctx, param)}
 }
 
@@ -347,7 +353,7 @@ type MockIUserRepository_Update_Call struct {
 //   - ctx context.Context
 //   - id int64
 //   - param domain.UpdateUserParam
-func (_e *MockIUserRepository_Expecter) Update(ctx interface{}, id interface{}, param interface{}) *MockIUserRepository_Update_Call {
+func (_e *MockIUserRepository_Expecter) Update(ctx any, id any, param any) *MockIUserRepository_Update_Call {
 	return &MockIUserRepository_Update_Call{Call: _e.mock.On("Update", ctx, id, param)}
 }
 

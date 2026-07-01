@@ -53,7 +53,7 @@ type MockIWebRenderer_Render_Call struct {
 //   - w http.ResponseWriter
 //   - name string
 //   - data any
-func (_e *MockIWebRenderer_Expecter) Render(w interface{}, name interface{}, data interface{}) *MockIWebRenderer_Render_Call {
+func (_e *MockIWebRenderer_Expecter) Render(w any, name any, data any) *MockIWebRenderer_Render_Call {
 	return &MockIWebRenderer_Render_Call{Call: _e.mock.On("Render", w, name, data)}
 }
 
@@ -106,7 +106,7 @@ type MockIWebRenderer_Render2_Call struct {
 //   - w http.ResponseWriter
 //   - name string
 //   - data map[string]any
-func (_e *MockIWebRenderer_Expecter) Render2(ctx interface{}, w interface{}, name interface{}, data interface{}) *MockIWebRenderer_Render2_Call {
+func (_e *MockIWebRenderer_Expecter) Render2(ctx any, w any, name any, data any) *MockIWebRenderer_Render2_Call {
 	return &MockIWebRenderer_Render2_Call{Call: _e.mock.On("Render2", ctx, w, name, data)}
 }
 

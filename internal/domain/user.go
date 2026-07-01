@@ -11,7 +11,7 @@ type User struct {
 	Base
 	Username string
 	Password string
-	Role     Role
+	RoleID   int64
 }
 
 type ctxKeyUser string
@@ -22,13 +22,6 @@ func UserFromContext(ctx context.Context) (*User, bool) {
 	user, ok := ctx.Value(UserCtxKey).(*User)
 	return user, ok
 }
-
-type Role string
-
-const (
-	RoleAdmin Role = "admin"
-	RoleUser  Role = "default"
-)
 
 type UpdateUserParam struct {
 	OldPassword string

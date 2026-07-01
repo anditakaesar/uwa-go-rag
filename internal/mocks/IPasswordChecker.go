@@ -69,7 +69,7 @@ type MockIPasswordChecker_CheckPassword_Call struct {
 // CheckPassword is a helper method to define mock.On call
 //   - password string
 //   - hash string
-func (_e *MockIPasswordChecker_Expecter) CheckPassword(password interface{}, hash interface{}) *MockIPasswordChecker_CheckPassword_Call {
+func (_e *MockIPasswordChecker_Expecter) CheckPassword(password any, hash any) *MockIPasswordChecker_CheckPassword_Call {
 	return &MockIPasswordChecker_CheckPassword_Call{Call: _e.mock.On("CheckPassword", password, hash)}
 }
 
@@ -134,7 +134,7 @@ type MockIPasswordChecker_HashPassword_Call struct {
 
 // HashPassword is a helper method to define mock.On call
 //   - password string
-func (_e *MockIPasswordChecker_Expecter) HashPassword(password interface{}) *MockIPasswordChecker_HashPassword_Call {
+func (_e *MockIPasswordChecker_Expecter) HashPassword(password any) *MockIPasswordChecker_HashPassword_Call {
 	return &MockIPasswordChecker_HashPassword_Call{Call: _e.mock.On("HashPassword", password)}
 }
 

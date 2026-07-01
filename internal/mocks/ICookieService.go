@@ -74,7 +74,7 @@ type MockICookieService_Get_Call struct {
 // Get is a helper method to define mock.On call
 //   - r *http.Request
 //   - name string
-func (_e *MockICookieService_Expecter) Get(r interface{}, name interface{}) *MockICookieService_Get_Call {
+func (_e *MockICookieService_Expecter) Get(r any, name any) *MockICookieService_Get_Call {
 	return &MockICookieService_Get_Call{Call: _e.mock.On("Get", r, name)}
 }
 
@@ -132,7 +132,7 @@ type MockICookieService_Save_Call struct {
 //   - ses *sessions.Session
 //   - r *http.Request
 //   - w http.ResponseWriter
-func (_e *MockICookieService_Expecter) Save(ses interface{}, r interface{}, w interface{}) *MockICookieService_Save_Call {
+func (_e *MockICookieService_Expecter) Save(ses any, r any, w any) *MockICookieService_Save_Call {
 	return &MockICookieService_Save_Call{Call: _e.mock.On("Save", ses, r, w)}
 }
 

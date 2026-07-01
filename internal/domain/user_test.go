@@ -18,7 +18,7 @@ func TestUserFromContext(test *testing.T) {
 				ID: 1,
 			},
 			Username: "stored user",
-			Role:     domain.RoleAdmin,
+			RoleID:   int64(1),
 		}
 		newCtx := context.WithValue(
 			ctx,
@@ -29,7 +29,7 @@ func TestUserFromContext(test *testing.T) {
 		got, ok := domain.UserFromContext(newCtx)
 		assert.Equal(t, true, ok)
 		assert.Equal(t, int64(1), got.Base.ID)
-		assert.Equal(t, domain.RoleAdmin, got.Role)
+		assert.Equal(t, int64(1), got.RoleID)
 	})
 }
 

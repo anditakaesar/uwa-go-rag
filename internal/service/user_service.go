@@ -46,14 +46,14 @@ func (s *UserService) CreateUser(ctx context.Context, user domain.User) (*domain
 	return s.userRepo.CreateUser(ctx, user)
 }
 
-func (s *UserService) CreateUserAdmin(ctx context.Context, user domain.User) (*domain.User, error) {
+func (s *UserService) CreateUserWithRole(ctx context.Context, user domain.User, role string) (*domain.User, error) {
 	hash, err := s.passChecker.HashPassword(user.Password)
 	if err != nil {
 		return nil, err
 	}
 
 	user.Password = hash
-	return s.userRepo.CreateUserAdmin(ctx, user)
+	return s.userRepo.CreateUserWithRole(ctx, user, role)
 }
 
 func (s *UserService) AuthenticateUser(ctx context.Context, username string, password string) (*domain.User, error) {
