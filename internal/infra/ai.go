@@ -72,7 +72,7 @@ func (b *AIClient) SendTextForEmbedding(ctx context.Context, text string) ([]flo
 		return nil, err
 	}
 
-	if len(resp.Data) == 0 {
+	if len(resp.Data) > 0 {
 		return resp.Data[0].Embedding, nil
 	}
 

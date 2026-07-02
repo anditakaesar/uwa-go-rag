@@ -66,9 +66,9 @@ func (r *RoleRepository) FetchRoleByParam(ctx context.Context, param domain.Fetc
 		argCount++
 	}
 
-	if param.Username != nil {
-		fmt.Fprintf(&qb, "AND username = $%d", argCount)
-		args = append(args, *param.Username)
+	if param.Name != nil {
+		fmt.Fprintf(&qb, "AND name = $%d", argCount)
+		args = append(args, *param.Name)
 		argCount++
 	}
 

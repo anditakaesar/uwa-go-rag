@@ -19,6 +19,6 @@ type Role struct {
 }
 
 type FetchRoleParam struct {
-	ID       *int64
-	Username *string
+	ID   *int64
+	Name *string
 }

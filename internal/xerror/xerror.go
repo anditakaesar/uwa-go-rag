@@ -57,6 +57,14 @@ func (e *ErrorDecodingRequest) Error() string {
 	return fmt.Sprintf("error while decoding request: %v", e.Err)
 }
 
+type ErrorAuditLogRecordValidation struct {
+	Message string
+}
+
+func (e *ErrorAuditLogRecordValidation) Error() string {
+	return e.Message
+}
+
 // DefineStatusCode maps custom error types to HTTP Status Codes
 func DefineStatusCode(err error) int {
 	if err == nil {

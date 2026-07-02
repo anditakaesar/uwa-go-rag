@@ -32,7 +32,7 @@ func (m *ServiceManager) Start(ctx context.Context) error {
 		s := svc
 		g.Go(func() error {
 			xlog.Logger.Info(fmt.Sprintf("Starting Service: %s", s.Name()))
-			return svc.Run(gCtx)
+			return s.Run(gCtx)
 		})
 	}
 
