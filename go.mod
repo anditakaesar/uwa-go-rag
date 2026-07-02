@@ -3,7 +3,7 @@ module github.com/anditakaesar/uwa-go-rag
 go 1.25.5
 
 require (
-	github.com/go-chi/chi/v5 v5.2.4
+	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
 	github.com/gorilla/csrf v1.7.3
 	github.com/gorilla/sessions v1.4.0
@@ -13,7 +13,6 @@ require (
 	github.com/riverqueue/river v0.31.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.31.0
 	github.com/stretchr/testify v1.11.1
-	github.com/yuin/goldmark v1.7.16
 	golang.org/x/crypto v0.48.0
 )
 
