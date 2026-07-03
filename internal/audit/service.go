@@ -17,6 +17,9 @@ const AuditKey auditCtxKey = "AUDIT_KEY"
 type AuditAction string
 
 // User.Create, User.Login, etc
+const (
+	USER_LOGIN AuditAction = "user.login"
+)
 
 type Repository interface {
 	Insert(ctx context.Context, auditlog AuditLog) error
@@ -79,17 +82,17 @@ func (auditlog *AuditLog) Validate() error {
 	return nil
 }
 
-type auditRecorder struct {
+type AuditRecorder struct {
 	repo Repository
 }
 
-func NewAuditLogRecorder(repo Repository) Recorder {
-	return &auditRecorder{
+func NewAuditLogRecorder(repo Repository) *AuditRecorder {
+	return &AuditRecorder{
 		repo: repo,
 	}
 }
 
-func (r *auditRecorder) Record(ctx context.Context, auditlog AuditLog) error {
+func (r *AuditRecorder) Record(ctx context.Context, auditlog AuditLog) error {
 	if err := auditlog.Validate(); err != nil {
 		return err
 	}

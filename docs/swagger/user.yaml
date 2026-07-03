@@ -1,7 +1,7 @@
-openapi: '3.0.3'
+openapi: "3.0.3"
 info:
   title: User API
-  version: '1.0'
+  version: "1.0"
 servers:
   - url: http://localhost:3000/api
 paths:
@@ -15,17 +15,56 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateUserRequest'
+              $ref: "#/components/schemas/CreateUserRequest"
       responses:
-        '201':
+        "201":
           description: CREATED
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SingleUserResponse'
+                $ref: "#/components/schemas/SingleUserResponse"
+
+  /login:
+    post:
+      summary: Login User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            title:
+              type: string
+            message:
+              type: string
     CreateUserRequest:
       type: object
       required:
@@ -60,10 +99,30 @@ components:
             - "createdAt"
       required:
         - "data"
-        
-  
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "user1"
+        password:
+          type: string
+          format: password
+          example: "mypassword123"
+    LoginResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+
   securitySchemes:
-    BearerAuth:            # Logical name for the scheme
+    BearerAuth: # Logical name for the scheme
       type: http
       scheme: bearer
-      bearerFormat: JWT    # Optional, tells the client it's a JWT
+      bearerFormat: JWT # Optional, tells the client it's a JWT

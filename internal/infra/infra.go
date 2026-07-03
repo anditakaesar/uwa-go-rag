@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/audit"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/repo"
 	"github.com/anditakaesar/uwa-go-rag/internal/service"
@@ -23,11 +24,13 @@ type Services struct {
 	WebRenderer   *web.Renderer
 	ChatService   *service.ChatService
 	RiverClient   *river.Client[pgx.Tx]
+	AuditService  *audit.AuditRecorder
 }
 
 func NewInfra(pool *pgxpool.Pool) *Services {
 	userRepo := repo.NewUserRepository(pool)
 	ragRepo := repo.NewRagRepository(pool)
+	auditRepo := repo.NewAuditRepository(pool)
 	uow := NewUnitOfWork(pool)
 	riverQueue := NewRiverQueue()
 	aiClient := NewAIClient(AIClientDep{
@@ -50,6 +53,7 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 		UploadDir: env.Values.UploadDir,
 	})
 	ragSvc := service.NewRagService()
+	auditSvc := audit.NewAuditLogRecorder(auditRepo)
 
 	// queue workers
 	workers, err := worker.RegisterWorkers(worker.RegisterWorkerDep{
@@ -79,5 +83,6 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 		WebRenderer:   web.NewRenderer(),
 		ChatService:   chatSvc,
 		RiverClient:   riverClient,
+		AuditService:  auditSvc,
 	}
 }

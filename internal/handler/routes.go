@@ -119,3 +119,19 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 		}
 	}
 }
+
+func SetupLoginApiRoutes(router chi.Router, h *LoginApi) {
+	endpoints := []Endpoint{
+		{
+			HttpMethod: http.MethodPost,
+			Path:       "/login",
+			Handler:    MakeHandler(h.ApiLogin),
+		},
+	}
+
+	router.Group(func(r chi.Router) {
+		for _, endpoint := range endpoints {
+			r.MethodFunc(endpoint.HttpMethod, endpoint.Path, endpoint.Handler)
+		}
+	})
+}
