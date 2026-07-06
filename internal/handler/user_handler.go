@@ -88,8 +88,12 @@ func (h *UserApi) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 func (h *UserApi) FetchUsers(w http.ResponseWriter, r *http.Request) error {
 	pagination := parsePagination(r)
 
+	var req FindUserRequest
+	req.parseParam(r)
+
 	users, param, err := h.UserService.FindAll(r.Context(), domain.FindAllUsersParam{
-		Pagination: pagination,
+		UsernameLike: req.UsernameLike,
+		Pagination:   pagination,
 	})
 	if err != nil {
 		return err

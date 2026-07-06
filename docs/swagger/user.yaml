@@ -27,6 +27,23 @@ paths:
       summary: Fetch users
       security:
         - BearerAuth: []
+      parameters:
+        - in: query
+          name: username
+          schema:
+            type: string
+          description: find username like
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: limit the size (default 10)
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: page number (default 1)
+
       responses:
         "200":
           description: OK

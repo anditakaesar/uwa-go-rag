@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"net/http"
 	"strings"
 	"time"
 
@@ -72,5 +73,17 @@ func (req *UpdateUserRequest) ToDomainParam() *domain.UpdateUserParam {
 	return &domain.UpdateUserParam{
 		OldPassword: req.OldPassword,
 		Password:    &req.Password,
+	}
+}
+
+type FindUserRequest struct {
+	UsernameLike *string `json:"usernamelike"`
+}
+
+func (req *FindUserRequest) parseParam(r *http.Request) {
+	q := r.URL.Query()
+	username := q.Get("username")
+	if strings.TrimSpace(username) != "" {
+		req.UsernameLike = &username
 	}
 }

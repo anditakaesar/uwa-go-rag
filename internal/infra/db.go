@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"strings"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
@@ -15,8 +17,32 @@ type database struct {
 	db *pgxpool.Pool
 }
 
+type queryTracer struct {
+	log *slog.Logger
+}
+
+func (tracer *queryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
+	if !strings.Contains(data.SQL, "river_") {
+		tracer.log.Debug(fmt.Sprintf("Executing command sql: %s, args: %v+", data.SQL, data.Args))
+	}
+
+	return ctx
+}
+
+func (tracer *queryTracer) TraceQueryEnd(_ context.Context, _ *pgx.Conn, _ pgx.TraceQueryEndData) {
+}
+
 func NewDatabase(ctx context.Context, dbURL string) (*database, error) {
-	pool, err := pgxpool.New(ctx, dbURL)
+	config, err := pgxpool.ParseConfig(dbURL)
+	if err != nil {
+		return nil, err
+	}
+
+	config.ConnConfig.Tracer = &queryTracer{
+		log: xlog.Logger,
+	}
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, err
 	}

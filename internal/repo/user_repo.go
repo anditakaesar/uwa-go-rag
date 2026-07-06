@@ -143,16 +143,40 @@ func (r *UserRepository) Update(ctx context.Context, id int64, param domain.Upda
 }
 
 func (r *UserRepository) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, error) {
-	query := `
+	qb := strings.Builder{}
+
+	var args []any
+	fmt.Fprintf(&qb, `
 		SELECT %s
         FROM users
-        WHERE deleted_at IS NULL
-		LIMIT $1 OFFSET $2`
+        WHERE deleted_at IS NULL`, userColumns)
 
-	query = fmt.Sprintf(query, userColumns)
+	argCount := 1
 
-	rows, err := r.GetExecutor(ctx).Query(ctx,
-		query, param.Pagination.Size, param.Pagination.GetOffset())
+	if param.UsernameLike != nil {
+		fmt.Fprintf(&qb, " AND username like $%d", argCount)
+		args = append(args, fmt.Sprintf("%%%s%%", *param.UsernameLike))
+		argCount++
+	}
+
+	if param.Pagination.Size > 0 {
+		fmt.Fprintf(&qb, " LIMIT $%d", argCount)
+		args = append(args, param.Pagination.Size)
+		argCount++
+	}
+
+	if param.Pagination.Page > 0 {
+		fmt.Fprintf(&qb, " OFFSET $%d", argCount)
+		args = append(args, param.Pagination.GetOffset())
+		argCount++
+	}
+
+	if argCount == 1 {
+		return nil, &xerror.ErrorValidation{Message: "find users param required"}
+	}
+
+	query := qb.String()
+	rows, err := r.GetExecutor(ctx).Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

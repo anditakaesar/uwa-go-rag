@@ -35,7 +35,8 @@ type FetchUserParam struct {
 }
 
 type FindAllUsersParam struct {
-	Pagination common.Pagination `json:"pagination"`
+	UsernameLike *string           `json:"usernamelike"`
+	Pagination   common.Pagination `json:"pagination"`
 }
 
 func (param *FindAllUsersParam) Normalize() {
