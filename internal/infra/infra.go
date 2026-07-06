@@ -31,6 +31,7 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 	userRepo := repo.NewUserRepository(pool)
 	ragRepo := repo.NewRagRepository(pool)
 	auditRepo := repo.NewAuditRepository(pool)
+	rolePermissionRepo := repo.NewRolePermissionRepo(pool)
 	uow := NewUnitOfWork(pool)
 	riverQueue := NewRiverQueue()
 	aiClient := NewAIClient(AIClientDep{
@@ -43,7 +44,10 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 		PassChecker: NewPasswordHelper(env.Values.PassSecret),
 		UOW:         uow,
 	})
-	jwtSvc := NewJWTService(env.Values.JWTSecret)
+	jwtSvc := NewJWTService(JWTServiceDep{
+		Secret:             []byte(env.Values.JWTSecret),
+		RolePermissionRepo: rolePermissionRepo,
+	})
 	cookieService := NewCookieService(env.Values.IsDevelopment(), env.Values.CookieSecret)
 	fileSvc := service.NewFileService(env.Values.UploadDir, env.UPLOAD_ALLOWED_TYPES)
 	chatSvc := service.NewChatService(service.ChatServiceDep{

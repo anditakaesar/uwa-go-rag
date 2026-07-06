@@ -2,19 +2,20 @@ package domain
 
 import (
 	"context"
-	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Identity struct {
-	UserID int64
-	Method string // "session" | "token" | "jwt"
+	UserID     int64
+	Permission []string
+	Method     string // "session" | "token" | "jwt"
 }
 
 type UserClaims struct {
-	UserID int64
-	Exp    time.Time
+	Permissions []string
+	jwt.RegisteredClaims
 }
 
 type ctxKey string

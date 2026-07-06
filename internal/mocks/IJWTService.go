@@ -5,6 +5,8 @@
 package mocks
 
 import (
+	"context"
+
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -37,8 +39,8 @@ func (_m *MockIJWTService) EXPECT() *MockIJWTService_Expecter {
 }
 
 // IssueJWT provides a mock function for the type MockIJWTService
-func (_mock *MockIJWTService) IssueJWT(userID int64, secret []byte) (string, error) {
-	ret := _mock.Called(userID, secret)
+func (_mock *MockIJWTService) IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error) {
+	ret := _mock.Called(ctx, userID, secret)
 
 	if len(ret) == 0 {
 		panic("no return value specified for IssueJWT")
@@ -46,16 +48,16 @@ func (_mock *MockIJWTService) IssueJWT(userID int64, secret []byte) (string, err
 
 	var r0 string
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(int64, []byte) (string, error)); ok {
-		return returnFunc(userID, secret)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, []byte) (string, error)); ok {
+		return returnFunc(ctx, userID, secret)
 	}
-	if returnFunc, ok := ret.Get(0).(func(int64, []byte) string); ok {
-		r0 = returnFunc(userID, secret)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, []byte) string); ok {
+		r0 = returnFunc(ctx, userID, secret)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
-	if returnFunc, ok := ret.Get(1).(func(int64, []byte) error); ok {
-		r1 = returnFunc(userID, secret)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, []byte) error); ok {
+		r1 = returnFunc(ctx, userID, secret)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -68,25 +70,31 @@ type MockIJWTService_IssueJWT_Call struct {
 }
 
 // IssueJWT is a helper method to define mock.On call
+//   - ctx context.Context
 //   - userID int64
 //   - secret []byte
-func (_e *MockIJWTService_Expecter) IssueJWT(userID any, secret any) *MockIJWTService_IssueJWT_Call {
-	return &MockIJWTService_IssueJWT_Call{Call: _e.mock.On("IssueJWT", userID, secret)}
+func (_e *MockIJWTService_Expecter) IssueJWT(ctx any, userID any, secret any) *MockIJWTService_IssueJWT_Call {
+	return &MockIJWTService_IssueJWT_Call{Call: _e.mock.On("IssueJWT", ctx, userID, secret)}
 }
 
-func (_c *MockIJWTService_IssueJWT_Call) Run(run func(userID int64, secret []byte)) *MockIJWTService_IssueJWT_Call {
+func (_c *MockIJWTService_IssueJWT_Call) Run(run func(ctx context.Context, userID int64, secret []byte)) *MockIJWTService_IssueJWT_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 int64
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(int64)
+			arg0 = args[0].(context.Context)
 		}
-		var arg1 []byte
+		var arg1 int64
 		if args[1] != nil {
-			arg1 = args[1].([]byte)
+			arg1 = args[1].(int64)
+		}
+		var arg2 []byte
+		if args[2] != nil {
+			arg2 = args[2].([]byte)
 		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -97,7 +105,7 @@ func (_c *MockIJWTService_IssueJWT_Call) Return(s string, err error) *MockIJWTSe
 	return _c
 }
 
-func (_c *MockIJWTService_IssueJWT_Call) RunAndReturn(run func(userID int64, secret []byte) (string, error)) *MockIJWTService_IssueJWT_Call {
+func (_c *MockIJWTService_IssueJWT_Call) RunAndReturn(run func(ctx context.Context, userID int64, secret []byte) (string, error)) *MockIJWTService_IssueJWT_Call {
 	_c.Call.Return(run)
 	return _c
 }

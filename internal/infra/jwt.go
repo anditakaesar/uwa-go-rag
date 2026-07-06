@@ -1,7 +1,9 @@
 package infra
 
 import (
+	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
@@ -9,17 +11,25 @@ import (
 )
 
 type JWTService struct {
-	secret []byte
+	secret             []byte
+	rolePermissionRepo IInfraRolePermissionRepo
 }
 
-func NewJWTService(secret string) *JWTService {
+type JWTServiceDep struct {
+	Secret             []byte
+	RolePermissionRepo IInfraRolePermissionRepo
+}
+
+func NewJWTService(dep JWTServiceDep) *JWTService {
 	return &JWTService{
-		secret: []byte(secret),
+		secret:             dep.Secret,
+		rolePermissionRepo: dep.RolePermissionRepo,
 	}
 }
 
 func (s *JWTService) Verify(token string) (domain.UserClaims, error) {
-	parsed, err := jwt.Parse(token, func(t *jwt.Token) (any, error) {
+	claims := &domain.UserClaims{}
+	parsed, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid signing method")
 		}
@@ -29,18 +39,24 @@ func (s *JWTService) Verify(token string) (domain.UserClaims, error) {
 		return domain.UserClaims{}, errors.New("invalid token")
 	}
 
-	claims := parsed.Claims.(jwt.MapClaims)
-
-	userID := int64(claims["sub"].(float64))
-	exp := time.Unix(int64(claims["exp"].(float64)), 0)
-
-	return domain.UserClaims{UserID: int64(userID), Exp: exp}, nil
+	return *claims, nil
 }
 
-func (s *JWTService) IssueJWT(userID int64, secret []byte) (string, error) {
-	claims := jwt.MapClaims{
-		"sub": userID,
-		"exp": time.Now().Add(15 * time.Minute).Unix(),
+func (s *JWTService) IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error) {
+	permissions, err := s.rolePermissionRepo.GetPermissionsByUser(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+
+	claims := domain.UserClaims{
+		Permissions: domain.ListPermissionName(permissions),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: strconv.FormatInt(userID, 10),
+			ExpiresAt: jwt.NewNumericDate(
+				time.Now().Add(15 * time.Minute),
+			),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

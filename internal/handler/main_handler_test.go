@@ -292,7 +292,7 @@ func TestMainHandler_DoLogin(test *testing.T) {
 		}
 		m.cookieSvc.On("Get", m.anything, "auth_session").Return(session, nil).Once()
 
-		m.jwtSvc.On("IssueJWT", int64(1), m.anything).Return("fake-jwt", nil).Once()
+		m.jwtSvc.On("IssueJWT", m.anything, int64(1), m.anything).Return("fake-jwt", nil).Once()
 
 		session.Values["user_id"] = 1
 		session.Values["username"] = "registereduser"
@@ -331,7 +331,7 @@ func TestMainHandler_DoLogin(test *testing.T) {
 		}
 		m.cookieSvc.On("Get", m.anything, "auth_session").Return(session, nil).Once()
 
-		m.jwtSvc.On("IssueJWT", int64(1), m.anything).Return("fake-jwt", nil).Once()
+		m.jwtSvc.On("IssueJWT", m.anything, int64(1), m.anything).Return("fake-jwt", nil).Once()
 
 		session.Values["user_id"] = 1
 		session.Values["username"] = "registereduser"
@@ -368,7 +368,7 @@ func TestMainHandler_DoLogin(test *testing.T) {
 		}
 		m.cookieSvc.On("Get", m.anything, "auth_session").Return(session, nil).Once()
 
-		m.jwtSvc.On("IssueJWT", int64(1), m.anything).Return("fake-jwt", errors.New("error_IssueJWt")).Once()
+		m.jwtSvc.On("IssueJWT", m.anything, int64(1), m.anything).Return("fake-jwt", errors.New("error_IssueJWt")).Once()
 
 		form := url.Values{"username": {"registereduser"}, "password": {"password123"}}
 		req := httptest.NewRequest("POST", "/login", strings.NewReader(form.Encode()))

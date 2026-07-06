@@ -54,7 +54,7 @@ func (h *LoginApi) ApiLogin(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorSession{Message: "username and password didn't match"}
 	}
 
-	jwtToken, err := h.JWTService.IssueJWT(user.ID, []byte(env.Values.JWTSecret))
+	jwtToken, err := h.JWTService.IssueJWT(r.Context(), user.ID, []byte(env.Values.JWTSecret))
 	if err != nil {
 		return &xerror.ErrorToken{Message: err.Error()}
 	}

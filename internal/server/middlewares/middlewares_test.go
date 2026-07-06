@@ -3,6 +3,7 @@ package middlewares_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/mocks"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
@@ -145,7 +147,11 @@ func TestResolveAuth(test *testing.T) {
 
 		// Mock JWT verification
 		expectedID := int64(99)
-		m.jwtSvc.On("Verify", "valid-token").Return(domain.UserClaims{UserID: expectedID}, nil).Once()
+		m.jwtSvc.On("Verify", "valid-token").Return(domain.UserClaims{
+			RegisteredClaims: jwt.RegisteredClaims{
+				Subject: fmt.Sprint(expectedID),
+			},
+		}, nil).Once()
 
 		nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			identity := r.Context().Value(domain.IdentityKey).(domain.Identity)

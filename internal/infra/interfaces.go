@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
@@ -14,5 +15,5 @@ type ICookieService interface {
 
 type IJWTService interface {
 	Verify(token string) (domain.UserClaims, error)
-	IssueJWT(userID int64, secret []byte) (string, error)
+	IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error)
 }

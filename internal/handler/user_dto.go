@@ -28,15 +28,15 @@ func (req *CreateUserRequest) Validate() error {
 type UserResponse struct {
 	ID        int64     `json:"id"`
 	Username  string    `json:"username"`
-	Role      string    `json:"role"`
+	RoleID    int64     `json:"roleID"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
 func UserDomainToResponse(user *domain.User) UserResponse {
 	return UserResponse{
-		ID:       user.ID,
-		Username: user.Username,
-		//Role:      string(user.Role),
+		ID:        user.ID,
+		Username:  user.Username,
+		RoleID:    user.RoleID,
 		CreatedAt: user.CreatedAt,
 	}
 }

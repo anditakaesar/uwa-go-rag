@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
@@ -61,14 +63,15 @@ func ResolveAuth(
 			}
 
 			auth := r.Header.Get("Authorization")
-			if strings.HasPrefix(auth, "Bearer ") {
-				tokenStr := strings.TrimPrefix(auth, "Bearer ")
+			tokenStr, found := strings.CutPrefix(auth, "Bearer ")
+			if found {
 				claims, err := jwtService.Verify(tokenStr)
 				if err == nil {
+					userID, _ := strconv.ParseInt(claims.Subject, 10, 64)
 					ctx := context.WithValue(
 						r.Context(),
 						domain.IdentityKey,
-						domain.Identity{UserID: claims.UserID, Method: "jwt"},
+						domain.Identity{UserID: userID, Permission: claims.Permissions, Method: "jwt"},
 					)
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return
@@ -105,24 +108,24 @@ func ResolveUser(userService service.IUserService) Middleware {
 	}
 }
 
-// func RequireRole(roles []domain.Role) Middleware {
-// 	return func(next http.Handler) http.Handler {
-// 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 			user, ok := domain.UserFromContext(r.Context())
-// 			if !ok {
-// 				http.Error(w, "unauthorized", http.StatusUnauthorized)
-// 				return
-// 			}
+func RequirePermission(permission string) Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			user, ok := domain.IdentityFromContext(r.Context())
+			if !ok {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
 
-// 			if user != nil && !slices.Contains(roles, user.Role) {
-// 				http.Error(w, "unauthorized", http.StatusUnauthorized)
-// 				return
-// 			}
+			if !slices.Contains(user.Permission, permission) {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
 
-// 			next.ServeHTTP(w, r)
-// 		})
-// 	}
-// }
+			next.ServeHTTP(w, r)
+		})
+	}
+}
 
 func RequireAuth() Middleware {
 	return func(next http.Handler) http.Handler {

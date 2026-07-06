@@ -125,7 +125,7 @@ func (h *MainHandler) DoLogin(w http.ResponseWriter, r *http.Request) error {
 	session.Values["user_id"] = user.ID
 	session.Values["username"] = user.Username
 
-	jwtToken, err := h.JWTService.IssueJWT(user.ID, []byte(env.Values.JWTSecret))
+	jwtToken, err := h.JWTService.IssueJWT(r.Context(), user.ID, []byte(env.Values.JWTSecret))
 	if err != nil {
 		return &xerror.ErrorToken{Message: err.Error()}
 	}

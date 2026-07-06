@@ -98,8 +98,7 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 			},
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
-				//middlewares.RequireRole([]domain.Role{domain.RoleAdmin}),
-			},
+				middlewares.RequirePermission("users.read")},
 		},
 		{
 			Endpoint: Endpoint{
