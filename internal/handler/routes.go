@@ -87,7 +87,7 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 			},
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
-				//middlewares.RequireRole([]domain.Role{domain.RoleAdmin}),
+				middlewares.RequirePermission("users.create"),
 			},
 		},
 		{
@@ -109,6 +109,27 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
 			},
+		},
+	}
+
+	for _, e := range protectedEndpoints {
+		if len(e.Middlewares) > 0 {
+			router.With(e.Middlewares...).MethodFunc(e.HttpMethod, e.Path, e.Handler)
+		}
+	}
+}
+
+func SetupRoleApiRoutes(router chi.Router, h *RoleApi) {
+	protectedEndpoints := []EndpointWithMiddleware{
+		{
+			Endpoint: Endpoint{
+				HttpMethod: http.MethodGet,
+				Path:       "/roles",
+				Handler:    MakeHandler(h.FetchRoles),
+			},
+			Middlewares: []func(http.Handler) http.Handler{
+				middlewares.RequireAuth(),
+				middlewares.RequirePermission("roles.read")},
 		},
 	}
 

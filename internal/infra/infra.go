@@ -23,6 +23,7 @@ type Services struct {
 	FileService   *service.FileService
 	WebRenderer   *web.Renderer
 	ChatService   *service.ChatService
+	RoleService   *service.RoleService
 	RiverClient   *river.Client[pgx.Tx]
 	AuditService  *audit.AuditRecorder
 }
@@ -31,6 +32,7 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 	userRepo := repo.NewUserRepository(pool)
 	ragRepo := repo.NewRagRepository(pool)
 	auditRepo := repo.NewAuditRepository(pool)
+	roleRepo := repo.NewRoleRepository(pool)
 	rolePermissionRepo := repo.NewRolePermissionRepo(pool)
 	uow := NewUnitOfWork(pool)
 	riverQueue := NewRiverQueue()
@@ -58,6 +60,9 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 	})
 	ragSvc := service.NewRagService()
 	auditSvc := audit.NewAuditLogRecorder(auditRepo)
+	roleSvc := service.NewRoleService(service.RoleServiceDep{
+		RoleRepo: roleRepo,
+	})
 
 	// queue workers
 	workers, err := worker.RegisterWorkers(worker.RegisterWorkerDep{
@@ -86,6 +91,7 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 		FileService:   fileSvc,
 		WebRenderer:   web.NewRenderer(),
 		ChatService:   chatSvc,
+		RoleService:   roleSvc,
 		RiverClient:   riverClient,
 		AuditService:  auditSvc,
 	}

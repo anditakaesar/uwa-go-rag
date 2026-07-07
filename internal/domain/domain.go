@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
+)
 
 type Base struct {
 	ID        int64
@@ -21,6 +25,15 @@ type Role struct {
 type FetchRoleParam struct {
 	ID   *int64
 	Name *string
+}
+
+type FetchAllRoleParam struct {
+	NameLike   *string           `json:"namelike"`
+	Pagination common.Pagination `json:"pagination"`
+}
+
+func (param *FetchAllRoleParam) Normalize() {
+	param.Pagination.Normalize()
 }
 
 type Permission struct {

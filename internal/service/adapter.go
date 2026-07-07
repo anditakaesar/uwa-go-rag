@@ -19,6 +19,11 @@ type IRagRepository interface {
 	//CreateRagFile(ctx context.Context, ragFile domain.RagFile) (*domain.RagFile, error)
 }
 
+type IRoleRepository interface {
+	FetchRoleByParam(ctx context.Context, param domain.FetchRoleParam) (*domain.Role, error)
+	FetchAll(ctx context.Context, param domain.FetchAllRoleParam) ([]domain.Role, error)
+}
+
 type IUnitOfWork interface {
 	Do(ctx context.Context, fn func(ctx context.Context) error) error
 }

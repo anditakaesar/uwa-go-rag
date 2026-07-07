@@ -7,6 +7,8 @@ servers:
 paths:
   /users:
     post:
+      tags:
+        - User Management
       summary: Create a new user
       security:
         - BearerAuth: []
@@ -23,7 +25,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SingleUserResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     get:
+      tags:
+        - User Management
       summary: Fetch users
       security:
         - BearerAuth: []
@@ -43,17 +59,30 @@ paths:
           schema:
             type: integer
           description: page number (default 1)
-
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SingleUserResponse"
+                $ref: "#/components/schemas/FetchUserResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /login:
     post:
+      tags:
+        - Authentication
       summary: Login User
       requestBody:
         required: true
@@ -68,6 +97,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /roles:
+    get:
+      tags:
+        - Role Management
+      summary: Fetch roles
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: find name like
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: limit the size (default 10)
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: page number (default 1)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FetchRoleResponse"
         "400":
           description: Bad Request
           content:
@@ -125,8 +197,62 @@ components:
             - "username"
             - "role"
             - "createdAt"
+    FetchUserResponse:
+      type: "object"
+      properties:
+        data:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              id:
+                type: "integer"
+              username:
+                type: "string"
+              role:
+                type: "string"
+              createdAt:
+                type: "string"
+        meta:
+          type: "object"
+          properties:
+            usernamelike:
+              type: "string"
+              nullable: true
+            pagination:
+              type: "object"
+              properties:
+                page:
+                  type: "integer"
+                size:
+                  type: "integer"
       required:
         - "data"
+    FetchRoleResponse:
+      type: "object"
+      properties:
+        data:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              id:
+                type: "integer"
+              name:
+                type: "string"
+        meta:
+          type: "object"
+          properties:
+            namelike:
+              type: "string"
+              nullable: true
+            pagination:
+              type: "object"
+              properties:
+                page:
+                  type: "integer"
+                size:
+                  type: "integer"
     LoginRequest:
       type: object
       required:

@@ -56,7 +56,7 @@ func (r *RoleRepository) FetchRoleByParam(ctx context.Context, param domain.Fetc
 	var args []any
 	fmt.Fprintf(&qb, `
 		SELECT %s
-		FROM roles WHERE 1=1 
+		FROM roles WHERE 1=1
 	`, roleColumns)
 
 	argCount := 1
@@ -78,4 +78,54 @@ func (r *RoleRepository) FetchRoleByParam(ctx context.Context, param domain.Fetc
 
 	row := r.GetExecutor(ctx).QueryRow(ctx, qb.String(), args...)
 	return scanRole(row)
+}
+
+func (r *RoleRepository) FetchAll(ctx context.Context, param domain.FetchAllRoleParam) ([]domain.Role, error) {
+	qb := strings.Builder{}
+	var args []any
+	fmt.Fprintf(&qb, `
+		SELECT %s
+		FROM roles WHERE 1=1
+	`, roleColumns)
+
+	argCount := 1
+	if param.NameLike != nil {
+		fmt.Fprintf(&qb, "AND name like $%d", argCount)
+		args = append(args, fmt.Sprintf("%%%s%%", *param.NameLike))
+		argCount++
+	}
+
+	if param.Pagination.Size > 0 {
+		fmt.Fprintf(&qb, " LIMIT $%d", argCount)
+		args = append(args, param.Pagination.Size)
+		argCount++
+	}
+
+	if param.Pagination.Page > 0 {
+		fmt.Fprintf(&qb, " OFFSET $%d", argCount)
+		args = append(args, param.Pagination.GetOffset())
+		argCount++
+	}
+
+	if argCount == 1 {
+		return nil, &xerror.ErrorValidation{Message: "fetch role param required"}
+	}
+
+	rows, err := r.GetExecutor(ctx).Query(ctx, qb.String(), args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	roles := []domain.Role{}
+
+	for rows.Next() {
+		r, err := scanRole(rows)
+		if err != nil {
+			return nil, err
+		}
+		roles = append(roles, *r)
+	}
+
+	return roles, rows.Err()
 }
