@@ -28,6 +28,7 @@ func TestUserApi_CreateUser(test *testing.T) {
 		m.userSvc.On("CreateUser", m.anything, domain.User{
 			Username: "newuser",
 			Password: "newpassword",
+			RoleID:   int64(3),
 		}).Return(&domain.User{
 			Base: domain.Base{
 				ID: 1,
@@ -36,7 +37,7 @@ func TestUserApi_CreateUser(test *testing.T) {
 			RoleID:   int64(3),
 		}, nil).Once()
 
-		userReq := `{"username":"newuser","password":"newpassword"}`
+		userReq := `{"username":"newuser","password":"newpassword", "roleID": 3}`
 
 		req, err := http.NewRequest(http.MethodPost, "/api/users", bytes.NewBufferString(userReq))
 		assert.NoError(t, err)
@@ -60,9 +61,10 @@ func TestUserApi_CreateUser(test *testing.T) {
 		m.userSvc.On("CreateUser", m.anything, domain.User{
 			Username: "newuser",
 			Password: "newpassword",
+			RoleID:   int64(3),
 		}).Return(nil, errors.New("error_CreateUser")).Once()
 
-		userReq := `{"username":"newuser","password":"newpassword"}`
+		userReq := `{"username":"newuser","password":"newpassword", "roleID": 3}`
 
 		req, err := http.NewRequest(http.MethodPost, "/api/users", bytes.NewBufferString(userReq))
 		assert.NoError(t, err)

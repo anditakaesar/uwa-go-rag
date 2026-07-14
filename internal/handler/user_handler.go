@@ -41,6 +41,7 @@ func (h *UserApi) CreateUser(w http.ResponseWriter, r *http.Request) error {
 	user, err := h.UserService.CreateUser(r.Context(), domain.User{
 		Username: strings.TrimSpace(req.Username),
 		Password: req.Password,
+		RoleID:   req.RoleID,
 	})
 	if err != nil {
 		return err

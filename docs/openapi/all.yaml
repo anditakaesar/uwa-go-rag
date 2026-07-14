@@ -178,6 +178,9 @@ components:
           type: string
           format: password
           example: "examplepassword"
+        roleID:
+          type: integer
+          example: 12
     SingleUserResponse:
       type: "object"
       properties:
@@ -188,14 +191,14 @@ components:
               type: "integer"
             username:
               type: "string"
-            role:
-              type: "string"
+            roleID:
+              type: integer
             createdAt:
               type: "string"
           required:
             - "id"
             - "username"
-            - "role"
+            - "roleID"
             - "createdAt"
     FetchUserResponse:
       type: "object"

@@ -12,6 +12,7 @@ import (
 type CreateUserRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	RoleID   int64  `json:"roleID"`
 }
 
 func (req *CreateUserRequest) Validate() error {
@@ -21,6 +22,10 @@ func (req *CreateUserRequest) Validate() error {
 
 	if strings.TrimSpace(req.Password) == "" {
 		return &xerror.ErrorValidation{Message: "password is required"}
+	}
+
+	if req.RoleID <= 0 {
+		return &xerror.ErrorValidation{Message: "role id is required"}
 	}
 
 	return nil

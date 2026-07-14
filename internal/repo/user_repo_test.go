@@ -71,14 +71,15 @@ func TestUserRepository_CreateUser(test *testing.T) {
 	test.Parallel()
 
 	query := `
-			INSERT INTO users (username, password)
-			VALUES ($1, $2)
+			INSERT INTO users (username, password, role_id)
+			VALUES ($1, $2, $3)
 			RETURNING %s;
 		`
 	query = fmt.Sprintf(query, userColumns)
 	newUser := domain.User{
 		Username: "user1",
 		Password: "password1",
+		RoleID:   int64(3),
 	}
 
 	test.Run("success", func(t *testing.T) {
@@ -89,7 +90,7 @@ func TestUserRepository_CreateUser(test *testing.T) {
 		rows := m.mockDB.NewRows([]string{"id", "username", "password", "role_id", "created_at", "updated_at", "deleted_at"}).
 			AddRow(int64(1), newUser.Username, "pass", int64(1), m.now, nil, nil)
 		m.mockDB.ExpectQuery(regexp.QuoteMeta(query)).
-			WithArgs(newUser.Username, newUser.Password).
+			WithArgs(newUser.Username, newUser.Password, newUser.RoleID).
 			WillReturnRows(rows)
 
 		r := repo.NewUserRepository(m.mockDB)
@@ -107,7 +108,7 @@ func TestUserRepository_CreateUser(test *testing.T) {
 		defer m.mockDB.Close()
 
 		m.mockDB.ExpectQuery(regexp.QuoteMeta(query)).
-			WithArgs(newUser.Username, newUser.Password).
+			WithArgs(newUser.Username, newUser.Password, newUser.RoleID).
 			WillReturnError(errors.New("query_error"))
 
 		r := repo.NewUserRepository(m.mockDB)

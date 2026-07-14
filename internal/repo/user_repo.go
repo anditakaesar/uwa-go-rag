@@ -53,13 +53,13 @@ func scanUser(row pgx.Row) (*domain.User, error) {
 
 func (r *UserRepository) CreateUser(ctx context.Context, newUser domain.User) (*domain.User, error) {
 	query := `
-        INSERT INTO users (username, password)
-        VALUES ($1, $2)
+        INSERT INTO users (username, password, role_id)
+        VALUES ($1, $2, $3)
         RETURNING %s;
     `
 	query = fmt.Sprintf(query, userColumns)
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password)
+	row := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password, newUser.RoleID)
 	user, err := scanUser(row)
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func (r *UserRepository) Update(ctx context.Context, id int64, param domain.Upda
 	argCount := 1
 
 	if param.Password != nil {
-		qb.WriteString(fmt.Sprintf("password = $%d, ", argCount))
+		fmt.Fprintf(&qb, "password = $%d, ", argCount)
 		args = append(args, *param.Password)
 		argCount++
 	}
