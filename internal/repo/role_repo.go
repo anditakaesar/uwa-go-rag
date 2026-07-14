@@ -8,6 +8,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
+	"github.com/henvic/pgq"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -80,45 +81,39 @@ func (r *RoleRepository) FetchRoleByParam(ctx context.Context, param domain.Fetc
 	return scanRole(row)
 }
 
-func (r *RoleRepository) FetchAll(ctx context.Context, param domain.FetchAllRoleParam) ([]domain.Role, error) {
-	qb := strings.Builder{}
-	var args []any
-	fmt.Fprintf(&qb, `
-		SELECT %s
-		FROM roles WHERE 1=1
-	`, roleColumns)
+func (r *RoleRepository) FetchAll(ctx context.Context, param *domain.FetchAllRoleParam) ([]domain.Role, error) {
+	selectQuery := pgq.Select(roleColumns).From("roles")
 
-	argCount := 1
 	if param.NameLike != nil {
-		fmt.Fprintf(&qb, "AND name like $%d", argCount)
-		args = append(args, fmt.Sprintf("%%%s%%", *param.NameLike))
-		argCount++
+		selectQuery = selectQuery.Where("name like ?", fmt.Sprint("%", *param.NameLike, "%"))
 	}
 
-	if param.Pagination.Size > 0 {
-		fmt.Fprintf(&qb, " LIMIT $%d", argCount)
-		args = append(args, param.Pagination.Size)
-		argCount++
+	countQuery := pgq.Select("count(*) as total").FromSelect(selectQuery, "r")
+	query, args, err := countQuery.SQL()
+	if err != nil {
+		return nil, err
 	}
 
-	if param.Pagination.Page > 0 {
-		fmt.Fprintf(&qb, " OFFSET $%d", argCount)
-		args = append(args, param.Pagination.GetOffset())
-		argCount++
+	err = r.GetExecutor(ctx).QueryRow(ctx, query, args...).Scan(
+		&param.Pagination.Total,
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	if argCount == 1 {
-		return nil, &xerror.ErrorValidation{Message: "fetch role param required"}
+	param.Pagination.WrapPaging(&selectQuery)
+	query, args, err = selectQuery.SQL()
+	if err != nil {
+		return nil, err
 	}
 
-	rows, err := r.GetExecutor(ctx).Query(ctx, qb.String(), args...)
+	rows, err := r.GetExecutor(ctx).Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	roles := []domain.Role{}
-
 	for rows.Next() {
 		r, err := scanRole(rows)
 		if err != nil {

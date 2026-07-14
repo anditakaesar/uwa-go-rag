@@ -26,7 +26,7 @@ func NewRoleService(dep RoleServiceDep) *RoleService {
 
 func (s *RoleService) FetchAll(ctx context.Context, param domain.FetchAllRoleParam) ([]domain.Role, *domain.FetchAllRoleParam, error) {
 	param.Normalize()
-	users, err := s.roleRepo.FetchAll(ctx, param)
+	users, err := s.roleRepo.FetchAll(ctx, &param)
 	if err != nil {
 		return nil, nil, err
 	}

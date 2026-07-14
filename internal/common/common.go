@@ -1,10 +1,15 @@
 package common
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/henvic/pgq"
+)
 
 type Pagination struct {
-	Page int `json:"page"`
-	Size int `json:"size"`
+	Page  int   `json:"page"`
+	Size  int   `json:"size"`
+	Total int64 `json:"total"`
 }
 
 func (p *Pagination) GetOffset() int {
@@ -19,6 +24,16 @@ func (p *Pagination) Normalize() {
 
 	if p.Page < 1 {
 		p.Page = 1
+	}
+}
+
+func (p *Pagination) WrapPaging(sb *pgq.SelectBuilder) {
+	if p.Size > 0 {
+		*sb = sb.Limit(uint64(p.Size))
+	}
+
+	if p.Page > 0 {
+		*sb = sb.Offset(uint64(p.GetOffset()))
 	}
 }
 

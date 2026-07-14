@@ -21,7 +21,7 @@ type IRagRepository interface {
 
 type IRoleRepository interface {
 	FetchRoleByParam(ctx context.Context, param domain.FetchRoleParam) (*domain.Role, error)
-	FetchAll(ctx context.Context, param domain.FetchAllRoleParam) ([]domain.Role, error)
+	FetchAll(ctx context.Context, param *domain.FetchAllRoleParam) ([]domain.Role, error)
 }
 
 type IUnitOfWork interface {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
@@ -43,8 +44,7 @@ func (m *ServiceManager) Start(ctx context.Context) error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	for i := len(m.services) - 1; i >= 0; i-- {
-		s := m.services[i]
+	for _, s := range slices.Backward(m.services) {
 		xlog.Logger.Info(fmt.Sprintf("Shutting Down Service: %s", s.Name()))
 		if err := s.Shutdown(shutdownCtx); err != nil {
 			xlog.Logger.Error(fmt.Sprintf("Error shutting down %s: %v", s.Name(), err))
