@@ -19,7 +19,7 @@ func Test_values_IsDevelopment(test *testing.T) {
 
 	for _, tt := range tests {
 		test.Run(tt.name, func(t *testing.T) {
-			v := &values{Env: tt.envValue}
+			v := &Object{Env: tt.envValue}
 			if got := v.IsDevelopment(); got != tt.expected {
 				t.Errorf("IsDevelopment() for %s = %v, want %v", tt.envValue, got, tt.expected)
 			}

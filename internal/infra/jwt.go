@@ -12,17 +12,20 @@ import (
 
 type JWTService struct {
 	secret             []byte
+	jwtExpire          int
 	rolePermissionRepo IInfraRolePermissionRepo
 }
 
 type JWTServiceDep struct {
 	Secret             []byte
+	JWTExpire          int
 	RolePermissionRepo IInfraRolePermissionRepo
 }
 
 func NewJWTService(dep JWTServiceDep) *JWTService {
 	return &JWTService{
 		secret:             dep.Secret,
+		jwtExpire:          dep.JWTExpire,
 		rolePermissionRepo: dep.RolePermissionRepo,
 	}
 }
@@ -53,7 +56,7 @@ func (s *JWTService) IssueJWT(ctx context.Context, userID int64, secret []byte) 
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: strconv.FormatInt(userID, 10),
 			ExpiresAt: jwt.NewNumericDate(
-				time.Now().Add(15 * time.Minute),
+				time.Now().Add(time.Duration(s.jwtExpire) * time.Minute),
 			),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},

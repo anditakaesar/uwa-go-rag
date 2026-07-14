@@ -21,6 +21,7 @@ const (
 type MainHandler struct {
 	UserService   service.IUserService
 	JWTService    infra.IJWTService
+	jwtSecret     []byte
 	CookieService infra.ICookieService
 	FileService   service.IFileService
 	Render        func(context.Context, http.ResponseWriter, string, map[string]any)
@@ -29,6 +30,7 @@ type MainHandler struct {
 type MainHandlerDeps struct {
 	UserService   service.IUserService
 	JWTService    infra.IJWTService
+	JWTSecret     string
 	CookieService infra.ICookieService
 	FileService   service.IFileService
 	WebRenderer   IWebRenderer
@@ -38,6 +40,7 @@ func NewMainHandler(dep MainHandlerDeps) *MainHandler {
 	return &MainHandler{
 		UserService:   dep.UserService,
 		JWTService:    dep.JWTService,
+		jwtSecret:     []byte(dep.JWTSecret),
 		CookieService: dep.CookieService,
 		FileService:   dep.FileService,
 		Render:        dep.WebRenderer.Render2,
@@ -125,7 +128,7 @@ func (h *MainHandler) DoLogin(w http.ResponseWriter, r *http.Request) error {
 	session.Values["user_id"] = user.ID
 	session.Values["username"] = user.Username
 
-	jwtToken, err := h.JWTService.IssueJWT(r.Context(), user.ID, []byte(env.Values.JWTSecret))
+	jwtToken, err := h.JWTService.IssueJWT(r.Context(), user.ID, h.jwtSecret)
 	if err != nil {
 		return &xerror.ErrorToken{Message: err.Error()}
 	}

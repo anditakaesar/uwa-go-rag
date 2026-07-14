@@ -1,16 +1,20 @@
 package env
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
-var Values *values
+var Values *Object
 
-type values struct {
+type Object struct {
 	Env          string
 	Port         string
 	DBUrl        string
 	CookieSecret string
 	CSRFSecret   string
 	JWTSecret    string
+	JWTExpire    int
 	PassSecret   string
 	UploadDir    string
 	HostName     string
@@ -18,14 +22,15 @@ type values struct {
 	AIAPIKey     string
 }
 
-func init() {
-	Values = &values{
+func Load() {
+	Values = &Object{
 		Env:          os.Getenv("ENV"),
 		Port:         os.Getenv("PORT"),
 		DBUrl:        os.Getenv("DB_URL"),
 		CookieSecret: os.Getenv("COOKIE_SECRET"),
 		CSRFSecret:   os.Getenv("CSRF_SECRET"),
 		JWTSecret:    os.Getenv("JWT_SECRET"),
+		JWTExpire:    getJWTExpireSession(),
 		PassSecret:   os.Getenv("PASS_SECRET"),
 		UploadDir:    os.Getenv("UPLOAD_DIR"),
 		HostName:     os.Getenv("HOSTNAME"),
@@ -34,7 +39,16 @@ func init() {
 	}
 }
 
-func (v *values) IsDevelopment() bool {
+func getJWTExpireSession() int {
+	str := os.Getenv("JWT_EXPIRE")
+	value, err := strconv.Atoi(str)
+	if err != nil || value < 10 {
+		return 15
+	}
+	return value
+}
+
+func (v *Object) IsDevelopment() bool {
 	return v.Env == "dev" || v.Env == "development"
 }
 

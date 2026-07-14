@@ -48,6 +48,7 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 	})
 	jwtSvc := NewJWTService(JWTServiceDep{
 		Secret:             []byte(env.Values.JWTSecret),
+		JWTExpire:          env.Values.JWTExpire,
 		RolePermissionRepo: rolePermissionRepo,
 	})
 	cookieService := NewCookieService(env.Values.IsDevelopment(), env.Values.CookieSecret)

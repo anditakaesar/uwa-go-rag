@@ -1,2 +1,4 @@
 migrate
 mockery
+migrate.*
+mockery_*

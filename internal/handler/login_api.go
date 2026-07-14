@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/audit"
-	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
 	"github.com/anditakaesar/uwa-go-rag/internal/service"
@@ -18,12 +17,14 @@ import (
 type LoginApi struct {
 	UserService  service.IUserService
 	JWTService   infra.IJWTService
+	jwtSecret    []byte
 	AuditService audit.Recorder
 }
 
 type LoginApiDeps struct {
 	UserService  service.IUserService
 	JWTService   infra.IJWTService
+	JWTSecret    string
 	AuditService audit.Recorder
 }
 
@@ -31,6 +32,7 @@ func NewLoginApi(dep LoginApiDeps) *LoginApi {
 	return &LoginApi{
 		UserService:  dep.UserService,
 		JWTService:   dep.JWTService,
+		jwtSecret:    []byte(dep.JWTSecret),
 		AuditService: dep.AuditService,
 	}
 }
@@ -54,7 +56,7 @@ func (h *LoginApi) ApiLogin(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorSession{Message: "username and password didn't match"}
 	}
 
-	jwtToken, err := h.JWTService.IssueJWT(r.Context(), user.ID, []byte(env.Values.JWTSecret))
+	jwtToken, err := h.JWTService.IssueJWT(r.Context(), user.ID, h.jwtSecret)
 	if err != nil {
 		return &xerror.ErrorToken{Message: err.Error()}
 	}

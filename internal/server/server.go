@@ -64,6 +64,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 	mainHandler := handler.NewMainHandler(handler.MainHandlerDeps{
 		UserService:   infraSvc.UserService,
 		JWTService:    infraSvc.JWTService,
+		JWTSecret:     env.Values.JWTSecret,
 		CookieService: infraSvc.CookieService,
 		FileService:   infraSvc.FileService,
 		WebRenderer:   infraSvc.WebRenderer,
@@ -80,6 +81,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 	loginApi := handler.NewLoginApi(handler.LoginApiDeps{
 		UserService:  infraSvc.UserService,
 		JWTService:   infraSvc.JWTService,
+		JWTSecret:    env.Values.JWTSecret,
 		AuditService: infraSvc.AuditService,
 	})
 

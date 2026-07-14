@@ -5,11 +5,14 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/handler"
 	"github.com/go-chi/chi/v5"
 )
 
 func TestSetupMainRoutes(test *testing.T) {
+	env.Values = &env.Object{}
+
 	test.Run("setup routes registration", func(t *testing.T) {
 		// 1. Setup a dummy handler (doesn't need real services)
 		h := &handler.MainHandler{}

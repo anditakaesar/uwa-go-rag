@@ -4,13 +4,15 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/mocks"
 	"github.com/anditakaesar/uwa-go-rag/internal/server"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSetupServer(test *testing.T) {
-	test.Run("success generate ", func(t *testing.T) {
+	env.Values = &env.Object{}
+	test.Run("success generate setup server", func(t *testing.T) {
 
 		mockDB := new(mocks.MockIDatabase)
 

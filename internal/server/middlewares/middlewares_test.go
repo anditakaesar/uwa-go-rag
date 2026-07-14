@@ -42,6 +42,7 @@ func setupMocks() *mockItems {
 
 func TestCSRFMiddleware(test *testing.T) {
 	test.Parallel()
+	env.Values = &env.Object{}
 
 	env.Values.CSRFSecret = "32-byte-long-auth-key-goes-here-"
 	env.Values.Env = "development"

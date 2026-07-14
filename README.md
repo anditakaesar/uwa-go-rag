@@ -57,7 +57,7 @@ HOSTNAME="http://localhost:3000"
 ```
 
 ## Docs `/docs`
-- Run interactive API documentation using [`scalarapi/api-references`](https://github.com/ScalaR/ScalaR) or `swagger/swagger-ui`. 
+- Run interactive API documentation using [`scalarapi/api-reference`](https://github.com/ScalaR/ScalaR) or `swagger/swagger-ui`. 
 
 `$ podman run -d -p 8081:8080 -v "$(pwd)/docs/openapi:/docs" scalarapi/api-reference:latest`
 

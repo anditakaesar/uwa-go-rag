@@ -17,6 +17,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	env.Load()
 	manager := &ServiceManager{}
 
 	db, err := infra.NewDatabase(ctx, env.Values.DBUrl)
