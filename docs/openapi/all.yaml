@@ -5,6 +5,36 @@ info:
 servers:
   - url: http://localhost:3000/api
 paths:
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Login User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /users:
     post:
       tags:
@@ -79,37 +109,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /login:
-    post:
-      tags:
-        - Authentication
-      summary: Login User
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LoginResponse"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
   /roles:
     get:
       tags:
@@ -155,6 +154,18 @@ paths:
 
 components:
   schemas:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        size:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 100
     ErrorResponse:
       type: object
       properties:
@@ -170,6 +181,7 @@ components:
       required:
         - username
         - password
+        - roleID
       properties:
         username:
           type: string
@@ -195,6 +207,7 @@ components:
               type: integer
             createdAt:
               type: "string"
+              example: "2026-07-14T22:32:12.062975+07:00"
           required:
             - "id"
             - "username"
@@ -206,16 +219,7 @@ components:
         data:
           type: "array"
           items:
-            type: "object"
-            properties:
-              id:
-                type: "integer"
-              username:
-                type: "string"
-              role:
-                type: "string"
-              createdAt:
-                type: "string"
+            $ref: "#/components/schemas/SingleUserResponse"
         meta:
           type: "object"
           properties:
@@ -223,12 +227,7 @@ components:
               type: "string"
               nullable: true
             pagination:
-              type: "object"
-              properties:
-                page:
-                  type: "integer"
-                size:
-                  type: "integer"
+              $ref: "#/components/schemas/Pagination"
       required:
         - "data"
     FetchRoleResponse:
@@ -250,12 +249,7 @@ components:
               type: "string"
               nullable: true
             pagination:
-              type: "object"
-              properties:
-                page:
-                  type: "integer"
-                size:
-                  type: "integer"
+              $ref: "#/components/schemas/Pagination"
     LoginRequest:
       type: object
       required:

@@ -11,7 +11,7 @@ type IUserRepository interface {
 	CreateUserWithRole(ctx context.Context, newUser domain.User, role string) (*domain.User, error)
 	FetchUserByParam(ctx context.Context, param domain.FetchUserParam) (*domain.User, error)
 	Update(ctx context.Context, id int64, param domain.UpdateUserParam) (*domain.User, error)
-	FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, error)
+	FindAll(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.User, error)
 	Delete(ctx context.Context, id int64) (*domain.User, error)
 }
 

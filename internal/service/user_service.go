@@ -118,7 +118,7 @@ func (s *UserService) Update(ctx context.Context, id int64, update *domain.Updat
 
 func (s *UserService) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error) {
 	param.Normalize()
-	users, err := s.userRepo.FindAll(ctx, param)
+	users, err := s.userRepo.FindAll(ctx, &param)
 	if err != nil {
 		return nil, nil, err
 	}

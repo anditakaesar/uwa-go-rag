@@ -88,7 +88,7 @@ func (r *RoleRepository) FetchAll(ctx context.Context, param *domain.FetchAllRol
 		selectQuery = selectQuery.Where("name like ?", fmt.Sprint("%", *param.NameLike, "%"))
 	}
 
-	countQuery := pgq.Select("count(*) as total").FromSelect(selectQuery, "r")
+	countQuery := pgq.Select(COUNT_AS_TOTAL).FromSelect(selectQuery, "r")
 	query, args, err := countQuery.SQL()
 	if err != nil {
 		return nil, err

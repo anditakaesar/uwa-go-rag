@@ -317,7 +317,7 @@ func (_c *MockIUserRepository_FetchUserByParam_Call) RunAndReturn(run func(ctx c
 }
 
 // FindAll provides a mock function for the type MockIUserRepository
-func (_mock *MockIUserRepository) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, error) {
+func (_mock *MockIUserRepository) FindAll(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.User, error) {
 	ret := _mock.Called(ctx, param)
 
 	if len(ret) == 0 {
@@ -326,17 +326,17 @@ func (_mock *MockIUserRepository) FindAll(ctx context.Context, param domain.Find
 
 	var r0 []domain.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FindAllUsersParam) ([]domain.User, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllUsersParam) ([]domain.User, error)); ok {
 		return returnFunc(ctx, param)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FindAllUsersParam) []domain.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllUsersParam) []domain.User); ok {
 		r0 = returnFunc(ctx, param)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.User)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.FindAllUsersParam) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.FindAllUsersParam) error); ok {
 		r1 = returnFunc(ctx, param)
 	} else {
 		r1 = ret.Error(1)
@@ -351,20 +351,20 @@ type MockIUserRepository_FindAll_Call struct {
 
 // FindAll is a helper method to define mock.On call
 //   - ctx context.Context
-//   - param domain.FindAllUsersParam
+//   - param *domain.FindAllUsersParam
 func (_e *MockIUserRepository_Expecter) FindAll(ctx any, param any) *MockIUserRepository_FindAll_Call {
 	return &MockIUserRepository_FindAll_Call{Call: _e.mock.On("FindAll", ctx, param)}
 }
 
-func (_c *MockIUserRepository_FindAll_Call) Run(run func(ctx context.Context, param domain.FindAllUsersParam)) *MockIUserRepository_FindAll_Call {
+func (_c *MockIUserRepository_FindAll_Call) Run(run func(ctx context.Context, param *domain.FindAllUsersParam)) *MockIUserRepository_FindAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 domain.FindAllUsersParam
+		var arg1 *domain.FindAllUsersParam
 		if args[1] != nil {
-			arg1 = args[1].(domain.FindAllUsersParam)
+			arg1 = args[1].(*domain.FindAllUsersParam)
 		}
 		run(
 			arg0,
@@ -379,7 +379,7 @@ func (_c *MockIUserRepository_FindAll_Call) Return(users []domain.User, err erro
 	return _c
 }
 
-func (_c *MockIUserRepository_FindAll_Call) RunAndReturn(run func(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, error)) *MockIUserRepository_FindAll_Call {
+func (_c *MockIUserRepository_FindAll_Call) RunAndReturn(run func(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.User, error)) *MockIUserRepository_FindAll_Call {
 	_c.Call.Return(run)
 	return _c
 }

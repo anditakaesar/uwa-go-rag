@@ -9,6 +9,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
+	"github.com/henvic/pgq"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -142,40 +143,29 @@ func (r *UserRepository) Update(ctx context.Context, id int64, param domain.Upda
 	return scanUser(row)
 }
 
-func (r *UserRepository) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, error) {
-	qb := strings.Builder{}
-
-	var args []any
-	fmt.Fprintf(&qb, `
-		SELECT %s
-        FROM users
-        WHERE deleted_at IS NULL`, userColumns)
-
-	argCount := 1
+func (r *UserRepository) FindAll(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.User, error) {
+	selectQuery := pgq.Select(userColumns).From("users").Where("deleted_at IS NULL")
 
 	if param.UsernameLike != nil {
-		fmt.Fprintf(&qb, " AND username like $%d", argCount)
-		args = append(args, fmt.Sprintf("%%%s%%", *param.UsernameLike))
-		argCount++
+		selectQuery = selectQuery.Where("username like ?", fmt.Sprint("%", *param.UsernameLike, "%"))
 	}
 
-	if param.Pagination.Size > 0 {
-		fmt.Fprintf(&qb, " LIMIT $%d", argCount)
-		args = append(args, param.Pagination.Size)
-		argCount++
+	countQuery, countArgs, err := pgq.Select(COUNT_AS_TOTAL).FromSelect(selectQuery, "u").SQL()
+	if err != nil {
+		return nil, err
 	}
 
-	if param.Pagination.Page > 0 {
-		fmt.Fprintf(&qb, " OFFSET $%d", argCount)
-		args = append(args, param.Pagination.GetOffset())
-		argCount++
+	err = r.GetExecutor(ctx).QueryRow(ctx, countQuery, countArgs...).Scan(&param.Pagination.Total)
+	if err != nil {
+		return nil, err
 	}
 
-	if argCount == 1 {
-		return nil, &xerror.ErrorValidation{Message: "find users param required"}
+	param.Pagination.WrapPaging(&selectQuery)
+	query, args, err := selectQuery.SQL()
+	if err != nil {
+		return nil, err
 	}
 
-	query := qb.String()
 	rows, err := r.GetExecutor(ctx).Query(ctx, query, args...)
 	if err != nil {
 		return nil, err

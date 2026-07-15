@@ -472,7 +472,7 @@ func TestUserService_FindAll(test *testing.T) {
 	test.Run("success", func(t *testing.T) {
 		m := setupMocks()
 
-		m.userRepo.On("FindAll", m.ctx, domain.FindAllUsersParam{
+		m.userRepo.On("FindAll", m.ctx, &domain.FindAllUsersParam{
 			Pagination: common.Pagination{
 				Page: 1,
 				Size: 1,
@@ -509,7 +509,7 @@ func TestUserService_FindAll(test *testing.T) {
 	test.Run("error", func(t *testing.T) {
 		m := setupMocks()
 
-		m.userRepo.On("FindAll", m.ctx, domain.FindAllUsersParam{
+		m.userRepo.On("FindAll", m.ctx, &domain.FindAllUsersParam{
 			Pagination: common.Pagination{
 				Page: 1,
 				Size: 1,
