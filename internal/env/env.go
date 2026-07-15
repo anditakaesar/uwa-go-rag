@@ -1,8 +1,10 @@
 package env
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var Values *Object
@@ -46,6 +48,22 @@ func getJWTExpireSession() int {
 		return 15
 	}
 	return value
+}
+
+func GetLogLevel() slog.Level {
+	str := os.Getenv("LOG_LEVEL")
+	switch strings.ToLower(str) {
+	case "debug":
+		return slog.LevelDebug
+	case "info":
+		return slog.LevelInfo
+	case "warn":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelError
+	}
 }
 
 func (v *Object) IsDevelopment() bool {

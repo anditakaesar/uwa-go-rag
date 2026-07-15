@@ -22,8 +22,9 @@ type queryTracer struct {
 }
 
 func (tracer *queryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
-	if !strings.Contains(data.SQL, "river_") {
-		tracer.log.Debug(fmt.Sprintf("Executing command sql: %s, args: %v+", data.SQL, data.Args))
+	if !strings.Contains(data.SQL, "river_") && !strings.Contains(data.SQL, "begin") && !strings.Contains(data.SQL, "commit") {
+		tracer.log.Info(fmt.Sprintf("Executing command sql: %s, args: %v+", data.SQL, data.Args))
+		return ctx
 	}
 
 	return ctx
