@@ -82,3 +82,7 @@ func parsePagination(r *http.Request) common.Pagination {
 		Size: size,
 	}
 }
+
+var defaultSuccessResponse map[string]string = map[string]string{
+	"message": "success",
+}

@@ -106,7 +106,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 		// middlewares
 		r.Use(cors.Handler(cors.Options{
 			AllowedOrigins:   []string{"*"}, // Allow all origins
-			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 			ExposedHeaders:   []string{"Link"},
 			AllowCredentials: false,

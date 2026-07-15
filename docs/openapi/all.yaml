@@ -109,11 +109,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
   /users/{id}:
     delete:
       tags:
         - User Management
       summary: Soft delete user
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -121,6 +124,82 @@ paths:
           description: The unique identifier of the user
           schema:
             type: integer
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - User Management
+      summary: Update user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/password:
+    post:
+      tags:
+        - User Management
+      summary: Change current user password
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserPasswordRequest"
       responses:
         "200":
           description: Successful response
@@ -311,6 +390,22 @@ components:
           properties:
             token:
               type: string
+    UpdateUserPasswordRequest:
+      type: object
+      properties:
+        oldPassword:
+          required: true
+          type: string
+        password:
+          required: true
+          type: string
+    UpdateUserRequest:
+      type: object
+      properties:
+        password:
+          type: string
+        roleID:
+          type: integer
 
   securitySchemes:
     BearerAuth: # Logical name for the scheme

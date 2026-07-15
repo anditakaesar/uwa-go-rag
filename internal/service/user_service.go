@@ -13,6 +13,7 @@ type IUserService interface {
 	AuthenticateUser(ctx context.Context, username string, password string) (*domain.User, error)
 	GetUserByID(ctx context.Context, id int64) (*domain.User, error)
 	UpdatePassword(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)
+	Update(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)
 	FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error)
 	Delete(ctx context.Context, id int64) error
 }
@@ -101,6 +102,40 @@ func (s *UserService) UpdatePassword(ctx context.Context, id int64, update *doma
 		}
 
 		result, err = s.userRepo.Update(txCtx, id, domain.UpdateUserParam{
+			Password: &hash,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if updateErr != nil {
+		return nil, updateErr
+	}
+
+	return result, nil
+}
+
+func (s *UserService) Update(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error) {
+	var result *domain.User
+	updateErr := s.uow.Do(ctx, func(txCtx context.Context) error {
+		user, err := s.userRepo.FetchUserByParam(txCtx, domain.FetchUserParam{
+			ID:        &id,
+			ForUpdate: true,
+		})
+		if err != nil {
+			return err
+		}
+
+		hash, err := s.passChecker.HashPassword(*update.Password)
+		if err != nil {
+			return err
+		}
+
+		result, err = s.userRepo.Update(txCtx, user.ID, domain.UpdateUserParam{
+			RoleID:   update.RoleID,
 			Password: &hash,
 		})
 		if err != nil {

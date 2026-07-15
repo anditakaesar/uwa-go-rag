@@ -109,6 +109,16 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 		},
 		{
 			Endpoint: Endpoint{
+				HttpMethod: http.MethodPatch,
+				Path:       "/users/{id}",
+				Handler:    MakeHandler(h.Update),
+			},
+			Middlewares: []func(http.Handler) http.Handler{
+				middlewares.RequirePermission("users.update"),
+			},
+		},
+		{
+			Endpoint: Endpoint{
 				HttpMethod: http.MethodDelete,
 				Path:       "/users/{id}",
 				Handler:    MakeHandler(h.Delete),

@@ -81,6 +81,22 @@ func (req *UpdateUserPasswordReq) ToDomainParam() *domain.UpdateUserParam {
 	}
 }
 
+type UpdateUserRequest struct {
+	Password string `json:"password"`
+	RoleID   int64  `json:"roleID"`
+}
+
+func (req *UpdateUserRequest) Validate() error {
+	return nil
+}
+
+func (req *UpdateUserRequest) ToDomainParam() *domain.UpdateUserParam {
+	return &domain.UpdateUserParam{
+		Password: &req.Password,
+		RoleID:   &req.RoleID,
+	}
+}
+
 type FindUserRequest struct {
 	UsernameLike *string `json:"usernamelike"`
 }

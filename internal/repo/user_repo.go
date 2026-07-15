@@ -131,6 +131,7 @@ func (r *UserRepository) Update(ctx context.Context, id int64, param domain.Upda
 
 	if param.RoleID != nil {
 		updateQuery = updateQuery.Set("role_id", *param.RoleID)
+		argCount++
 	}
 
 	if argCount == 0 {

@@ -77,12 +77,12 @@ func (h *UserApi) UpdateUserPassword(w http.ResponseWriter, r *http.Request) err
 		return &xerror.ErrorPermission{Message: "unauthorized"}
 	}
 
-	user, err := h.UserService.UpdatePassword(r.Context(), id, req.ToDomainParam())
+	_, err = h.UserService.UpdatePassword(r.Context(), id, req.ToDomainParam())
 	if err != nil {
 		return err
 	}
 
-	transport.SendJSON(w, http.StatusOK, UserDomainToResponse(user))
+	transport.SendJSON(w, http.StatusOK, defaultSuccessResponse)
 	return nil
 }
 
@@ -115,8 +115,32 @@ func (h *UserApi) Delete(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	transport.SendJSON(w, http.StatusOK, map[string]string{
-		"message": "success",
-	})
+	transport.SendJSON(w, http.StatusOK, defaultSuccessResponse)
+	return nil
+}
+
+func (h *UserApi) Update(w http.ResponseWriter, r *http.Request) error {
+	id, err := parseIDParam(r)
+	if err != nil {
+		return &xerror.ErrorNotFound{Message: err.Error()}
+	}
+
+	var req UpdateUserRequest
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return &xerror.ErrorDecodingRequest{Err: err}
+	}
+
+	err = req.Validate()
+	if err != nil {
+		return err
+	}
+
+	_, err = h.UserService.Update(r.Context(), id, req.ToDomainParam())
+	if err != nil {
+		return err
+	}
+
+	transport.SendJSON(w, http.StatusOK, defaultSuccessResponse)
 	return nil
 }
