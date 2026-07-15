@@ -180,6 +180,63 @@ func (_c *MockIUserService_CreateUser_Call) RunAndReturn(run func(ctx context.Co
 	return _c
 }
 
+// Delete provides a mock function for the type MockIUserService
+func (_mock *MockIUserService) Delete(ctx context.Context, id int64) error {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Delete")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) error); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockIUserService_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type MockIUserService_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int64
+func (_e *MockIUserService_Expecter) Delete(ctx any, id any) *MockIUserService_Delete_Call {
+	return &MockIUserService_Delete_Call{Call: _e.mock.On("Delete", ctx, id)}
+}
+
+func (_c *MockIUserService_Delete_Call) Run(run func(ctx context.Context, id int64)) *MockIUserService_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockIUserService_Delete_Call) Return(err error) *MockIUserService_Delete_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockIUserService_Delete_Call) RunAndReturn(run func(ctx context.Context, id int64) error) *MockIUserService_Delete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // FindAll provides a mock function for the type MockIUserService
 func (_mock *MockIUserService) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error) {
 	ret := _mock.Called(ctx, param)

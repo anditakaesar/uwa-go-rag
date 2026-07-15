@@ -86,7 +86,6 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 				Handler:    MakeHandler(h.CreateUser),
 			},
 			Middlewares: []func(http.Handler) http.Handler{
-				middlewares.RequireAuth(),
 				middlewares.RequirePermission("users.create"),
 			},
 		},
@@ -97,8 +96,8 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 				Handler:    MakeHandler(h.FetchUsers),
 			},
 			Middlewares: []func(http.Handler) http.Handler{
-				middlewares.RequireAuth(),
-				middlewares.RequirePermission("users.read")},
+				middlewares.RequirePermission("users.read"),
+			},
 		},
 		{
 			Endpoint: Endpoint{
@@ -106,16 +105,26 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 				Path:       "/users/{id}",
 				Handler:    MakeHandler(h.UpdateUser),
 			},
+			Middlewares: []func(http.Handler) http.Handler{},
+		},
+		{
+			Endpoint: Endpoint{
+				HttpMethod: http.MethodDelete,
+				Path:       "/users/{id}",
+				Handler:    MakeHandler(h.Delete),
+			},
 			Middlewares: []func(http.Handler) http.Handler{
-				middlewares.RequireAuth(),
+				middlewares.RequirePermission("users.delete"),
 			},
 		},
 	}
 
 	for _, e := range protectedEndpoints {
-		if len(e.Middlewares) > 0 {
-			router.With(e.Middlewares...).MethodFunc(e.HttpMethod, e.Path, e.Handler)
+		requiredMiddlewares := []func(http.Handler) http.Handler{
+			middlewares.RequireAuth(),
 		}
+		e.Middlewares = append(requiredMiddlewares, e.Middlewares...)
+		router.With(e.Middlewares...).MethodFunc(e.HttpMethod, e.Path, e.Handler)
 	}
 }
 

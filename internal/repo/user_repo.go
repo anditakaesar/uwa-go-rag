@@ -46,6 +46,9 @@ func scanUser(row pgx.Row) (*domain.User, error) {
 		&model.DeletedAt,
 	)
 	if err != nil {
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return nil, &xerror.ErrorResourceNotFound{Message: "user not found"}
+		}
 		return nil, err
 	}
 

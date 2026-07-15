@@ -103,3 +103,20 @@ func (h *UserApi) FetchUsers(w http.ResponseWriter, r *http.Request) error {
 	transport.SendJSON(w, http.StatusOK, UserListToResponse(users), transport.WithMeta(*param))
 	return nil
 }
+
+func (h *UserApi) Delete(w http.ResponseWriter, r *http.Request) error {
+	id, err := parseIDParam(r)
+	if err != nil {
+		return err
+	}
+
+	err = h.UserService.Delete(r.Context(), id)
+	if err != nil {
+		return err
+	}
+
+	transport.SendJSON(w, http.StatusOK, map[string]string{
+		"message": "success",
+	})
+	return nil
+}

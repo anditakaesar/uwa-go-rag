@@ -14,6 +14,7 @@ type IUserService interface {
 	GetUserByID(ctx context.Context, id int64) (*domain.User, error)
 	Update(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)
 	FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error)
+	Delete(ctx context.Context, id int64) error
 }
 
 type UserService struct {
@@ -123,4 +124,21 @@ func (s *UserService) FindAll(ctx context.Context, param domain.FindAllUsersPara
 		return nil, nil, err
 	}
 	return users, &param, nil
+}
+
+func (s *UserService) Delete(ctx context.Context, id int64) error {
+	delErr := s.uow.Do(ctx, func(txCtx context.Context) error {
+		userToDelete, err := s.userRepo.FetchUserByParam(txCtx, domain.FetchUserParam{
+			ID:        &id,
+			ForUpdate: true,
+		})
+		if err != nil {
+			return err
+		}
+
+		_, err = s.userRepo.Delete(txCtx, userToDelete.ID)
+		return err
+	})
+
+	return delErr
 }

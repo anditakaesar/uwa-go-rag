@@ -65,6 +65,14 @@ func (e *ErrorAuditLogRecordValidation) Error() string {
 	return e.Message
 }
 
+type ErrorResourceNotFound struct {
+	Message string
+}
+
+func (e *ErrorResourceNotFound) Error() string {
+	return e.Message
+}
+
 // DefineStatusCode maps custom error types to HTTP Status Codes
 func DefineStatusCode(err error) int {
 	if err == nil {
@@ -83,7 +91,8 @@ func DefineStatusCode(err error) int {
 	}
 
 	var errNotFound *ErrorNotFound
-	if errors.As(err, &errNotFound) {
+	var errResourceNotFound *ErrorResourceNotFound
+	if errors.As(err, &errNotFound) || errors.As(err, &errResourceNotFound) {
 		return http.StatusNotFound
 	}
 
