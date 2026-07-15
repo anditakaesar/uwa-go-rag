@@ -134,7 +134,7 @@ func TestUserApi_CreateUser(test *testing.T) {
 	})
 }
 
-func TestUserApi_UpdateUser(test *testing.T) {
+func TestUserApi_UpdateUserPassword(test *testing.T) {
 	test.Parallel()
 
 	test.Run("success", func(t *testing.T) {
@@ -145,7 +145,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		})
 
 		newPass := "new-pass"
-		m.userSvc.On("Update", m.anything, int64(1), &domain.UpdateUserParam{
+		m.userSvc.On("UpdatePassword", m.anything, int64(1), &domain.UpdateUserParam{
 			OldPassword: "old-pass",
 			Password:    &newPass,
 		}).Return(&domain.User{
@@ -177,7 +177,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		assert.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		gotErr := h.UpdateUser(rr, req)
+		gotErr := h.UpdateUserPassword(rr, req)
 
 		assert.NoError(t, gotErr)
 		m.userSvc.AssertExpectations(t)
@@ -191,7 +191,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		})
 
 		newPass := "new-pass"
-		m.userSvc.On("Update", m.anything, int64(1), &domain.UpdateUserParam{
+		m.userSvc.On("UpdatePassword", m.anything, int64(1), &domain.UpdateUserParam{
 			OldPassword: "old-pass",
 			Password:    &newPass,
 		}).Return(nil, errors.New("error_Update")).Once()
@@ -217,7 +217,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		assert.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		gotErr := h.UpdateUser(rr, req)
+		gotErr := h.UpdateUserPassword(rr, req)
 
 		assert.Error(t, gotErr)
 		m.userSvc.AssertExpectations(t)
@@ -251,7 +251,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		assert.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		gotErr := h.UpdateUser(rr, req)
+		gotErr := h.UpdateUserPassword(rr, req)
 
 		assert.Error(t, gotErr)
 		m.userSvc.AssertExpectations(t)
@@ -274,7 +274,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		assert.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		gotErr := h.UpdateUser(rr, req)
+		gotErr := h.UpdateUserPassword(rr, req)
 
 		assert.Error(t, gotErr)
 		m.userSvc.AssertExpectations(t)
@@ -297,7 +297,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		assert.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		gotErr := h.UpdateUser(rr, req)
+		gotErr := h.UpdateUserPassword(rr, req)
 
 		assert.Error(t, gotErr)
 		m.userSvc.AssertExpectations(t)
@@ -320,7 +320,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		assert.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		gotErr := h.UpdateUser(rr, req)
+		gotErr := h.UpdateUserPassword(rr, req)
 
 		assert.Error(t, gotErr)
 		m.userSvc.AssertExpectations(t)
@@ -343,7 +343,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		assert.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		gotErr := h.UpdateUser(rr, req)
+		gotErr := h.UpdateUserPassword(rr, req)
 
 		assert.Error(t, gotErr)
 		m.userSvc.AssertExpectations(t)
@@ -366,7 +366,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		assert.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		gotErr := h.UpdateUser(rr, req)
+		gotErr := h.UpdateUserPassword(rr, req)
 
 		assert.Error(t, gotErr)
 		m.userSvc.AssertExpectations(t)
@@ -388,7 +388,7 @@ func TestUserApi_UpdateUser(test *testing.T) {
 		assert.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		gotErr := h.UpdateUser(rr, req)
+		gotErr := h.UpdateUserPassword(rr, req)
 
 		assert.Error(t, gotErr)
 		m.userSvc.AssertExpectations(t)

@@ -51,13 +51,13 @@ func (h *UserApi) CreateUser(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (h *UserApi) UpdateUser(w http.ResponseWriter, r *http.Request) error {
+func (h *UserApi) UpdateUserPassword(w http.ResponseWriter, r *http.Request) error {
 	id, err := parseIDParam(r)
 	if err != nil {
 		return &xerror.ErrorNotFound{Message: err.Error()}
 	}
 
-	var req UpdateUserRequest
+	var req UpdateUserPasswordReq
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return &xerror.ErrorDecodingRequest{Err: err}
@@ -70,14 +70,14 @@ func (h *UserApi) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 
 	requesterUser, ok := domain.UserFromContext(r.Context())
 	if !ok {
-		return &xerror.ErrorPermission{Message: "permission required"}
+		return &xerror.ErrorPermission{Message: "unauthorized"}
 	}
 
 	if requesterUser.ID != id {
-		return &xerror.ErrorPermission{Message: "update user not allowed"}
+		return &xerror.ErrorPermission{Message: "unauthorized"}
 	}
 
-	user, err := h.UserService.Update(r.Context(), id, req.ToDomainParam())
+	user, err := h.UserService.UpdatePassword(r.Context(), id, req.ToDomainParam())
 	if err != nil {
 		return err
 	}

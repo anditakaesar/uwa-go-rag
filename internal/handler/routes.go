@@ -102,8 +102,8 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 		{
 			Endpoint: Endpoint{
 				HttpMethod: http.MethodPost,
-				Path:       "/users/{id}",
-				Handler:    MakeHandler(h.UpdateUser),
+				Path:       "/users/{id}/password",
+				Handler:    MakeHandler(h.UpdateUserPassword),
 			},
 			Middlewares: []func(http.Handler) http.Handler{},
 		},

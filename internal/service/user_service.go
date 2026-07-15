@@ -12,7 +12,7 @@ type IUserService interface {
 	CreateUser(ctx context.Context, user domain.User) (*domain.User, error)
 	AuthenticateUser(ctx context.Context, username string, password string) (*domain.User, error)
 	GetUserByID(ctx context.Context, id int64) (*domain.User, error)
-	Update(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)
+	UpdatePassword(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)
 	FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error)
 	Delete(ctx context.Context, id int64) error
 }
@@ -79,7 +79,7 @@ func (s *UserService) GetUserByID(ctx context.Context, id int64) (*domain.User, 
 	})
 }
 
-func (s *UserService) Update(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error) {
+func (s *UserService) UpdatePassword(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error) {
 	var result *domain.User
 	updateErr := s.uow.Do(ctx, func(txCtx context.Context) error {
 		user, err := s.userRepo.FetchUserByParam(txCtx, domain.FetchUserParam{

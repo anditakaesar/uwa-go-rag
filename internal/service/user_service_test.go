@@ -295,7 +295,7 @@ func TestUserService_GetUserByID(test *testing.T) {
 
 }
 
-func TestUserService_Update(test *testing.T) {
+func TestUserService_UpdatePassword(test *testing.T) {
 	test.Parallel()
 
 	oldUser := domain.User{
@@ -339,7 +339,7 @@ func TestUserService_Update(test *testing.T) {
 			PassChecker: m.passChecker,
 		})
 
-		got, gotErr := s.Update(m.ctx, oldUser.ID, &updateParam)
+		got, gotErr := s.UpdatePassword(m.ctx, oldUser.ID, &updateParam)
 		assert.NoError(t, gotErr)
 		assert.Equal(t, oldUser.ID, got.ID)
 		assert.Equal(t, "newhashedpass", got.Password)
@@ -375,7 +375,7 @@ func TestUserService_Update(test *testing.T) {
 			PassChecker: m.passChecker,
 		})
 
-		got, gotErr := s.Update(m.ctx, oldUser.ID, &updateParam)
+		got, gotErr := s.UpdatePassword(m.ctx, oldUser.ID, &updateParam)
 		assert.Error(t, gotErr)
 		assert.Nil(t, got)
 
@@ -404,7 +404,7 @@ func TestUserService_Update(test *testing.T) {
 			PassChecker: m.passChecker,
 		})
 
-		got, gotErr := s.Update(m.ctx, oldUser.ID, &updateParam)
+		got, gotErr := s.UpdatePassword(m.ctx, oldUser.ID, &updateParam)
 		assert.Error(t, gotErr)
 		assert.Nil(t, got)
 
@@ -431,7 +431,7 @@ func TestUserService_Update(test *testing.T) {
 			PassChecker: m.passChecker,
 		})
 
-		got, gotErr := s.Update(m.ctx, oldUser.ID, &updateParam)
+		got, gotErr := s.UpdatePassword(m.ctx, oldUser.ID, &updateParam)
 		assert.Error(t, gotErr)
 		assert.Nil(t, got)
 
@@ -456,7 +456,7 @@ func TestUserService_Update(test *testing.T) {
 			PassChecker: m.passChecker,
 		})
 
-		got, gotErr := s.Update(m.ctx, oldUser.ID, &updateParam)
+		got, gotErr := s.UpdatePassword(m.ctx, oldUser.ID, &updateParam)
 		assert.Error(t, gotErr)
 		assert.Nil(t, got)
 

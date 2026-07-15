@@ -420,7 +420,7 @@ type MockIUserRepository_Update_Call struct {
 // Update is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int64
-//   - param domain.UpdateUserParam
+//   - param domain.UpdateUserPasswordParam
 func (_e *MockIUserRepository_Expecter) Update(ctx any, id any, param any) *MockIUserRepository_Update_Call {
 	return &MockIUserRepository_Update_Call{Call: _e.mock.On("Update", ctx, id, param)}
 }

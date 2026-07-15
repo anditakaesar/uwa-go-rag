@@ -26,6 +26,7 @@ func UserFromContext(ctx context.Context) (*User, bool) {
 type UpdateUserParam struct {
 	OldPassword string
 	Password    *string
+	RoleID      *int64
 }
 
 type FetchUserParam struct {

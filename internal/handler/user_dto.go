@@ -57,12 +57,12 @@ func UserListToResponse(users []domain.User) []UserResponse {
 	return results
 }
 
-type UpdateUserRequest struct {
+type UpdateUserPasswordReq struct {
 	OldPassword string `json:"oldPassword"`
 	Password    string `json:"password"`
 }
 
-func (req *UpdateUserRequest) Validate() error {
+func (req *UpdateUserPasswordReq) Validate() error {
 	if strings.TrimSpace(req.OldPassword) == "" {
 		return &xerror.ErrorValidation{Message: "old password is required"}
 	}
@@ -74,7 +74,7 @@ func (req *UpdateUserRequest) Validate() error {
 	return nil
 }
 
-func (req *UpdateUserRequest) ToDomainParam() *domain.UpdateUserParam {
+func (req *UpdateUserPasswordReq) ToDomainParam() *domain.UpdateUserParam {
 	return &domain.UpdateUserParam{
 		OldPassword: req.OldPassword,
 		Password:    &req.Password,

@@ -381,12 +381,12 @@ func (_c *MockIUserService_GetUserByID_Call) RunAndReturn(run func(ctx context.C
 	return _c
 }
 
-// Update provides a mock function for the type MockIUserService
-func (_mock *MockIUserService) Update(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error) {
+// UpdatePassword provides a mock function for the type MockIUserService
+func (_mock *MockIUserService) UpdatePassword(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error) {
 	ret := _mock.Called(ctx, id, update)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Update")
+		panic("no return value specified for UpdatePassword")
 	}
 
 	var r0 *domain.User
@@ -409,20 +409,20 @@ func (_mock *MockIUserService) Update(ctx context.Context, id int64, update *dom
 	return r0, r1
 }
 
-// MockIUserService_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
-type MockIUserService_Update_Call struct {
+// MockIUserService_UpdatePassword_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdatePassword'
+type MockIUserService_UpdatePassword_Call struct {
 	*mock.Call
 }
 
-// Update is a helper method to define mock.On call
+// UpdatePassword is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int64
-//   - update *domain.UpdateUserParam
-func (_e *MockIUserService_Expecter) Update(ctx any, id any, update any) *MockIUserService_Update_Call {
-	return &MockIUserService_Update_Call{Call: _e.mock.On("Update", ctx, id, update)}
+//   - update *domain.UpdateUserPasswordParam
+func (_e *MockIUserService_Expecter) UpdatePassword(ctx any, id any, update any) *MockIUserService_UpdatePassword_Call {
+	return &MockIUserService_UpdatePassword_Call{Call: _e.mock.On("UpdatePassword", ctx, id, update)}
 }
 
-func (_c *MockIUserService_Update_Call) Run(run func(ctx context.Context, id int64, update *domain.UpdateUserParam)) *MockIUserService_Update_Call {
+func (_c *MockIUserService_UpdatePassword_Call) Run(run func(ctx context.Context, id int64, update *domain.UpdateUserParam)) *MockIUserService_UpdatePassword_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -445,12 +445,12 @@ func (_c *MockIUserService_Update_Call) Run(run func(ctx context.Context, id int
 	return _c
 }
 
-func (_c *MockIUserService_Update_Call) Return(user *domain.User, err error) *MockIUserService_Update_Call {
+func (_c *MockIUserService_UpdatePassword_Call) Return(user *domain.User, err error) *MockIUserService_UpdatePassword_Call {
 	_c.Call.Return(user, err)
 	return _c
 }
 
-func (_c *MockIUserService_Update_Call) RunAndReturn(run func(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)) *MockIUserService_Update_Call {
+func (_c *MockIUserService_UpdatePassword_Call) RunAndReturn(run func(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)) *MockIUserService_UpdatePassword_Call {
 	_c.Call.Return(run)
 	return _c
 }

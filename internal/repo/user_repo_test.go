@@ -248,9 +248,7 @@ func TestUserRepository_Update(test *testing.T) {
 		hashedPass := "pass"
 
 		const query = `
-			UPDATE users SET password = $1, updated_at = NOW()
-			WHERE id = $2 AND deleted_at IS NULL
-			RETURNING id, username, password, role_id, created_at, updated_at, deleted_at
+			UPDATE users SET password = $1, updated_at = $2 WHERE deleted_at IS NULL AND id = $3 RETURNING id, username, password, role_id, created_at, updated_at, deleted_at
 		`
 
 		rows := m.mockDB.NewRows([]string{
@@ -262,6 +260,7 @@ func TestUserRepository_Update(test *testing.T) {
 		m.mockDB.ExpectQuery(regexp.QuoteMeta(query)).
 			WithArgs(
 				hashedPass,
+				"NOW()",
 				userID,
 			).WillReturnRows(rows)
 
@@ -284,14 +283,13 @@ func TestUserRepository_Update(test *testing.T) {
 		hashedPass := "pass"
 
 		const query = `
-			UPDATE users SET password = $1, updated_at = NOW()
-			WHERE id = $2 AND deleted_at IS NULL
-			RETURNING id, username, password, role_id, created_at, updated_at, deleted_at
+			UPDATE users SET password = $1, updated_at = $2 WHERE deleted_at IS NULL AND id = $3 RETURNING id, username, password, role_id, created_at, updated_at, deleted_at
 		`
 
 		m.mockDB.ExpectQuery(regexp.QuoteMeta(query)).
 			WithArgs(
 				hashedPass,
+				"NOW()",
 				userID,
 			).WillReturnError(errors.New("error_Execute"))
 

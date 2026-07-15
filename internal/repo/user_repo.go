@@ -121,28 +121,30 @@ func (r *UserRepository) FetchUserByParam(ctx context.Context, param domain.Fetc
 }
 
 func (r *UserRepository) Update(ctx context.Context, id int64, param domain.UpdateUserParam) (*domain.User, error) {
-	qb := strings.Builder{}
-	qb.WriteString("UPDATE users SET ")
-	var args []any
-	argCount := 1
-
+	updateQuery := pgq.Update("users").
+		Where("deleted_at IS NULL").Where("id = ?", id).Returning(userColumns)
+	argCount := 0
 	if param.Password != nil {
-		fmt.Fprintf(&qb, "password = $%d, ", argCount)
-		args = append(args, *param.Password)
+		updateQuery = updateQuery.Set("password", *param.Password)
 		argCount++
 	}
 
-	if argCount == 1 {
+	if param.RoleID != nil {
+		updateQuery = updateQuery.Set("role_id", *param.RoleID)
+	}
+
+	if argCount == 0 {
 		return nil, errors.New("nothing to update")
 	}
 
-	qb.WriteString("updated_at = NOW() ")
-	fmt.Fprintf(&qb, "WHERE id = $%d AND deleted_at IS NULL ", argCount)
-	args = append(args, id)
-	fmt.Fprintf(&qb, "RETURNING %s", userColumns)
+	updateQuery = updateQuery.Set("updated_at", "NOW()")
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, qb.String(), args...)
+	query, args, err := updateQuery.SQL()
+	if err != nil {
+		return nil, err
+	}
 
+	row := r.GetExecutor(ctx).QueryRow(ctx, query, args...)
 	return scanUser(row)
 }
 
