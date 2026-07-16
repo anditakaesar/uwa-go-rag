@@ -16,4 +16,7 @@ type ICookieService interface {
 type IJWTService interface {
 	Verify(token string) (domain.UserClaims, error)
 	IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error)
+
+	VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error)
+	IssueRefreshToken(ctx context.Context, userID int64, secret []byte) (string, error)
 }

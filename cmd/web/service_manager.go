@@ -81,6 +81,7 @@ func (w *WebServer) Run(ctx context.Context) error {
 	}
 
 	err := w.server.ListenAndServe()
+	// err := w.server.ListenAndServeTLS("localhost.pem", "localhost-key.pem")
 	if err != nil && err != http.ErrServerClosed {
 		return err
 	}

@@ -110,6 +110,78 @@ func (_c *MockIJWTService_IssueJWT_Call) RunAndReturn(run func(ctx context.Conte
 	return _c
 }
 
+// IssueRefreshToken provides a mock function for the type MockIJWTService
+func (_mock *MockIJWTService) IssueRefreshToken(ctx context.Context, userID int64, secret []byte) (string, error) {
+	ret := _mock.Called(ctx, userID, secret)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IssueRefreshToken")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, []byte) (string, error)); ok {
+		return returnFunc(ctx, userID, secret)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, []byte) string); ok {
+		r0 = returnFunc(ctx, userID, secret)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, []byte) error); ok {
+		r1 = returnFunc(ctx, userID, secret)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockIJWTService_IssueRefreshToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IssueRefreshToken'
+type MockIJWTService_IssueRefreshToken_Call struct {
+	*mock.Call
+}
+
+// IssueRefreshToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int64
+//   - secret []byte
+func (_e *MockIJWTService_Expecter) IssueRefreshToken(ctx any, userID any, secret any) *MockIJWTService_IssueRefreshToken_Call {
+	return &MockIJWTService_IssueRefreshToken_Call{Call: _e.mock.On("IssueRefreshToken", ctx, userID, secret)}
+}
+
+func (_c *MockIJWTService_IssueRefreshToken_Call) Run(run func(ctx context.Context, userID int64, secret []byte)) *MockIJWTService_IssueRefreshToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 []byte
+		if args[2] != nil {
+			arg2 = args[2].([]byte)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockIJWTService_IssueRefreshToken_Call) Return(s string, err error) *MockIJWTService_IssueRefreshToken_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *MockIJWTService_IssueRefreshToken_Call) RunAndReturn(run func(ctx context.Context, userID int64, secret []byte) (string, error)) *MockIJWTService_IssueRefreshToken_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Verify provides a mock function for the type MockIJWTService
 func (_mock *MockIJWTService) Verify(token string) (domain.UserClaims, error) {
 	ret := _mock.Called(token)
@@ -166,6 +238,72 @@ func (_c *MockIJWTService_Verify_Call) Return(userClaims domain.UserClaims, err 
 }
 
 func (_c *MockIJWTService_Verify_Call) RunAndReturn(run func(token string) (domain.UserClaims, error)) *MockIJWTService_Verify_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// VerifyRefreshToken provides a mock function for the type MockIJWTService
+func (_mock *MockIJWTService) VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error) {
+	ret := _mock.Called(ctx, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for VerifyRefreshToken")
+	}
+
+	var r0 domain.RefreshTokenClaims
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (domain.RefreshTokenClaims, error)); ok {
+		return returnFunc(ctx, token)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) domain.RefreshTokenClaims); ok {
+		r0 = returnFunc(ctx, token)
+	} else {
+		r0 = ret.Get(0).(domain.RefreshTokenClaims)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, token)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockIJWTService_VerifyRefreshToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'VerifyRefreshToken'
+type MockIJWTService_VerifyRefreshToken_Call struct {
+	*mock.Call
+}
+
+// VerifyRefreshToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - token string
+func (_e *MockIJWTService_Expecter) VerifyRefreshToken(ctx any, token any) *MockIJWTService_VerifyRefreshToken_Call {
+	return &MockIJWTService_VerifyRefreshToken_Call{Call: _e.mock.On("VerifyRefreshToken", ctx, token)}
+}
+
+func (_c *MockIJWTService_VerifyRefreshToken_Call) Run(run func(ctx context.Context, token string)) *MockIJWTService_VerifyRefreshToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockIJWTService_VerifyRefreshToken_Call) Return(refreshTokenClaims domain.RefreshTokenClaims, err error) *MockIJWTService_VerifyRefreshToken_Call {
+	_c.Call.Return(refreshTokenClaims, err)
+	return _c
+}
+
+func (_c *MockIJWTService_VerifyRefreshToken_Call) RunAndReturn(run func(ctx context.Context, token string) (domain.RefreshTokenClaims, error)) *MockIJWTService_VerifyRefreshToken_Call {
 	_c.Call.Return(run)
 	return _c
 }

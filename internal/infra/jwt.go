@@ -56,6 +56,21 @@ func (s *JWTService) IssueJWT(ctx context.Context, userID int64, secret []byte) 
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: strconv.FormatInt(userID, 10),
 			ExpiresAt: jwt.NewNumericDate(
+				time.Now().Add(10 * time.Minute), // accessToken should be shortlived
+			),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(secret)
+}
+
+func (s *JWTService) IssueRefreshToken(ctx context.Context, userID int64, secret []byte) (string, error) {
+	claims := domain.RefreshTokenClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: strconv.FormatInt(userID, 10),
+			ExpiresAt: jwt.NewNumericDate(
 				time.Now().Add(time.Duration(s.jwtExpire) * time.Minute),
 			),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
@@ -64,4 +79,19 @@ func (s *JWTService) IssueJWT(ctx context.Context, userID int64, secret []byte) 
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(secret)
+}
+
+func (s *JWTService) VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error) {
+	claims := &domain.RefreshTokenClaims{}
+	parsed, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+		return s.secret, nil
+	})
+	if err != nil || !parsed.Valid {
+		return domain.RefreshTokenClaims{}, errors.New("invalid refresh token")
+	}
+
+	return *claims, nil
 }

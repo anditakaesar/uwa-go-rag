@@ -66,3 +66,6 @@ uploads/
 # generated
 coverage.out
 report.json
+
+# generated cert for localhost
+*.pem

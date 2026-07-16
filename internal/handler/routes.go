@@ -163,8 +163,13 @@ func SetupLoginApiRoutes(router chi.Router, h *LoginApi) {
 	endpoints := []Endpoint{
 		{
 			HttpMethod: http.MethodPost,
-			Path:       "/login",
+			Path:       "/auth/login",
 			Handler:    MakeHandler(h.ApiLogin),
+		},
+		{
+			HttpMethod: http.MethodPost,
+			Path:       "/auth/refresh",
+			Handler:    MakeHandler(h.RefreshToken),
 		},
 	}
 

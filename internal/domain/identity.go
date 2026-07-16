@@ -26,3 +26,7 @@ func IdentityFromContext(ctx context.Context) (Identity, bool) {
 	id, ok := ctx.Value(IdentityKey).(Identity)
 	return id, ok
 }
+
+type RefreshTokenClaims struct {
+	jwt.RegisteredClaims
+}

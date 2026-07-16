@@ -15,25 +15,28 @@ import (
 )
 
 type LoginApi struct {
-	UserService  service.IUserService
-	JWTService   infra.IJWTService
-	jwtSecret    []byte
-	AuditService audit.Recorder
+	UserService   service.IUserService
+	JWTService    infra.IJWTService
+	jwtSecret     []byte
+	CookieService infra.ICookieService
+	AuditService  audit.Recorder
 }
 
 type LoginApiDeps struct {
-	UserService  service.IUserService
-	JWTService   infra.IJWTService
-	JWTSecret    string
-	AuditService audit.Recorder
+	UserService   service.IUserService
+	JWTService    infra.IJWTService
+	JWTSecret     string
+	CookieService infra.ICookieService
+	AuditService  audit.Recorder
 }
 
 func NewLoginApi(dep LoginApiDeps) *LoginApi {
 	return &LoginApi{
-		UserService:  dep.UserService,
-		JWTService:   dep.JWTService,
-		jwtSecret:    []byte(dep.JWTSecret),
-		AuditService: dep.AuditService,
+		UserService:   dep.UserService,
+		JWTService:    dep.JWTService,
+		jwtSecret:     []byte(dep.JWTSecret),
+		CookieService: dep.CookieService,
+		AuditService:  dep.AuditService,
 	}
 }
 
@@ -61,6 +64,23 @@ func (h *LoginApi) ApiLogin(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorToken{Message: err.Error()}
 	}
 
+	refreshToken, err := h.JWTService.IssueRefreshToken(r.Context(), user.ID, h.jwtSecret)
+	if err != nil {
+		return &xerror.ErrorToken{Message: err.Error()}
+	}
+
+	session, err := h.CookieService.Get(r, sessionKey)
+	if err != nil {
+		return &xerror.ErrorSession{Message: err.Error()}
+	}
+	session.Values["user_id"] = user.ID
+	session.Values["refreshToken"] = refreshToken
+
+	err = h.CookieService.Save(session, r, w)
+	if err != nil {
+		return &xerror.ErrorSession{Message: err.Error()}
+	}
+
 	go func(recorder audit.Recorder) {
 		errAudit := recorder.Record(context.Background(), audit.AuditLog{
 			ResourceName: "users",
@@ -73,6 +93,39 @@ func (h *LoginApi) ApiLogin(w http.ResponseWriter, r *http.Request) error {
 			xlog.Logger.Error(fmt.Sprintf("error when audit logging: %v", errAudit))
 		}
 	}(h.AuditService)
+
+	transport.SendJSON(w, http.StatusOK, map[string]string{
+		"token": jwtToken,
+	})
+	return nil
+}
+
+func (h *LoginApi) RefreshToken(w http.ResponseWriter, r *http.Request) error {
+	session, err := h.CookieService.Get(r, sessionKey)
+	if err != nil {
+		return &xerror.ErrorSession{Message: "invalid or expired session cookie"}
+	}
+
+	// 2. Extract the values stored during login
+	refreshTokenVal, ok := session.Values["refreshToken"]
+	if !ok || refreshTokenVal == "" {
+		return &xerror.ErrorSession{Message: "refresh token missing from session"}
+	}
+
+	_, err = h.JWTService.VerifyRefreshToken(r.Context(), refreshTokenVal.(string))
+	if err != nil {
+		return &xerror.ErrorPermission{Message: "refresh token invalid or expired"}
+	}
+
+	userIDVal, ok := session.Values["user_id"]
+	if !ok {
+		return &xerror.ErrorSession{Message: "user identity missing from session"}
+	}
+
+	jwtToken, err := h.JWTService.IssueJWT(r.Context(), userIDVal.(int64), h.jwtSecret)
+	if err != nil {
+		return &xerror.ErrorSession{Message: "generate new token failed"}
+	}
 
 	transport.SendJSON(w, http.StatusOK, map[string]string{
 		"token": jwtToken,

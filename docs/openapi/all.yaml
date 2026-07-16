@@ -5,7 +5,7 @@ info:
 servers:
   - url: http://localhost:3000/api
 paths:
-  /login:
+  /auth/login:
     post:
       tags:
         - Authentication
@@ -29,6 +29,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh token endpoint. Use other client such as postman/bruno. Scalar-api client (using docker container) might fail to send cookies.
+      # Apply the cookie security scheme to this specific endpoint
+      security:
+        - CookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
         "401":
           description: Unauthorized
           content:
@@ -412,3 +434,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT # Optional, tells the client it's a JWT
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth_session

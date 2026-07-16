@@ -79,10 +79,11 @@ func SetupServer(dep *ServerDependency) *Executor {
 	})
 
 	loginApi := handler.NewLoginApi(handler.LoginApiDeps{
-		UserService:  infraSvc.UserService,
-		JWTService:   infraSvc.JWTService,
-		JWTSecret:    env.Values.JWTSecret,
-		AuditService: infraSvc.AuditService,
+		UserService:   infraSvc.UserService,
+		JWTService:    infraSvc.JWTService,
+		JWTSecret:     env.Values.JWTSecret,
+		CookieService: infraSvc.CookieService,
+		AuditService:  infraSvc.AuditService,
 	})
 
 	roleApi := handler.NewRoleApi(handler.RoleApiDeps{
@@ -105,12 +106,12 @@ func SetupServer(dep *ServerDependency) *Executor {
 	router.Route("/api", func(r chi.Router) {
 		// middlewares
 		r.Use(cors.Handler(cors.Options{
-			AllowedOrigins:   []string{"*"}, // Allow all origins
+			AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:8081"},
 			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-			ExposedHeaders:   []string{"Link"},
-			AllowCredentials: false,
-			MaxAge:           300, // Cache preflight response for 5 minutes
+			ExposedHeaders:   []string{"Link", "Set-Cookie"},
+			AllowCredentials: true,
+			MaxAge:           300,
 		}))
 		r.Use(middlewares.GlobalErrorMiddleware)
 		r.Use(middlewares.ResolveAuth(

@@ -15,11 +15,19 @@ func NewCookieService(isDev bool, secret string) *CookieSvc {
 		[]byte(secret),
 	)
 
+	sameSiteMode := http.SameSiteNoneMode
+	secureFlag := true
+
+	if isDev {
+		sameSiteMode = http.SameSiteLaxMode
+		secureFlag = false
+	}
+
 	cookieStore.Options = &sessions.Options{
 		Path:     "/",
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-		Secure:   !isDev, // true in prod
+		SameSite: sameSiteMode,
+		Secure:   secureFlag,
 	}
 
 	return &CookieSvc{

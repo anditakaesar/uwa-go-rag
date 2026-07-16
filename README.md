@@ -46,14 +46,26 @@ Check `Makefile`
 ### Env
 Environment variables are located in file `.env-example`. This file eventualy will be `.env` on the deployemnt environment or loaded through different manners.
 ```
-ENV="development"
-PORT=":3000"
-DB_URL="postgres://postgres:password@localhost:5433/backend_db?sslmode=disable"
-COOKIE_SECRET="Rm57qySVRliOZg5WqJ5GyKHKY6f4sJ41"
-CSRF_SECRET="4eQWYCt7WjxLwPmL06MhOW5FS96wxOk6"
-JWT_SECRET="4eQWYCt7WjxLwPmL06MhOW5FS96wxOk6"
-UPLOAD_DIR="../../uploads"
-HOSTNAME="http://localhost:3000"
+ENV=development
+PORT=:3000
+DB_URL=postgres://postgres:password@localhost:5433/backend_db?sslmode=disable
+COOKIE_SECRET=Rm57qySVRliOZg5WqJ5GyKHKY6f4sJ41
+CSRF_SECRET=4eQWYCt7WjxLwPmL06MhOW5FS96wxOk6
+JWT_SECRET=4eQWYCt7WjxLwPmL06MhOW5FS96wxOk6
+JWT_EXPIRE=15
+UPLOAD_DIR=../../uploads
+HOSTNAME=http://localhost:3000
+LOG_LEVEL=ERROR
+```
+
+### Run on TLS
+The web server is able to run on TLS/Secure.
+- Install `mkcert`
+- Run `$ mkcert -install`
+- Run `$ mkcert localhost`. This will geenerate *.pem files
+- On web server, run on TLS by loading these *.pem files
+```go
+err := w.server.ListenAndServeTLS("localhost.pem", "localhost-key.pem")
 ```
 
 ## Docs `/docs`
