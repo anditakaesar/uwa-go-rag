@@ -106,12 +106,12 @@ func SetupServer(dep *ServerDependency) *Executor {
 	router.Route("/api", func(r chi.Router) {
 		// middlewares
 		r.Use(cors.Handler(cors.Options{
-			AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:8081"},
-			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-			ExposedHeaders:   []string{"Link", "Set-Cookie"},
-			AllowCredentials: true,
-			MaxAge:           300,
+			AllowedOrigins:   env.CorsOpts.AllowedOrigins,
+			AllowedMethods:   env.CorsOpts.AllowedMethods,
+			AllowedHeaders:   env.CorsOpts.AllowedHeaders,
+			ExposedHeaders:   env.CorsOpts.ExposedHeaders,
+			AllowCredentials: env.CorsOpts.AllowCredentials,
+			MaxAge:           env.CorsOpts.MaxAge,
 		}))
 		r.Use(middlewares.GlobalErrorMiddleware)
 		r.Use(middlewares.ResolveAuth(

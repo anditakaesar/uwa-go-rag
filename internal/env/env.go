@@ -1,6 +1,7 @@
 package env
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 )
 
 var Values *Object
+var CorsOpts *CorsOptions
 
 type Object struct {
 	Env          string
@@ -24,6 +26,15 @@ type Object struct {
 	AIAPIKey     string
 }
 
+type CorsOptions struct {
+	AllowedOrigins   []string
+	AllowedMethods   []string
+	AllowedHeaders   []string
+	ExposedHeaders   []string
+	AllowCredentials bool
+	MaxAge           int
+}
+
 func Load() {
 	Values = &Object{
 		Env:          os.Getenv("ENV"),
@@ -38,6 +49,15 @@ func Load() {
 		HostName:     os.Getenv("HOSTNAME"),
 		AIBaseURL:    os.Getenv("AI_BASE_URL"),
 		AIAPIKey:     os.Getenv("AI_API_KEY"),
+	}
+
+	CorsOpts = &CorsOptions{
+		AllowedOrigins:   getCorsOpt("AllowedOrigins"),
+		AllowedMethods:   getCorsOpt("AllowedMethods"),
+		AllowedHeaders:   getCorsOpt("AllowedHeaders"),
+		ExposedHeaders:   getCorsOpt("ExposedHeaders"),
+		AllowCredentials: getCorsOptAllowCredentials(),
+		MaxAge:           getCorsOptMaxAge(),
 	}
 }
 
@@ -86,3 +106,28 @@ var (
 		"text/plain; charset=utf-8": true,
 	}
 )
+
+func getCorsOpt(key string) []string {
+	str := os.Getenv(fmt.Sprint("CORS_OPT_", key))
+	return strings.Split(str, ";")
+}
+
+func getCorsOptAllowCredentials() bool {
+	str := os.Getenv(fmt.Sprint("CORS_OPT_", "AllowCredentials"))
+	res, err := strconv.ParseBool(str)
+	if err != nil {
+		return false
+	}
+
+	return res
+}
+
+func getCorsOptMaxAge() int {
+	str := os.Getenv(fmt.Sprint("CORS_OPT_", "MaxAge"))
+	res, err := strconv.Atoi(str)
+	if err != nil {
+		return 300
+	}
+
+	return res
+}

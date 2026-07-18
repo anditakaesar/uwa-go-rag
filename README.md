@@ -55,6 +55,12 @@ JWT_SECRET=4eQWYCt7WjxLwPmL06MhOW5FS96wxOk6
 JWT_EXPIRE=15
 UPLOAD_DIR=../../uploads
 HOSTNAME=http://localhost:3000
+CORS_OPT_AllowedOrigins=http://localhost:3000;http://localhost:8081;http://localhost:5173
+CORS_OPT_AllowedMethods=GET;POST;PUT;DELETE;PATCH;OPTIONS
+CORS_OPT_AllowedHeaders=Accept;Authorization;Content-Type;X-CSRF-Token
+CORS_OPT_ExposedHeaders=Link;Set-Cookie
+CORS_OPT_AllowCredentials=true
+CORS_OPT_MaxAge=300
 LOG_LEVEL=ERROR
 ```
 
