@@ -12,9 +12,10 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/service"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
+	"github.com/go-chi/chi/v5"
 )
 
-type LoginApi struct {
+type AuthApi struct {
 	UserService   service.IUserService
 	JWTService    infra.IJWTService
 	jwtSecret     []byte
@@ -30,8 +31,8 @@ type LoginApiDeps struct {
 	AuditService  audit.Recorder
 }
 
-func NewLoginApi(dep LoginApiDeps) *LoginApi {
-	return &LoginApi{
+func NewLoginApi(dep LoginApiDeps) *AuthApi {
+	return &AuthApi{
 		UserService:   dep.UserService,
 		JWTService:    dep.JWTService,
 		jwtSecret:     []byte(dep.JWTSecret),
@@ -45,7 +46,33 @@ type LoginReq struct {
 	Password string `json:"password"`
 }
 
-func (h *LoginApi) ApiLogin(w http.ResponseWriter, r *http.Request) error {
+func SetupLoginApiRoutes(router chi.Router, h *AuthApi) {
+	endpoints := []Endpoint{
+		{
+			HttpMethod: http.MethodPost,
+			Path:       "/auth/login",
+			Handler:    MakeHandler(h.Login),
+		},
+		{
+			HttpMethod: http.MethodPost,
+			Path:       "/auth/refresh",
+			Handler:    MakeHandler(h.RefreshToken),
+		},
+		{
+			HttpMethod: http.MethodPost,
+			Path:       "/auth/logout",
+			Handler:    MakeHandler(h.Logout),
+		},
+	}
+
+	router.Group(func(r chi.Router) {
+		for _, endpoint := range endpoints {
+			r.MethodFunc(endpoint.HttpMethod, endpoint.Path, endpoint.Handler)
+		}
+	})
+}
+
+func (h *AuthApi) Login(w http.ResponseWriter, r *http.Request) error {
 	var loginReq LoginReq
 
 	err := json.NewDecoder(r.Body).Decode(&loginReq)
@@ -74,6 +101,7 @@ func (h *LoginApi) ApiLogin(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorSession{Message: err.Error()}
 	}
 	session.Values["user_id"] = user.ID
+	session.Values["username"] = user.Username
 	session.Values["refreshToken"] = refreshToken
 
 	err = h.CookieService.Save(session, r, w)
@@ -100,7 +128,7 @@ func (h *LoginApi) ApiLogin(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (h *LoginApi) RefreshToken(w http.ResponseWriter, r *http.Request) error {
+func (h *AuthApi) RefreshToken(w http.ResponseWriter, r *http.Request) error {
 	session, err := h.CookieService.Get(r, sessionKey)
 	if err != nil {
 		return &xerror.ErrorSession{Message: "invalid or expired session cookie"}
@@ -130,5 +158,23 @@ func (h *LoginApi) RefreshToken(w http.ResponseWriter, r *http.Request) error {
 	transport.SendJSON(w, http.StatusOK, map[string]string{
 		"token": jwtToken,
 	})
+	return nil
+}
+
+func (h *AuthApi) Logout(w http.ResponseWriter, r *http.Request) error {
+	session, err := h.CookieService.Get(r, sessionKey)
+	if err != nil {
+		return &xerror.ErrorSession{Message: err.Error()}
+	}
+
+	delete(session.Values, "user_id")
+	delete(session.Values, "username")
+	delete(session.Values, "refreshToken")
+
+	err = h.CookieService.Save(session, r, w)
+	if err != nil {
+		return &xerror.ErrorSession{Message: err.Error()}
+	}
+
 	return nil
 }
