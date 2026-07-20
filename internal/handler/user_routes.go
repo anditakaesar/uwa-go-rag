@@ -57,6 +57,13 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 				middlewares.RequirePermission("users.delete"),
 			},
 		},
+		{
+			Endpoint: Endpoint{
+				HttpMethod: http.MethodGet,
+				Path:       "/users/me",
+				Handler:    MakeHandler(h.FetchMe),
+			},
+		},
 	}
 
 	for _, e := range protectedEndpoints {
@@ -65,26 +72,5 @@ func SetupUserApiRoutes(router chi.Router, h *UserApi) {
 		}
 		e.Middlewares = append(requiredMiddlewares, e.Middlewares...)
 		router.With(e.Middlewares...).MethodFunc(e.HttpMethod, e.Path, e.Handler)
-	}
-}
-
-func SetupRoleApiRoutes(router chi.Router, h *RoleApi) {
-	protectedEndpoints := []EndpointWithMiddleware{
-		{
-			Endpoint: Endpoint{
-				HttpMethod: http.MethodGet,
-				Path:       "/roles",
-				Handler:    MakeHandler(h.FetchRoles),
-			},
-			Middlewares: []func(http.Handler) http.Handler{
-				middlewares.RequireAuth(),
-				middlewares.RequirePermission("roles.read")},
-		},
-	}
-
-	for _, e := range protectedEndpoints {
-		if len(e.Middlewares) > 0 {
-			router.With(e.Middlewares...).MethodFunc(e.HttpMethod, e.Path, e.Handler)
-		}
 	}
 }

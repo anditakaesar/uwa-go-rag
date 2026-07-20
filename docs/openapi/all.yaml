@@ -4,6 +4,8 @@ info:
   version: "1.0"
 servers:
   - url: http://localhost:3000/api
+    description: unsecure
+  - url: https://localhost:3000/api
 paths:
   /auth/login:
     post:
@@ -40,7 +42,8 @@ paths:
     post:
       tags:
         - Authentication
-      summary: Refresh token endpoint. Use other client such as postman/bruno. Scalar-api client (using docker container) might fail to send cookies.
+      summary: Refresh token endpoint
+      description: Use other client such as postman/bruno. Scalar-api client (using docker container) might fail to send cookies
       # Apply the cookie security scheme to this specific endpoint
       security:
         - CookieAuth: []
@@ -183,6 +186,33 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me:
+    get:
+      tags:
+        - User Management
+      summary: Fetch current user
+      security:
+        - BearerAuth: []
       responses:
         "200":
           description: Successful response

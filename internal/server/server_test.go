@@ -12,6 +12,7 @@ import (
 
 func TestSetupServer(test *testing.T) {
 	env.Values = &env.Object{}
+	env.CorsOpts = &env.CorsOptions{}
 	test.Run("success generate setup server", func(t *testing.T) {
 
 		mockDB := new(mocks.MockIDatabase)

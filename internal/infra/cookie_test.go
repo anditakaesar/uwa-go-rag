@@ -13,7 +13,7 @@ func TestNewCookieService(test *testing.T) {
 	test.Run("success", func(t *testing.T) {
 		svc := NewCookieService(true, "test-secret")
 
-		assert.Equal(t, false, svc.cookieStore.Options.Secure)
+		assert.Equal(t, true, svc.cookieStore.Options.Secure)
 	})
 }
 

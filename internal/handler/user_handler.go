@@ -144,3 +144,15 @@ func (h *UserApi) Update(w http.ResponseWriter, r *http.Request) error {
 	transport.SendJSON(w, http.StatusOK, defaultSuccessResponse)
 	return nil
 }
+
+func (h *UserApi) FetchMe(w http.ResponseWriter, r *http.Request) error {
+	identity := r.Context().Value(domain.IdentityKey).(domain.Identity)
+
+	user, err := h.UserService.GetUserByID(r.Context(), identity.UserID)
+	if err != nil {
+		return err
+	}
+
+	transport.SendJSON(w, http.StatusOK, UserDomainToResponse(user))
+	return nil
+}
