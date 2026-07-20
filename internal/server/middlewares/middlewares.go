@@ -48,20 +48,6 @@ func ResolveAuth(
 ) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			session, err := cookieStore.Get(r, "auth_session")
-			if err == nil {
-				uid, ok := session.Values["user_id"].(int64)
-				if ok {
-					ctx := context.WithValue(
-						r.Context(),
-						domain.IdentityKey,
-						domain.Identity{UserID: uid, Method: "session"},
-					)
-					next.ServeHTTP(w, r.WithContext(ctx))
-					return
-				}
-			}
-
 			auth := r.Header.Get("Authorization")
 			tokenStr, found := strings.CutPrefix(auth, "Bearer ")
 			if found {
@@ -72,6 +58,20 @@ func ResolveAuth(
 						r.Context(),
 						domain.IdentityKey,
 						domain.Identity{UserID: userID, Permission: claims.Permissions, Method: "jwt"},
+					)
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				}
+			}
+
+			session, err := cookieStore.Get(r, "auth_session")
+			if err == nil {
+				uid, ok := session.Values["user_id"].(int64)
+				if ok {
+					ctx := context.WithValue(
+						r.Context(),
+						domain.IdentityKey,
+						domain.Identity{UserID: uid, Method: "session"},
 					)
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return

@@ -57,16 +57,16 @@ func (m *ServiceManager) Start(ctx context.Context) error {
 // web-server
 type WebServer struct {
 	name   string
-	router *chi.Mux
 	server *http.Server
-	port   string
 }
 
 func NewWebServer(name string, router *chi.Mux, port string) *WebServer {
 	return &WebServer{
-		name:   name,
-		router: router,
-		port:   port,
+		name: name,
+		server: &http.Server{
+			Addr:    port,
+			Handler: router,
+		},
 	}
 }
 
@@ -75,11 +75,6 @@ func (w *WebServer) Name() string {
 }
 
 func (w *WebServer) Run(ctx context.Context) error {
-	w.server = &http.Server{
-		Addr:    w.port,
-		Handler: w.router,
-	}
-
 	// err := w.server.ListenAndServe()
 	err := w.server.ListenAndServeTLS("localhost.pem", "localhost-key.pem")
 	if err != nil && err != http.ErrServerClosed {

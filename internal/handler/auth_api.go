@@ -134,7 +134,6 @@ func (h *AuthApi) RefreshToken(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorSession{Message: "invalid or expired session cookie"}
 	}
 
-	// 2. Extract the values stored during login
 	refreshTokenVal, ok := session.Values["refreshToken"]
 	if !ok || refreshTokenVal == "" {
 		return &xerror.ErrorSession{Message: "refresh token missing from session"}
@@ -167,9 +166,8 @@ func (h *AuthApi) Logout(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorSession{Message: err.Error()}
 	}
 
-	delete(session.Values, "user_id")
-	delete(session.Values, "username")
-	delete(session.Values, "refreshToken")
+	session.Values = make(map[any]any)
+	session.Options.MaxAge = -1
 
 	err = h.CookieService.Save(session, r, w)
 	if err != nil {
