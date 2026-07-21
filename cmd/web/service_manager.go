@@ -106,27 +106,40 @@ type DBServer struct {
 
 func NewDBServer(db IDatabaseSvr) *DBServer {
 	return &DBServer{
-		db:   db,
-		name: "db-client",
+		db:     db,
+		name:   "db-client",
+		stopCh: make(chan struct{}),
 	}
 }
 
 func (s *DBServer) Run(ctx context.Context) error {
-	s.stopCh = make(chan struct{})
 	err := s.db.Ping(ctx)
 	if err != nil {
 		return err
 	}
 	xlog.Logger.Info("Database Connected")
-	<-s.stopCh
+	select {
+	case <-s.stopCh:
+	case <-ctx.Done():
+	}
 	return nil
 }
 
 func (s *DBServer) Shutdown(ctx context.Context) error {
 	close(s.stopCh)
-	s.db.Close()
-	xlog.Logger.Info("Database Connection Closed")
-	return nil
+	done := make(chan struct{})
+	go func() {
+		s.db.Close()
+		close(done)
+	}()
+	select {
+	case <-done:
+		xlog.Logger.Info("Database Connection Closed")
+		return nil
+	case <-ctx.Done():
+		xlog.Logger.Info("Database Close timed out - forcing application shutdown! (check for leaked connections/rows)")
+		return ctx.Err()
+	}
 }
 
 func (s *DBServer) Name() string {

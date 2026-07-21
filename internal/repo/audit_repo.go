@@ -29,12 +29,17 @@ func (r *AuditRepository) GetExecutor(ctx context.Context) IDBExecutor {
 
 func (r *AuditRepository) Insert(ctx context.Context, auditlog audit.AuditLog) error {
 	query := `
-		INSERT INTO audit_logs 
-		("resource_name", "resource_id", "actor_id", "actor_name", "actor_type", "action", 
+		INSERT INTO audit_logs
+		("resource_name", "resource_id", "actor_id", "actor_name", "actor_type", "action",
 		"before", "after", "metadata", "created_at") VALUES
 		($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW());
 	`
 
-	_, err := r.GetExecutor(ctx).Query(ctx, query, auditlog.ToArgs()...)
-	return err
+	rows, err := r.GetExecutor(ctx).Query(ctx, query, auditlog.ToArgs()...)
+	if err != nil {
+		return err
+	}
+
+	defer rows.Close()
+	return nil
 }

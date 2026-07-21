@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
@@ -42,6 +43,9 @@ func NewDatabase(ctx context.Context, dbURL string) (*database, error) {
 	config.ConnConfig.Tracer = &queryTracer{
 		log: xlog.Logger,
 	}
+
+	config.MaxConnIdleTime = 5 * time.Minute
+	config.MaxConnLifetime = 30 * time.Minute
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
@@ -87,7 +91,9 @@ func (u *unitOfWork) Do(ctx context.Context, fn func(ctx context.Context) error)
 		return fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer func() {
-		rollbackErr := tx.Rollback(ctx)
+		rollbackCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		rollbackErr := tx.Rollback(rollbackCtx)
 		if rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
 			xlog.Logger.Error(fmt.Sprintf("rollback err: %v", rollbackErr))
 		}
