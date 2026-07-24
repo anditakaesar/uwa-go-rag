@@ -7,6 +7,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -111,8 +112,8 @@ func (_c *MockIJWTService_IssueJWT_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // IssueRefreshToken provides a mock function for the type MockIJWTService
-func (_mock *MockIJWTService) IssueRefreshToken(ctx context.Context, userID int64, secret []byte) (string, error) {
-	ret := _mock.Called(ctx, userID, secret)
+func (_mock *MockIJWTService) IssueRefreshToken(ctx context.Context, param common.RefreshTokenParam) (string, error) {
+	ret := _mock.Called(ctx, param)
 
 	if len(ret) == 0 {
 		panic("no return value specified for IssueRefreshToken")
@@ -120,16 +121,16 @@ func (_mock *MockIJWTService) IssueRefreshToken(ctx context.Context, userID int6
 
 	var r0 string
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, []byte) (string, error)); ok {
-		return returnFunc(ctx, userID, secret)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, common.RefreshTokenParam) (string, error)); ok {
+		return returnFunc(ctx, param)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, []byte) string); ok {
-		r0 = returnFunc(ctx, userID, secret)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, common.RefreshTokenParam) string); ok {
+		r0 = returnFunc(ctx, param)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, []byte) error); ok {
-		r1 = returnFunc(ctx, userID, secret)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, common.RefreshTokenParam) error); ok {
+		r1 = returnFunc(ctx, param)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -143,30 +144,24 @@ type MockIJWTService_IssueRefreshToken_Call struct {
 
 // IssueRefreshToken is a helper method to define mock.On call
 //   - ctx context.Context
-//   - userID int64
-//   - secret []byte
-func (_e *MockIJWTService_Expecter) IssueRefreshToken(ctx any, userID any, secret any) *MockIJWTService_IssueRefreshToken_Call {
-	return &MockIJWTService_IssueRefreshToken_Call{Call: _e.mock.On("IssueRefreshToken", ctx, userID, secret)}
+//   - param common.RefreshTokenParam
+func (_e *MockIJWTService_Expecter) IssueRefreshToken(ctx any, param any) *MockIJWTService_IssueRefreshToken_Call {
+	return &MockIJWTService_IssueRefreshToken_Call{Call: _e.mock.On("IssueRefreshToken", ctx, param)}
 }
 
-func (_c *MockIJWTService_IssueRefreshToken_Call) Run(run func(ctx context.Context, userID int64, secret []byte)) *MockIJWTService_IssueRefreshToken_Call {
+func (_c *MockIJWTService_IssueRefreshToken_Call) Run(run func(ctx context.Context, param common.RefreshTokenParam)) *MockIJWTService_IssueRefreshToken_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 int64
+		var arg1 common.RefreshTokenParam
 		if args[1] != nil {
-			arg1 = args[1].(int64)
-		}
-		var arg2 []byte
-		if args[2] != nil {
-			arg2 = args[2].([]byte)
+			arg1 = args[1].(common.RefreshTokenParam)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -177,7 +172,7 @@ func (_c *MockIJWTService_IssueRefreshToken_Call) Return(s string, err error) *M
 	return _c
 }
 
-func (_c *MockIJWTService_IssueRefreshToken_Call) RunAndReturn(run func(ctx context.Context, userID int64, secret []byte) (string, error)) *MockIJWTService_IssueRefreshToken_Call {
+func (_c *MockIJWTService_IssueRefreshToken_Call) RunAndReturn(run func(ctx context.Context, param common.RefreshTokenParam) (string, error)) *MockIJWTService_IssueRefreshToken_Call {
 	_c.Call.Return(run)
 	return _c
 }

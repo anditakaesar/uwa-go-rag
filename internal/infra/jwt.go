@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -56,7 +57,7 @@ func (s *JWTService) IssueJWT(ctx context.Context, userID int64, secret []byte) 
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: strconv.FormatInt(userID, 10),
 			ExpiresAt: jwt.NewNumericDate(
-				time.Now().Add(10 * time.Minute), // accessToken should be shortlived
+				time.Now().Add(time.Duration(s.jwtExpire) * time.Minute), // accessToken should be shortlived
 			),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
@@ -66,19 +67,19 @@ func (s *JWTService) IssueJWT(ctx context.Context, userID int64, secret []byte) 
 	return token.SignedString(secret)
 }
 
-func (s *JWTService) IssueRefreshToken(ctx context.Context, userID int64, secret []byte) (string, error) {
+func (s *JWTService) IssueRefreshToken(ctx context.Context, param common.RefreshTokenParam) (string, error) {
 	claims := domain.RefreshTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: strconv.FormatInt(userID, 10),
+			Subject: strconv.FormatInt(param.UserID, 10),
 			ExpiresAt: jwt.NewNumericDate(
-				time.Now().Add(time.Duration(s.jwtExpire) * time.Minute),
+				time.Now().Add(time.Duration(param.MaxAgeExpiration) * time.Second),
 			),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(secret)
+	return token.SignedString(param.Secret)
 }
 
 func (s *JWTService) VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error) {

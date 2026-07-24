@@ -57,3 +57,10 @@ func (s *Sort) ToSQLSort() string {
 type txCtxKey string
 
 const TxKey txCtxKey = "TX_KEY"
+
+// Refresh token param
+type RefreshTokenParam struct {
+	UserID           int64
+	Secret           []byte
+	MaxAgeExpiration int
+}

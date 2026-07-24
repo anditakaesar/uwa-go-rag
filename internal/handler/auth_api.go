@@ -7,12 +7,14 @@ import (
 	"net/http"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/audit"
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
 	"github.com/anditakaesar/uwa-go-rag/internal/service"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/sessions"
 )
 
 type AuthApi struct {
@@ -91,7 +93,12 @@ func (h *AuthApi) Login(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorToken{Message: err.Error()}
 	}
 
-	refreshToken, err := h.JWTService.IssueRefreshToken(r.Context(), user.ID, h.jwtSecret)
+	maxAge := 7 * 86400
+	refreshToken, err := h.JWTService.IssueRefreshToken(r.Context(), common.RefreshTokenParam{
+		UserID:           user.ID,
+		Secret:           h.jwtSecret,
+		MaxAgeExpiration: maxAge,
+	})
 	if err != nil {
 		return &xerror.ErrorToken{Message: err.Error()}
 	}
@@ -100,6 +107,17 @@ func (h *AuthApi) Login(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return &xerror.ErrorSession{Message: err.Error()}
 	}
+
+	samesiteMode := http.SameSiteLaxMode
+
+	session.Options = &sessions.Options{
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: samesiteMode,
+		Secure:   true,
+		MaxAge:   maxAge,
+	}
+
 	session.Values["user_id"] = user.ID
 	session.Values["username"] = user.Username
 	session.Values["refreshToken"] = refreshToken

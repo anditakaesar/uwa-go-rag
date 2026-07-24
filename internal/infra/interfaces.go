@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/gorilla/sessions"
 )
@@ -18,5 +19,5 @@ type IJWTService interface {
 	IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error)
 
 	VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error)
-	IssueRefreshToken(ctx context.Context, userID int64, secret []byte) (string, error)
+	IssueRefreshToken(ctx context.Context, param common.RefreshTokenParam) (string, error)
 }
