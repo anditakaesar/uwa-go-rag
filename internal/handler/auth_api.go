@@ -8,6 +8,7 @@ import (
 
 	"github.com/anditakaesar/uwa-go-rag/internal/audit"
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
+	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
 	"github.com/anditakaesar/uwa-go-rag/internal/service"
@@ -109,6 +110,10 @@ func (h *AuthApi) Login(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	samesiteMode := http.SameSiteLaxMode
+
+	if env.Values.IsDevelopment() {
+		samesiteMode = http.SameSiteNoneMode
+	}
 
 	session.Options = &sessions.Options{
 		Path:     "/",

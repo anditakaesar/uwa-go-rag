@@ -33,6 +33,7 @@ func (r *UserRepository) GetExecutor(ctx context.Context) IDBExecutor {
 }
 
 const userColumns = "id, username, password, role_id, created_at, updated_at, deleted_at"
+const userColumnsEnriched = "users.id, users.username, users.password, users.role_id, users.created_at, users.updated_at, users.deleted_at, roles.name as role_name"
 
 func scanUser(row pgx.Row) (*domain.User, error) {
 	var model domain.User
@@ -44,6 +45,28 @@ func scanUser(row pgx.Row) (*domain.User, error) {
 		&model.CreatedAt,
 		&model.UpdatedAt,
 		&model.DeletedAt,
+	)
+	if err != nil {
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return nil, &xerror.ErrorResourceNotFound{Message: "user not found"}
+		}
+		return nil, err
+	}
+
+	return &model, nil
+}
+
+func scanUserEnriched(row pgx.Row) (*domain.UserEnriched, error) {
+	var model domain.UserEnriched
+	err := row.Scan(
+		&model.ID,
+		&model.Username,
+		&model.Password,
+		&model.RoleID,
+		&model.CreatedAt,
+		&model.UpdatedAt,
+		&model.DeletedAt,
+		&model.RoleName,
 	)
 	if err != nil {
 		if err.Error() == pgx.ErrNoRows.Error() {
@@ -149,11 +172,14 @@ func (r *UserRepository) Update(ctx context.Context, id int64, param domain.Upda
 	return scanUser(row)
 }
 
-func (r *UserRepository) FindAll(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.User, error) {
-	selectQuery := pgq.Select(userColumns).From("users").Where("deleted_at IS NULL")
+func (r *UserRepository) FindAll(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.UserEnriched, error) {
+	selectQuery := pgq.Select(userColumnsEnriched).
+		From("users").
+		LeftJoin("roles ON roles.id = users.role_id").
+		Where("users.deleted_at IS NULL")
 
 	if param.UsernameLike != nil {
-		selectQuery = selectQuery.Where("username like ?", fmt.Sprint("%", *param.UsernameLike, "%"))
+		selectQuery = selectQuery.Where("users.username like ?", fmt.Sprint("%", *param.UsernameLike, "%"))
 	}
 
 	countQuery, countArgs, err := pgq.Select(COUNT_AS_TOTAL).FromSelect(selectQuery, "u").SQL()
@@ -178,10 +204,10 @@ func (r *UserRepository) FindAll(ctx context.Context, param *domain.FindAllUsers
 	}
 	defer rows.Close()
 
-	users := []domain.User{}
+	users := []domain.UserEnriched{}
 
 	for rows.Next() {
-		u, err := scanUser(rows)
+		u, err := scanUserEnriched(rows)
 		if err != nil {
 			return nil, err
 		}

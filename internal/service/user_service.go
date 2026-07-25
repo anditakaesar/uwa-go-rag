@@ -14,7 +14,7 @@ type IUserService interface {
 	GetUserByID(ctx context.Context, id int64) (*domain.User, error)
 	UpdatePassword(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)
 	Update(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)
-	FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error)
+	FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.UserEnriched, *domain.FindAllUsersParam, error)
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -152,7 +152,7 @@ func (s *UserService) Update(ctx context.Context, id int64, update *domain.Updat
 	return result, nil
 }
 
-func (s *UserService) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error) {
+func (s *UserService) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.UserEnriched, *domain.FindAllUsersParam, error) {
 	param.Normalize()
 	users, err := s.userRepo.FindAll(ctx, &param)
 	if err != nil {

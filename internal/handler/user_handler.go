@@ -100,7 +100,7 @@ func (h *UserApi) FetchUsers(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	transport.SendJSON(w, http.StatusOK, UserListToResponse(users), transport.WithMeta(*param))
+	transport.SendJSON(w, http.StatusOK, UserEnrichedListToResponse(users), transport.WithMeta(*param))
 	return nil
 }
 

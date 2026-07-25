@@ -477,14 +477,16 @@ func TestUserService_FindAll(test *testing.T) {
 				Page: 1,
 				Size: 1,
 			},
-		}).Return([]domain.User{
+		}).Return([]domain.UserEnriched{
 			{
-				Base: domain.Base{
-					ID: 1,
+				User: domain.User{
+					Base: domain.Base{
+						ID: 1,
+					},
+					Username: "user1",
+					Password: "pass",
+					RoleID:   int64(1),
 				},
-				Username: "user1",
-				Password: "pass",
-				RoleID:   int64(1),
 			},
 		}, nil).Once()
 
@@ -514,7 +516,7 @@ func TestUserService_FindAll(test *testing.T) {
 				Page: 1,
 				Size: 1,
 			},
-		}).Return([]domain.User{}, errors.New("error_FindAll")).Once()
+		}).Return([]domain.UserEnriched{}, errors.New("error_FindAll")).Once()
 
 		s := service.NewUserService(service.UserServiceDeps{
 			UserRepo: m.userRepo,

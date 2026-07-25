@@ -384,13 +384,32 @@ components:
             - "username"
             - "roleID"
             - "createdAt"
+    SingleUserEnrichedResponse:
+      type: "object"
+      properties:
+        data:
+          type: "object"
+          properties:
+            id:
+              type: "integer"
+            username:
+              type: "string"
+            roleID:
+              type: integer
+            createdAt:
+              type: "string"
+              example: "2026-07-14T22:32:12.062975+07:00"
+            roleName:
+              type: "string"
+              example: "RoleName"
+
     FetchUserResponse:
       type: "object"
       properties:
         data:
           type: "array"
           items:
-            $ref: "#/components/schemas/SingleUserResponse"
+            $ref: "#/components/schemas/SingleUserEnrichedResponse"
         meta:
           type: "object"
           properties:

@@ -14,6 +14,11 @@ type User struct {
 	RoleID   int64
 }
 
+type UserEnriched struct {
+	User
+	RoleName string
+}
+
 type ctxKeyUser string
 
 const UserCtxKey ctxKeyUser = env.USER_CTX_KEY

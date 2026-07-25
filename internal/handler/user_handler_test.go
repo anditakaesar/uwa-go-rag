@@ -409,22 +409,26 @@ func TestUserApi_FetchUsers(test *testing.T) {
 				Page: 1,
 				Size: 15,
 			},
-		}).Return([]domain.User{
+		}).Return([]domain.UserEnriched{
 			{
-				Base: domain.Base{
-					ID: 1,
+				User: domain.User{
+					Base: domain.Base{
+						ID: 1,
+					},
+					Username: "user1",
+					Password: "pass",
+					RoleID:   int64(3),
 				},
-				Username: "user1",
-				Password: "pass",
-				RoleID:   int64(3),
 			},
 			{
-				Base: domain.Base{
-					ID: 1,
+				User: domain.User{
+					Base: domain.Base{
+						ID: 1,
+					},
+					Username: "user1",
+					Password: "pass",
+					RoleID:   int64(3),
 				},
-				Username: "user1",
-				Password: "pass",
-				RoleID:   int64(3),
 			},
 		}, &domain.FindAllUsersParam{
 			Pagination: common.Pagination{
@@ -455,22 +459,26 @@ func TestUserApi_FetchUsers(test *testing.T) {
 				Page: 1,
 				Size: 10,
 			},
-		}).Return([]domain.User{
+		}).Return([]domain.UserEnriched{
 			{
-				Base: domain.Base{
-					ID: 1,
+				User: domain.User{
+					Base: domain.Base{
+						ID: 1,
+					},
+					Username: "user1",
+					Password: "pass",
+					RoleID:   int64(3),
 				},
-				Username: "user1",
-				Password: "pass",
-				RoleID:   int64(3),
 			},
 			{
-				Base: domain.Base{
-					ID: 1,
+				User: domain.User{
+					Base: domain.Base{
+						ID: 1,
+					},
+					Username: "user1",
+					Password: "pass",
+					RoleID:   int64(3),
 				},
-				Username: "user1",
-				Password: "pass",
-				RoleID:   int64(3),
 			},
 		}, &domain.FindAllUsersParam{
 			Pagination: common.Pagination{
@@ -501,22 +509,26 @@ func TestUserApi_FetchUsers(test *testing.T) {
 				Page: 1,
 				Size: 10,
 			},
-		}).Return([]domain.User{
+		}).Return([]domain.UserEnriched{
 			{
-				Base: domain.Base{
-					ID: 1,
+				User: domain.User{
+					Base: domain.Base{
+						ID: 1,
+					},
+					Username: "user1",
+					Password: "pass",
+					RoleID:   int64(3),
 				},
-				Username: "user1",
-				Password: "pass",
-				RoleID:   int64(3),
 			},
 			{
-				Base: domain.Base{
-					ID: 1,
+				User: domain.User{
+					Base: domain.Base{
+						ID: 1,
+					},
+					Username: "user1",
+					Password: "pass",
+					RoleID:   int64(3),
 				},
-				Username: "user1",
-				Password: "pass",
-				RoleID:   int64(3),
 			},
 		}, &domain.FindAllUsersParam{
 			Pagination: common.Pagination{

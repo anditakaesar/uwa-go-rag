@@ -238,24 +238,24 @@ func (_c *MockIUserService_Delete_Call) RunAndReturn(run func(ctx context.Contex
 }
 
 // FindAll provides a mock function for the type MockIUserService
-func (_mock *MockIUserService) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error) {
+func (_mock *MockIUserService) FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.UserEnriched, *domain.FindAllUsersParam, error) {
 	ret := _mock.Called(ctx, param)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindAll")
 	}
 
-	var r0 []domain.User
+	var r0 []domain.UserEnriched
 	var r1 *domain.FindAllUsersParam
 	var r2 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FindAllUsersParam) ([]domain.UserEnriched, *domain.FindAllUsersParam, error)); ok {
 		return returnFunc(ctx, param)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FindAllUsersParam) []domain.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FindAllUsersParam) []domain.UserEnriched); ok {
 		r0 = returnFunc(ctx, param)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.User)
+			r0 = ret.Get(0).([]domain.UserEnriched)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.FindAllUsersParam) *domain.FindAllUsersParam); ok {
@@ -303,12 +303,12 @@ func (_c *MockIUserService_FindAll_Call) Run(run func(ctx context.Context, param
 	return _c
 }
 
-func (_c *MockIUserService_FindAll_Call) Return(users []domain.User, findAllUsersParam *domain.FindAllUsersParam, err error) *MockIUserService_FindAll_Call {
-	_c.Call.Return(users, findAllUsersParam, err)
+func (_c *MockIUserService_FindAll_Call) Return(userEnricheds []domain.UserEnriched, findAllUsersParam *domain.FindAllUsersParam, err error) *MockIUserService_FindAll_Call {
+	_c.Call.Return(userEnricheds, findAllUsersParam, err)
 	return _c
 }
 
-func (_c *MockIUserService_FindAll_Call) RunAndReturn(run func(ctx context.Context, param domain.FindAllUsersParam) ([]domain.User, *domain.FindAllUsersParam, error)) *MockIUserService_FindAll_Call {
+func (_c *MockIUserService_FindAll_Call) RunAndReturn(run func(ctx context.Context, param domain.FindAllUsersParam) ([]domain.UserEnriched, *domain.FindAllUsersParam, error)) *MockIUserService_FindAll_Call {
 	_c.Call.Return(run)
 	return _c
 }

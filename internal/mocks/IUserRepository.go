@@ -317,23 +317,23 @@ func (_c *MockIUserRepository_FetchUserByParam_Call) RunAndReturn(run func(ctx c
 }
 
 // FindAll provides a mock function for the type MockIUserRepository
-func (_mock *MockIUserRepository) FindAll(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.User, error) {
+func (_mock *MockIUserRepository) FindAll(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.UserEnriched, error) {
 	ret := _mock.Called(ctx, param)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindAll")
 	}
 
-	var r0 []domain.User
+	var r0 []domain.UserEnriched
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllUsersParam) ([]domain.User, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllUsersParam) ([]domain.UserEnriched, error)); ok {
 		return returnFunc(ctx, param)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllUsersParam) []domain.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllUsersParam) []domain.UserEnriched); ok {
 		r0 = returnFunc(ctx, param)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.User)
+			r0 = ret.Get(0).([]domain.UserEnriched)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.FindAllUsersParam) error); ok {
@@ -374,12 +374,12 @@ func (_c *MockIUserRepository_FindAll_Call) Run(run func(ctx context.Context, pa
 	return _c
 }
 
-func (_c *MockIUserRepository_FindAll_Call) Return(users []domain.User, err error) *MockIUserRepository_FindAll_Call {
-	_c.Call.Return(users, err)
+func (_c *MockIUserRepository_FindAll_Call) Return(userEnricheds []domain.UserEnriched, err error) *MockIUserRepository_FindAll_Call {
+	_c.Call.Return(userEnricheds, err)
 	return _c
 }
 
-func (_c *MockIUserRepository_FindAll_Call) RunAndReturn(run func(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.User, error)) *MockIUserRepository_FindAll_Call {
+func (_c *MockIUserRepository_FindAll_Call) RunAndReturn(run func(ctx context.Context, param *domain.FindAllUsersParam) ([]domain.UserEnriched, error)) *MockIUserRepository_FindAll_Call {
 	_c.Call.Return(run)
 	return _c
 }
