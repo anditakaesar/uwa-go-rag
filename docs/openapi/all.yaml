@@ -301,7 +301,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FetchRoleResponse"
+                $ref: "#/components/schemas/FetchRoleListResponse"
         "400":
           description: Bad Request
           content:
@@ -314,7 +314,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
+  /roles/{id}:
+    get:
+      tags:
+        - Role Management
+      summary: Fetch role by id
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/GetRoleResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     SuccessResponse:
@@ -420,18 +453,23 @@ components:
               $ref: "#/components/schemas/Pagination"
       required:
         - "data"
-    FetchRoleResponse:
+    GetRoleResponse:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        name:
+          type: "string"
+        idname:
+          type: "string"
+          example: "1 - Superadmin"
+    FetchRoleListResponse:
       type: "object"
       properties:
         data:
           type: "array"
           items:
-            type: "object"
-            properties:
-              id:
-                type: "integer"
-              name:
-                type: "string"
+            $ref: "#/components/schemas/GetRoleResponse"
         meta:
           type: "object"
           properties:

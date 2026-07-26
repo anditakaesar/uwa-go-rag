@@ -8,6 +8,7 @@ import (
 
 type IRoleService interface {
 	FetchAll(ctx context.Context, param domain.FetchAllRoleParam) ([]domain.Role, *domain.FetchAllRoleParam, error)
+	Get(ctx context.Context, id int64) (*domain.Role, error)
 }
 
 type RoleService struct {
@@ -31,4 +32,11 @@ func (s *RoleService) FetchAll(ctx context.Context, param domain.FetchAllRolePar
 		return nil, nil, err
 	}
 	return users, &param, nil
+}
+
+func (s *RoleService) Get(ctx context.Context, id int64) (*domain.Role, error) {
+	role, err := s.roleRepo.FetchRoleByParam(ctx, domain.FetchRoleParam{
+		ID: &id,
+	})
+	return role, err
 }

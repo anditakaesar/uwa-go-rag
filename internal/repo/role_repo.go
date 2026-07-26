@@ -46,6 +46,9 @@ func scanRole(row pgx.Row) (*domain.Role, error) {
 	)
 
 	if err != nil {
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return nil, &xerror.ErrorResourceNotFound{Message: "role not found"}
+		}
 		return nil, err
 	}
 

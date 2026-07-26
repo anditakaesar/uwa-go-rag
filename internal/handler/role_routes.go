@@ -16,12 +16,25 @@ func SetupRoleApiRoutes(router chi.Router, h *RoleApi) {
 				Handler:    MakeHandler(h.FetchRoles),
 			},
 			Middlewares: []func(http.Handler) http.Handler{
-				middlewares.RequireAuth(),
 				middlewares.RequirePermission("roles.read")},
+		},
+		{
+			Endpoint: Endpoint{
+				HttpMethod: http.MethodGet,
+				Path:       "/roles/{id}",
+				Handler:    MakeHandler(h.GetRole),
+			},
+			Middlewares: []func(http.Handler) http.Handler{
+				middlewares.RequirePermission("roles.read"),
+			},
 		},
 	}
 
 	for _, e := range protectedEndpoints {
+		requiredMiddlewares := []func(http.Handler) http.Handler{
+			middlewares.RequireAuth(),
+		}
+		e.Middlewares = append(requiredMiddlewares, e.Middlewares...)
 		if len(e.Middlewares) > 0 {
 			router.With(e.Middlewares...).MethodFunc(e.HttpMethod, e.Path, e.Handler)
 		}

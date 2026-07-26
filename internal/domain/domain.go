@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
@@ -20,6 +21,10 @@ type Role struct {
 	CreatedAt   time.Time
 	UpdatedAt   *time.Time
 	IsSystem    bool
+}
+
+func (r *Role) IDName() string {
+	return fmt.Sprintf("%d - %s", r.ID, r.Name)
 }
 
 type FetchRoleParam struct {
