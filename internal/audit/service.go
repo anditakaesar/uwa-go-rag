@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 )
 
@@ -23,10 +24,12 @@ const (
 
 type Repository interface {
 	Insert(ctx context.Context, auditlog AuditLog) error
+	FindAll(ctx context.Context, param *AuditLogFetchParam) ([]AuditLog, error)
 }
 
 type Recorder interface {
 	Record(ctx context.Context, auditlog AuditLog) error
+	FindAll(ctx context.Context, param AuditLogFetchParam) ([]AuditLog, *AuditLogFetchParam, error)
 }
 
 type AuditLog struct {
@@ -97,4 +100,22 @@ func (r *AuditRecorder) Record(ctx context.Context, auditlog AuditLog) error {
 		return err
 	}
 	return r.repo.Insert(ctx, auditlog)
+}
+
+type AuditLogFetchParam struct {
+	ResourceNameLike *string           `json:"resourceNameLike"`
+	Pagination       common.Pagination `json:"pagination"`
+}
+
+func (p *AuditLogFetchParam) Normalize() {
+	p.Pagination.Normalize()
+}
+
+func (r *AuditRecorder) FindAll(ctx context.Context, param AuditLogFetchParam) ([]AuditLog, *AuditLogFetchParam, error) {
+	param.Normalize()
+	auditlogs, err := r.repo.FindAll(ctx, &param)
+	if err != nil {
+		return nil, nil, err
+	}
+	return auditlogs, &param, nil
 }

@@ -90,6 +90,10 @@ func SetupServer(dep *ServerDependency) *Executor {
 		RoleService: infraSvc.RoleService,
 	})
 
+	auditlogApi := handler.NewAuditLogApi(handler.AuditLogApiDep{
+		AuditLogService: infraSvc.AuditService,
+	})
+
 	router.Group(func(r chi.Router) {
 		// middlewares
 		r.Use(middlewares.GlobalErrorMiddleware)
@@ -125,6 +129,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 		handler.SetupChatApiRoutes(r, chatApi)
 		handler.SetupLoginApiRoutes(r, loginApi)
 		handler.SetupRoleApiRoutes(r, roleApi)
+		handler.SetupAuditLogApiRoutes(r, auditlogApi)
 	})
 
 	return &Executor{

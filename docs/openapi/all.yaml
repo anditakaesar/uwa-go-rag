@@ -314,6 +314,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
   /roles/{id}:
     get:
       tags:
@@ -348,6 +349,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /auditlogs:
+    get:
+      tags:
+        - Audit Logs
+      summary: Fetch Audit Logs
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: resourceName
+          schema:
+            type: string
+          description: find resource name like
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: limit the size (default 10)
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: page number (default 1)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FetchAuditLogResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     SuccessResponse:
@@ -435,7 +480,6 @@ components:
             roleName:
               type: "string"
               example: "RoleName"
-
     FetchUserResponse:
       type: "object"
       properties:
@@ -515,6 +559,44 @@ components:
           type: string
         roleID:
           type: integer
+    FetchAuditLogResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 101
+              resourceName:
+                type: string
+                example: "users"
+              actorID:
+                type: integer
+                nullable: true
+                example: 1
+              actorName:
+                type: string
+                example: "username"
+              actorType:
+                type: string
+                example: "system"
+              action:
+                type: string
+                example: "login"
+              createdAt:
+                type: string
+                example: "2026-07-14T22:32:12.062975+07:00"
+        meta:
+          type: "object"
+          properties:
+            resourceNameLike:
+              type: "string"
+              nullable: true
+            pagination:
+              $ref: "#/components/schemas/Pagination"
 
   securitySchemes:
     BearerAuth: # Logical name for the scheme

@@ -19,6 +19,11 @@ func (m *mockRepository) Insert(ctx context.Context, auditlog audit.AuditLog) er
 	return nil
 }
 
+func (m *mockRepository) FindAll(ctx context.Context, param *audit.AuditLogFetchParam) ([]audit.AuditLog, error) {
+	m.inserted = false
+	return nil, nil
+}
+
 func TestAuditLog_Validate(test *testing.T) {
 	test.Run("valid audit log", func(t *testing.T) {
 		log := audit.AuditLog{

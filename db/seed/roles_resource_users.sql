@@ -18,3 +18,12 @@ ON CONFLICT (name) DO NOTHING;
 INSERT INTO "public"."role_permissions" ("role_id", "permission_id")
     SELECT "roles"."id" as "role_id", "permissions"."id" as "permission_id" FROM "roles" LEFT JOIN "permissions" ON "resource" = 'roles' WHERE "roles"."name" = 'superadmin'
     ON CONFLICT ("role_id", "permission_id") DO NOTHING;
+
+INSERT INTO "public"."permissions" (resource, action, name)
+VALUES
+    ('audit_logs', 'read', 'audit_logs.read')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO "public"."role_permissions" ("role_id", "permission_id")
+    SELECT "roles"."id" as "role_id", "permissions"."id" as "permission_id" FROM "roles" LEFT JOIN "permissions" ON "resource" = 'audit_logs' WHERE "roles"."name" = 'superadmin'
+    ON CONFLICT ("role_id", "permission_id") DO NOTHING;
