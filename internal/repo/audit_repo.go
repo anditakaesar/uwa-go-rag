@@ -75,7 +75,7 @@ func (r *AuditRepository) Insert(ctx context.Context, auditlog audit.AuditLog) e
 }
 
 func (r *AuditRepository) FindAll(ctx context.Context, param *audit.AuditLogFetchParam) ([]audit.AuditLog, error) {
-	selectQuery := pgq.Select(auditLogColumns).From("audit_logs")
+	selectQuery := pgq.Select(auditLogColumns).From("audit_logs").OrderBy("audit_logs.id DESC")
 
 	if param.ResourceNameLike != nil {
 		selectQuery = selectQuery.Where("audit_log.resource_name like ?", fmt.Sprint("%", *param.ResourceNameLike, "%"))
