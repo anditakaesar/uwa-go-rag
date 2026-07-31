@@ -37,3 +37,4 @@ packages:
       IUserRepository:
       IPasswordChecker:
       IUserService:
+      IFileService:

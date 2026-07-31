@@ -33,7 +33,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	services := infra.NewInfra(pool)
+	services := infra.NewInfra(pool, nil)
 	seedSQL(ctx, pool)
 	seedUsers(ctx, services)
 }

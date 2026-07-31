@@ -42,3 +42,7 @@ type IJobQueue interface {
 	EnqueueChat(ctx context.Context, words []string) error
 	EnqueueRagFile(ctx context.Context, ragFileID int64) error
 }
+
+type IStorageClient interface {
+	ListFiles(ctx context.Context, bucketName string, prefix string) ([]string, error)
+}

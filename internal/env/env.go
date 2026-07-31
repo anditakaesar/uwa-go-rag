@@ -10,6 +10,7 @@ import (
 
 var Values *Object
 var CorsOpts *CorsOptions
+var S3Conf *S3Config
 
 type Object struct {
 	Env          string
@@ -33,6 +34,15 @@ type CorsOptions struct {
 	ExposedHeaders   []string
 	AllowCredentials bool
 	MaxAge           int
+}
+
+type S3Config struct {
+	S3Endpoint  string
+	S3AccessKey string
+	S3SecretKey string
+	S3Region    string
+	S3Bucket    string
+	S3Prefix    string
 }
 
 func Load() {
@@ -59,6 +69,16 @@ func Load() {
 		AllowCredentials: getCorsOptAllowCredentials(),
 		MaxAge:           getCorsOptMaxAge(),
 	}
+
+	S3Conf = &S3Config{
+		S3Endpoint:  os.Getenv("S3_ENDPOINT"),
+		S3AccessKey: os.Getenv("S3_ACCESS_KEY"),
+		S3SecretKey: os.Getenv("S3_SECRET_KEY"),
+		S3Region:    os.Getenv("S3_REGION"),
+		S3Bucket:    os.Getenv("S3_BUCKET"),
+		S3Prefix:    os.Getenv("S3_PREFIX"),
+	}
+
 }
 
 func getJWTExpireSession() int {

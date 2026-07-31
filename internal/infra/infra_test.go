@@ -9,7 +9,7 @@ import (
 
 func TestNewInfra(test *testing.T) {
 	test.Run("success", func(t *testing.T) {
-		got := infra.NewInfra(nil)
+		got := infra.NewInfra(nil, nil)
 		assert.NotNil(t, got)
 	})
 }

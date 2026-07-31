@@ -26,8 +26,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	client, err := infra.NewS3Client(ctx, infra.S3ClientDependency{
+		EndpointURL: env.S3Conf.S3Endpoint,
+		AccessKey:   env.S3Conf.S3AccessKey,
+		SecretKey:   env.S3Conf.S3SecretKey,
+		Region:      env.S3Conf.S3Region,
+	})
+	if err != nil {
+		xlog.Logger.Error(fmt.Sprintf("unable to connect to storage service: %v", err))
+		os.Exit(1)
+	}
+
 	executor := server.SetupServer(&server.ServerDependency{
-		DB: db,
+		DB: db, StorageClient: client,
 	})
 	manager.Register(NewDBServer(db))
 	manager.Register(NewWebServer("web-server", executor.Mux, env.Values.Port))

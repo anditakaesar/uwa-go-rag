@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -15,17 +16,26 @@ import (
 
 type IFileService interface {
 	Save(filename string, content io.Reader) (string, error)
+	ListFiles(ctx context.Context, bucketName string, prefix string) ([]string, error)
 }
 
 type FileService struct {
-	uploadDir    string
-	allowedTypes map[string]bool
+	uploadDir     string
+	allowedTypes  map[string]bool
+	storageClient IStorageClient
 }
 
-func NewFileService(dir string, allowedTypes map[string]bool) *FileService {
+type FileServiceDep struct {
+	DirName       string
+	AllowedTypes  map[string]bool
+	StorageClient IStorageClient
+}
+
+func NewFileService(dep FileServiceDep) *FileService {
 	return &FileService{
-		uploadDir:    dir,
-		allowedTypes: allowedTypes,
+		uploadDir:     dep.DirName,
+		allowedTypes:  dep.AllowedTypes,
+		storageClient: dep.StorageClient,
 	}
 }
 
@@ -77,4 +87,8 @@ func sanitizeFilename(filename string) string {
 	}
 
 	return safeName + strings.ToLower(ext)
+}
+
+func (svc *FileService) ListFiles(ctx context.Context, bucketName string, prefix string) ([]string, error) {
+	return svc.storageClient.ListFiles(ctx, bucketName, prefix)
 }

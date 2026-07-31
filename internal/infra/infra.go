@@ -11,6 +11,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
 	"github.com/anditakaesar/uwa-go-rag/internal/worker"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
@@ -26,9 +27,10 @@ type Services struct {
 	RoleService   *service.RoleService
 	RiverClient   *river.Client[pgx.Tx]
 	AuditService  *audit.AuditRecorder
+	StorageClient *RustFS
 }
 
-func NewInfra(pool *pgxpool.Pool) *Services {
+func NewInfra(pool *pgxpool.Pool, s3client *s3.Client) *Services {
 	userRepo := repo.NewUserRepository(pool)
 	ragRepo := repo.NewRagRepository(pool)
 	auditRepo := repo.NewAuditRepository(pool)
@@ -36,6 +38,7 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 	rolePermissionRepo := repo.NewRolePermissionRepo(pool)
 	uow := NewUnitOfWork(pool)
 	riverQueue := NewRiverQueue()
+	storageClient := NewRustFs(s3client)
 	aiClient := NewAIClient(AIClientDep{
 		BaseURL: env.Values.AIBaseURL,
 		ApiKey:  env.Values.AIAPIKey,
@@ -52,7 +55,11 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 		RolePermissionRepo: rolePermissionRepo,
 	})
 	cookieService := NewCookieService(env.Values.IsDevelopment(), env.Values.CookieSecret)
-	fileSvc := service.NewFileService(env.Values.UploadDir, env.UPLOAD_ALLOWED_TYPES)
+	fileSvc := service.NewFileService(service.FileServiceDep{
+		DirName:       env.Values.UploadDir,
+		AllowedTypes:  env.UPLOAD_ALLOWED_TYPES,
+		StorageClient: storageClient,
+	})
 	chatSvc := service.NewChatService(service.ChatServiceDep{
 		RagRepo:   ragRepo,
 		AIClient:  aiClient,
@@ -95,5 +102,6 @@ func NewInfra(pool *pgxpool.Pool) *Services {
 		RoleService:   roleSvc,
 		RiverClient:   riverClient,
 		AuditService:  auditSvc,
+		StorageClient: storageClient,
 	}
 }

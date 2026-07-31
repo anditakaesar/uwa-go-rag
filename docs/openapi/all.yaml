@@ -393,6 +393,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /files:
+    get:
+      tags:
+        - List uploaded files
+      security:
+        - BearerAuth: []
+
 components:
   schemas:
     SuccessResponse:

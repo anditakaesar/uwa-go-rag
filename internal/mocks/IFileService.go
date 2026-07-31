@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	"context"
 	"io"
 
 	mock "github.com/stretchr/testify/mock"
@@ -35,6 +36,80 @@ type MockIFileService_Expecter struct {
 
 func (_m *MockIFileService) EXPECT() *MockIFileService_Expecter {
 	return &MockIFileService_Expecter{mock: &_m.Mock}
+}
+
+// ListFiles provides a mock function for the type MockIFileService
+func (_mock *MockIFileService) ListFiles(ctx context.Context, bucketName string, prefix string) ([]string, error) {
+	ret := _mock.Called(ctx, bucketName, prefix)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListFiles")
+	}
+
+	var r0 []string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) ([]string, error)); ok {
+		return returnFunc(ctx, bucketName, prefix)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) []string); ok {
+		r0 = returnFunc(ctx, bucketName, prefix)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = returnFunc(ctx, bucketName, prefix)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockIFileService_ListFiles_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListFiles'
+type MockIFileService_ListFiles_Call struct {
+	*mock.Call
+}
+
+// ListFiles is a helper method to define mock.On call
+//   - ctx context.Context
+//   - bucketName string
+//   - prefix string
+func (_e *MockIFileService_Expecter) ListFiles(ctx any, bucketName any, prefix any) *MockIFileService_ListFiles_Call {
+	return &MockIFileService_ListFiles_Call{Call: _e.mock.On("ListFiles", ctx, bucketName, prefix)}
+}
+
+func (_c *MockIFileService_ListFiles_Call) Run(run func(ctx context.Context, bucketName string, prefix string)) *MockIFileService_ListFiles_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockIFileService_ListFiles_Call) Return(strings []string, err error) *MockIFileService_ListFiles_Call {
+	_c.Call.Return(strings, err)
+	return _c
+}
+
+func (_c *MockIFileService_ListFiles_Call) RunAndReturn(run func(ctx context.Context, bucketName string, prefix string) ([]string, error)) *MockIFileService_ListFiles_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Save provides a mock function for the type MockIFileService
@@ -71,7 +146,7 @@ type MockIFileService_Save_Call struct {
 // Save is a helper method to define mock.On call
 //   - filename string
 //   - content io.Reader
-func (_e *MockIFileService_Expecter) Save(filename interface{}, content interface{}) *MockIFileService_Save_Call {
+func (_e *MockIFileService_Expecter) Save(filename any, content any) *MockIFileService_Save_Call {
 	return &MockIFileService_Save_Call{Call: _e.mock.On("Save", filename, content)}
 }
 

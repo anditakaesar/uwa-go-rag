@@ -12,6 +12,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5"
@@ -24,8 +25,13 @@ type IDatabase interface {
 	Close()
 }
 
+type IStorageClient interface {
+	Get() *s3.Client
+}
+
 type ServerDependency struct {
-	DB IDatabase
+	DB            IDatabase
+	StorageClient IStorageClient
 }
 
 type Executor struct {
@@ -35,7 +41,7 @@ type Executor struct {
 
 func SetupServer(dep *ServerDependency) *Executor {
 	router := chi.NewRouter()
-	infraSvc := infra.NewInfra(dep.DB.Get())
+	infraSvc := infra.NewInfra(dep.DB.Get(), dep.StorageClient.Get())
 
 	// static files
 	sub, err := fs.Sub(web.PublicFS, "public")
@@ -94,6 +100,12 @@ func SetupServer(dep *ServerDependency) *Executor {
 		AuditLogService: infraSvc.AuditService,
 	})
 
+	fileApi := handler.NewFileApi(handler.FileApiDependency{
+		FileService: infraSvc.FileService,
+		Bucket:      env.S3Conf.S3Bucket,
+		Prefix:      env.S3Conf.S3Prefix,
+	})
+
 	router.Group(func(r chi.Router) {
 		// middlewares
 		r.Use(middlewares.GlobalErrorMiddleware)
@@ -130,6 +142,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 		handler.SetupLoginApiRoutes(r, loginApi)
 		handler.SetupRoleApiRoutes(r, roleApi)
 		handler.SetupAuditLogApiRoutes(r, auditlogApi)
+		handler.SetupFileApiRoutes(r, fileApi)
 	})
 
 	return &Executor{
