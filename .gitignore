@@ -69,3 +69,7 @@ report.json
 
 # generated cert for localhost
 *.pem
+
+# vector, send log to loki
+vector.yaml
+logs/

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strings"
 	"time"
 
@@ -22,9 +23,11 @@ type queryTracer struct {
 	log *slog.Logger
 }
 
+var whitespaceRgx = regexp.MustCompile(`\s+`)
+
 func (tracer *queryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
 	if !strings.Contains(data.SQL, "river_") && !strings.Contains(data.SQL, "begin") && !strings.Contains(data.SQL, "commit") {
-		tracer.log.Info(fmt.Sprintf("Executing command sql: %s, args: %v+", data.SQL, data.Args))
+		tracer.log.Info(fmt.Sprintf("Executing command sql: %s, args: %v+", whitespaceRgx.ReplaceAllString(data.SQL, " "), data.Args))
 		return ctx
 	}
 

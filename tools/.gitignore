@@ -2,3 +2,6 @@ migrate
 mockery
 migrate.*
 mockery_*
+vector
+vector-*
+vector_data/

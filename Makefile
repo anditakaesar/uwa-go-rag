@@ -3,6 +3,8 @@ export
 
 TOOLS_MIGRATE="$$(pwd)/tools/migrate"
 TOOLS_MOCKERY="$$(pwd)/tools/mockery"
+TOOLS_VECTOR="$$(pwd)/tools/vector"
+VECTOR_CONFIG="$$(pwd)/vector.yaml"
 MIGRATION_PATH="$$(pwd)/db/migrations"
 DEV_DATABASE="postgres://postgres:password@localhost:5435/backend_db?sslmode=disable"
 
@@ -28,3 +30,6 @@ test:
 
 run:
 	go run ./cmd/web
+
+run-vector:
+	$(TOOLS_VECTOR) --config $(VECTOR_CONFIG)

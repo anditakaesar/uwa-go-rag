@@ -1,0 +1,47 @@
+data_dir: "./tools/vector_data"
+# sources: # use this to load form stdinput / using pipe when running go app
+#   go_stdin_logs:
+#     type: "stdin"
+
+sources:
+  go_file_logs:
+    type: "file"
+    include:
+      - "./logs/app.log"
+    read_from: "beginning"
+
+transforms:
+  parse_slog:
+    type: "remap"
+    inputs:
+      # - "go_stdin_logs"
+      - "go_file_logs"
+    source: |
+      # Parse the raw line string into a JSON object
+      parsed, err = parse_json(.message)
+      if err == null {
+        # Fix: Added '!' to merge to make the assignment infallible
+        . = merge!(., parsed)
+        del(.message)
+      }
+
+      # Map slog's 'msg' field to the standard '.message' string for Loki body
+      if exists(.msg) {
+        .message = to_string!(.msg)
+        del(.msg)
+      } else {
+        .message = to_string!(.message)
+      }f
+
+sinks:
+  loki_backend:
+    type: "loki"
+    inputs:
+      - "parse_slog"
+    endpoint: "http://loki:3100"
+    compression: "none" # Turned off for faster local debugging
+    encoding:
+      codec: "json"
+    labels:
+      environment: "development"
+      application: "go-local-app"

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,6 +19,14 @@ func main() {
 	defer stop()
 
 	env.Load()
+
+	logFile, err := os.OpenFile("logs/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	defer logFile.Close()
+	xlog.InitializeLoggerFile(logFile)
+	// xlog.InitializeLogger()
 	manager := &ServiceManager{}
 
 	db, err := infra.NewDatabase(ctx, env.Values.DBUrl)
