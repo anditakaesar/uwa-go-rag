@@ -12,7 +12,6 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5"
@@ -26,7 +25,7 @@ type IDatabase interface {
 }
 
 type IStorageClient interface {
-	Get() *s3.Client
+	Get() *infra.InfraStorageClient
 }
 
 type ServerDependency struct {
@@ -102,8 +101,6 @@ func SetupServer(dep *ServerDependency) *Executor {
 
 	fileApi := handler.NewFileApi(handler.FileApiDependency{
 		FileService: infraSvc.FileService,
-		Bucket:      env.S3Conf.S3Bucket,
-		Prefix:      env.S3Conf.S3Prefix,
 	})
 
 	router.Group(func(r chi.Router) {

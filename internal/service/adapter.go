@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
+	"github.com/google/uuid"
 )
 
 type IUserRepository interface {
@@ -44,5 +45,11 @@ type IJobQueue interface {
 }
 
 type IStorageClient interface {
-	ListFiles(ctx context.Context, bucketName string, prefix string) ([]string, error)
+	ListFiles(ctx context.Context) ([]string, error)
+	GetPresignURL(ctx context.Context, key string) (string, error)
+}
+
+type IFileRepository interface {
+	Insert(ctx context.Context, newFile domain.File) (*domain.File, error)
+	Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error)
 }

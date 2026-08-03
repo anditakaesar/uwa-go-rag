@@ -35,7 +35,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	client, err := infra.NewS3Client(ctx, infra.S3ClientDependency{
+	client, err := infra.NewStorageClient(ctx, infra.S3ClientDependency{
 		EndpointURL: env.S3Conf.S3Endpoint,
 		AccessKey:   env.S3Conf.S3AccessKey,
 		SecretKey:   env.S3Conf.S3SecretKey,

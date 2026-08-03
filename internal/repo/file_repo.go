@@ -58,12 +58,21 @@ func scanFileRow(row pgx.Row) (*domain.File, error) {
 }
 
 var insertColumns = []string{
-	"user_id", "original_name", "mime_type", "size_bytes", "s3_bucket", "s3_key", "status", "metadata",
+	"id", "user_id", "original_name", "mime_type", "size_bytes", "s3_bucket", "s3_key", "status", "metadata",
 }
 
 func (r *FileRepo) Insert(ctx context.Context, newFile domain.File) (*domain.File, error) {
 	insertQuery := pgq.Insert("files").Columns(insertColumns...).
-		Values(newFile.UserID, newFile.OriginalName, newFile.MimeType, newFile.SizeBytes, newFile.S3Bucket, newFile.S3Key, newFile.Status, newFile.Metadata).
+		Values(
+			newFile.ID,
+			newFile.UserID,
+			newFile.OriginalName,
+			newFile.MimeType,
+			newFile.SizeBytes,
+			newFile.S3Bucket,
+			newFile.S3Key,
+			newFile.Status,
+			newFile.Metadata).
 		Returning(fileColumns)
 	sql, args, err := insertQuery.SQL()
 	if err != nil {

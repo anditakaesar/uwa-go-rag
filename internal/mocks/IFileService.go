@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -38,9 +39,77 @@ func (_m *MockIFileService) EXPECT() *MockIFileService_Expecter {
 	return &MockIFileService_Expecter{mock: &_m.Mock}
 }
 
+// GeneratePresignURL provides a mock function for the type MockIFileService
+func (_mock *MockIFileService) GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error) {
+	ret := _mock.Called(ctx, param)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GeneratePresignURL")
+	}
+
+	var r0 *domain.GeneratePresignURLReturn
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error)); ok {
+		return returnFunc(ctx, param)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.GeneratePresignURLParam) *domain.GeneratePresignURLReturn); ok {
+		r0 = returnFunc(ctx, param)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.GeneratePresignURLReturn)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.GeneratePresignURLParam) error); ok {
+		r1 = returnFunc(ctx, param)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockIFileService_GeneratePresignURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GeneratePresignURL'
+type MockIFileService_GeneratePresignURL_Call struct {
+	*mock.Call
+}
+
+// GeneratePresignURL is a helper method to define mock.On call
+//   - ctx context.Context
+//   - param domain.GeneratePresignURLParam
+func (_e *MockIFileService_Expecter) GeneratePresignURL(ctx any, param any) *MockIFileService_GeneratePresignURL_Call {
+	return &MockIFileService_GeneratePresignURL_Call{Call: _e.mock.On("GeneratePresignURL", ctx, param)}
+}
+
+func (_c *MockIFileService_GeneratePresignURL_Call) Run(run func(ctx context.Context, param domain.GeneratePresignURLParam)) *MockIFileService_GeneratePresignURL_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 domain.GeneratePresignURLParam
+		if args[1] != nil {
+			arg1 = args[1].(domain.GeneratePresignURLParam)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockIFileService_GeneratePresignURL_Call) Return(generatePresignURLReturn *domain.GeneratePresignURLReturn, err error) *MockIFileService_GeneratePresignURL_Call {
+	_c.Call.Return(generatePresignURLReturn, err)
+	return _c
+}
+
+func (_c *MockIFileService_GeneratePresignURL_Call) RunAndReturn(run func(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error)) *MockIFileService_GeneratePresignURL_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListFiles provides a mock function for the type MockIFileService
-func (_mock *MockIFileService) ListFiles(ctx context.Context, bucketName string, prefix string) ([]string, error) {
-	ret := _mock.Called(ctx, bucketName, prefix)
+func (_mock *MockIFileService) ListFiles(ctx context.Context) ([]string, error) {
+	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListFiles")
@@ -48,18 +117,18 @@ func (_mock *MockIFileService) ListFiles(ctx context.Context, bucketName string,
 
 	var r0 []string
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) ([]string, error)); ok {
-		return returnFunc(ctx, bucketName, prefix)
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]string, error)); ok {
+		return returnFunc(ctx)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) []string); ok {
-		r0 = returnFunc(ctx, bucketName, prefix)
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []string); ok {
+		r0 = returnFunc(ctx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]string)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = returnFunc(ctx, bucketName, prefix)
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -73,30 +142,18 @@ type MockIFileService_ListFiles_Call struct {
 
 // ListFiles is a helper method to define mock.On call
 //   - ctx context.Context
-//   - bucketName string
-//   - prefix string
-func (_e *MockIFileService_Expecter) ListFiles(ctx any, bucketName any, prefix any) *MockIFileService_ListFiles_Call {
-	return &MockIFileService_ListFiles_Call{Call: _e.mock.On("ListFiles", ctx, bucketName, prefix)}
+func (_e *MockIFileService_Expecter) ListFiles(ctx any) *MockIFileService_ListFiles_Call {
+	return &MockIFileService_ListFiles_Call{Call: _e.mock.On("ListFiles", ctx)}
 }
 
-func (_c *MockIFileService_ListFiles_Call) Run(run func(ctx context.Context, bucketName string, prefix string)) *MockIFileService_ListFiles_Call {
+func (_c *MockIFileService_ListFiles_Call) Run(run func(ctx context.Context)) *MockIFileService_ListFiles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
 		run(
 			arg0,
-			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -107,7 +164,7 @@ func (_c *MockIFileService_ListFiles_Call) Return(strings []string, err error) *
 	return _c
 }
 
-func (_c *MockIFileService_ListFiles_Call) RunAndReturn(run func(ctx context.Context, bucketName string, prefix string) ([]string, error)) *MockIFileService_ListFiles_Call {
+func (_c *MockIFileService_ListFiles_Call) RunAndReturn(run func(ctx context.Context) ([]string, error)) *MockIFileService_ListFiles_Call {
 	_c.Call.Return(run)
 	return _c
 }

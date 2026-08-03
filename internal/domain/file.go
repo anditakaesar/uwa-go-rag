@@ -27,3 +27,14 @@ type File struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
+
+type GeneratePresignURLParam struct {
+	Name      string
+	SizeBytes int64
+	MimeType  string
+}
+
+type GeneratePresignURLReturn struct {
+	File
+	PresignURL string
+}

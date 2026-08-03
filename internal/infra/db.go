@@ -27,7 +27,7 @@ var whitespaceRgx = regexp.MustCompile(`\s+`)
 
 func (tracer *queryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
 	if !strings.Contains(data.SQL, "river_") && !strings.Contains(data.SQL, "begin") && !strings.Contains(data.SQL, "commit") {
-		tracer.log.Info(fmt.Sprintf("Executing command sql: %s, args: %v+", whitespaceRgx.ReplaceAllString(data.SQL, " "), data.Args))
+		tracer.log.Info("Executing command sql", "query", whitespaceRgx.ReplaceAllString(data.SQL, " "), "args", data.Args)
 		return ctx
 	}
 

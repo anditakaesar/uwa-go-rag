@@ -11,7 +11,6 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
 	"github.com/anditakaesar/uwa-go-rag/internal/worker"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
@@ -30,15 +29,20 @@ type Services struct {
 	StorageClient *RustFS
 }
 
-func NewInfra(pool *pgxpool.Pool, s3client *s3.Client) *Services {
+func NewInfra(pool *pgxpool.Pool, infraStorage *InfraStorageClient) *Services {
 	userRepo := repo.NewUserRepository(pool)
 	ragRepo := repo.NewRagRepository(pool)
 	auditRepo := repo.NewAuditRepository(pool)
 	roleRepo := repo.NewRoleRepository(pool)
 	rolePermissionRepo := repo.NewRolePermissionRepo(pool)
+	fileRepo := repo.NewFileRepo(pool)
 	uow := NewUnitOfWork(pool)
 	riverQueue := NewRiverQueue()
-	storageClient := NewRustFs(s3client)
+	storageClient := NewRustFs(RustFSDependency{
+		StorageClient: infraStorage,
+		BucketName:    env.S3Conf.S3Bucket,
+		BucketPrefix:  env.S3Conf.S3Prefix,
+	})
 	aiClient := NewAIClient(AIClientDep{
 		BaseURL: env.Values.AIBaseURL,
 		ApiKey:  env.Values.AIAPIKey,
@@ -59,6 +63,7 @@ func NewInfra(pool *pgxpool.Pool, s3client *s3.Client) *Services {
 		DirName:       env.Values.UploadDir,
 		AllowedTypes:  env.UPLOAD_ALLOWED_TYPES,
 		StorageClient: storageClient,
+		FileRepo:      fileRepo,
 	})
 	chatSvc := service.NewChatService(service.ChatServiceDep{
 		RagRepo:   ragRepo,

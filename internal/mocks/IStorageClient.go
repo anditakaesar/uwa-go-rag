@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -37,19 +37,19 @@ func (_m *MockIStorageClient) EXPECT() *MockIStorageClient_Expecter {
 }
 
 // Get provides a mock function for the type MockIStorageClient
-func (_mock *MockIStorageClient) Get() *s3.Client {
+func (_mock *MockIStorageClient) Get() *infra.InfraStorageClient {
 	ret := _mock.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for Get")
 	}
 
-	var r0 *s3.Client
-	if returnFunc, ok := ret.Get(0).(func() *s3.Client); ok {
+	var r0 *infra.InfraStorageClient
+	if returnFunc, ok := ret.Get(0).(func() *infra.InfraStorageClient); ok {
 		r0 = returnFunc()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*s3.Client)
+			r0 = ret.Get(0).(*infra.InfraStorageClient)
 		}
 	}
 	return r0
@@ -72,12 +72,12 @@ func (_c *MockIStorageClient_Get_Call) Run(run func()) *MockIStorageClient_Get_C
 	return _c
 }
 
-func (_c *MockIStorageClient_Get_Call) Return(client *s3.Client) *MockIStorageClient_Get_Call {
-	_c.Call.Return(client)
+func (_c *MockIStorageClient_Get_Call) Return(infraStorageClient *infra.InfraStorageClient) *MockIStorageClient_Get_Call {
+	_c.Call.Return(infraStorageClient)
 	return _c
 }
 
-func (_c *MockIStorageClient_Get_Call) RunAndReturn(run func() *s3.Client) *MockIStorageClient_Get_Call {
+func (_c *MockIStorageClient_Get_Call) RunAndReturn(run func() *infra.InfraStorageClient) *MockIStorageClient_Get_Call {
 	_c.Call.Return(run)
 	return _c
 }
