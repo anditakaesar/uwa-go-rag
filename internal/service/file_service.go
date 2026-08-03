@@ -30,6 +30,7 @@ type FileService struct {
 	allowedTypes  map[string]bool
 	storageClient IStorageClient
 	fileRepo      IFileRepository
+	uow           IUnitOfWork
 }
 
 type FileServiceDep struct {
@@ -37,6 +38,7 @@ type FileServiceDep struct {
 	AllowedTypes  map[string]bool
 	StorageClient IStorageClient
 	FileRepo      IFileRepository
+	UOW           IUnitOfWork
 }
 
 func NewFileService(dep FileServiceDep) *FileService {
@@ -45,6 +47,7 @@ func NewFileService(dep FileServiceDep) *FileService {
 		allowedTypes:  dep.AllowedTypes,
 		storageClient: dep.StorageClient,
 		fileRepo:      dep.FileRepo,
+		uow:           dep.UOW,
 	}
 }
 
@@ -103,7 +106,6 @@ func (svc *FileService) ListFiles(ctx context.Context) ([]string, error) {
 }
 
 func (svc *FileService) GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error) {
-	// get user
 	identity := ctx.Value(domain.IdentityKey).(domain.Identity)
 	cleanFilename := sanitizeFilename(param.Name)
 	extensionFile := filepath.Ext(param.Name)
@@ -112,35 +114,37 @@ func (svc *FileService) GeneratePresignURL(ctx context.Context, param domain.Gen
 		return nil, err
 	}
 
-	// call insert from file repo (db)
-	newFile, err := svc.fileRepo.Insert(ctx, domain.File{
-		ID:           newID,
-		UserID:       identity.UserID,
-		OriginalName: cleanFilename,
-		MimeType:     param.MimeType,
-		SizeBytes:    param.SizeBytes,
-		S3Bucket:     env.S3Conf.S3Bucket,
-		S3Key:        path.Join(env.S3Conf.S3Prefix, fmt.Sprintf("%v%v", newID.String(), extensionFile)),
-		Status:       domain.UPLOAD_STATUS_PENDING,
+	var result domain.GeneratePresignURLReturn
+
+	presignUrlErr := svc.uow.Do(ctx, func(txCtx context.Context) error {
+		newFile, err := svc.fileRepo.Insert(ctx, domain.File{
+			ID:           newID,
+			UserID:       identity.UserID,
+			OriginalName: cleanFilename,
+			MimeType:     param.MimeType,
+			SizeBytes:    param.SizeBytes,
+			S3Bucket:     env.S3Conf.S3Bucket,
+			S3Key:        path.Join(env.S3Conf.S3Prefix, fmt.Sprintf("%v%v", newID.String(), extensionFile)),
+			Status:       domain.UPLOAD_STATUS_PENDING,
+		})
+		if err != nil {
+			return err
+		}
+
+		presignUrl, err := svc.storageClient.GetPresignURL(ctx, newFile.S3Key)
+		if err != nil {
+			return err
+		}
+
+		result.File = *newFile
+		result.PresignURL = presignUrl
+
+		return nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	// need to decide:
-	// prefix? -> the prefix of the application assuming bucket is used by 1 service
-	// full key -> the key of the storage client that used to download the file
-	// get the ID as key
-	// call storageclient
-	// edge case, same file by hash?
-	// same file by name
 
-	presignUrl, err := svc.storageClient.GetPresignURL(ctx, newFile.S3Key)
-	if err != nil {
-		return nil, err
+	if presignUrlErr != nil {
+		return nil, presignUrlErr
 	}
 
-	return &domain.GeneratePresignURLReturn{
-		File:       *newFile,
-		PresignURL: presignUrl,
-	}, nil
+	return &result, nil
 }

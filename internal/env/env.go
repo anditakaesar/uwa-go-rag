@@ -25,6 +25,7 @@ type Object struct {
 	HostName     string
 	AIBaseURL    string
 	AIAPIKey     string
+	LogToFile    bool
 }
 
 type CorsOptions struct {
@@ -59,6 +60,7 @@ func Load() {
 		HostName:     os.Getenv("HOSTNAME"),
 		AIBaseURL:    os.Getenv("AI_BASE_URL"),
 		AIAPIKey:     os.Getenv("AI_API_KEY"),
+		LogToFile:    getLogToFile(),
 	}
 
 	CorsOpts = &CorsOptions{
@@ -88,6 +90,14 @@ func getJWTExpireSession() int {
 		return 15
 	}
 	return value
+}
+
+func getLogToFile() bool {
+	str := os.Getenv("LOG_TO_FILE")
+	if str == "true" {
+		return true
+	}
+	return false
 }
 
 func GetLogLevel() slog.Level {

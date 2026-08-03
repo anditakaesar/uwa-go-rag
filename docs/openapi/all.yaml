@@ -396,9 +396,45 @@ paths:
   /files:
     get:
       tags:
-        - List uploaded files
+        - File Management
+      summary: Fetch files
+      description: Fetch files within object storage bucket
       security:
         - BearerAuth: []
+  
+  /files/generate-presign-url:
+    post:
+      tags:
+        - File Management
+      summary: Generate Presigned URL
+      description: Generate `PUT` method presigned object URL
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true`
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GeneratePresignedURLRequest"
+      responses:
+        "201":
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratePresignedURLResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -604,6 +640,30 @@ components:
               nullable: true
             pagination:
               $ref: "#/components/schemas/Pagination"
+    GeneratePresignedURLRequest:
+      type: object
+      properties:
+        name:
+          required: true
+          type: string
+          example: "my-file.jpg"
+        sizeBytes:
+          required: true
+          type: number
+          example: 1024
+        mimeType:
+          required: true
+          type: string
+          example: "image/png"
+    GeneratePresignedURLResponse:
+      type: object
+      properties:
+        fileID:
+          type: string
+          example: "uuid-string-here"
+        presignURL:
+          type: string
+          example: "https://presign-url-to-s3"
 
   securitySchemes:
     BearerAuth: # Logical name for the scheme

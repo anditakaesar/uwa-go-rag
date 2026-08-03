@@ -19,6 +19,7 @@ import (
 func main() {
 	ctx := context.Background()
 	env.Load()
+	xlog.InitializeLogger()
 
 	pool, err := pgxpool.New(context.Background(), env.Values.DBUrl)
 	if err != nil {

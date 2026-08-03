@@ -41,6 +41,7 @@ func NewStorageClient(ctx context.Context, dep S3ClientDependency) (*InfraStorag
 		return nil, err
 	}
 
+	xlog.Logger.Info("Storage Client Connected")
 	return &InfraStorageClient{
 		storageClient: rustfs,
 		presignClient: presignClient,
@@ -94,10 +95,12 @@ func (r *RustFS) ListFiles(ctx context.Context) ([]string, error) {
 }
 
 func (r *RustFS) GetPresignURL(ctx context.Context, key string) (string, error) {
-	req, err := r.presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
+	objectInput := &s3.PutObjectInput{
 		Bucket: aws.String(env.S3Conf.S3Bucket),
 		Key:    aws.String(key),
-	}, func(opts *s3.PresignOptions) {
+	}
+
+	req, err := r.presignClient.PresignPutObject(ctx, objectInput, func(opts *s3.PresignOptions) {
 		opts.Expires = 15 * time.Minute
 	})
 	if err != nil {

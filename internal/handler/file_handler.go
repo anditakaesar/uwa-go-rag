@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
@@ -51,11 +52,27 @@ type GeneratePresignURLRequest struct {
 	MimeType  string `json:"mimeType"`
 }
 
-func (param *GeneratePresignURLRequest) ToDomainParam() domain.GeneratePresignURLParam {
+func (req *GeneratePresignURLRequest) Validate() error {
+	if strings.TrimSpace(req.Name) == "" {
+		return &xerror.ErrorValidation{Message: "name parameter required"}
+	}
+
+	if strings.TrimSpace(req.MimeType) == "" {
+		return &xerror.ErrorValidation{Message: "mimeType parameter required"}
+	}
+
+	if req.SizeBytes < 0 {
+		return &xerror.ErrorValidation{Message: "sizeBytes parameter required"}
+	}
+
+	return nil
+}
+
+func (req *GeneratePresignURLRequest) ToDomainParam() domain.GeneratePresignURLParam {
 	return domain.GeneratePresignURLParam{
-		Name:      param.Name,
-		SizeBytes: param.SizeBytes,
-		MimeType:  param.MimeType,
+		Name:      req.Name,
+		SizeBytes: req.SizeBytes,
+		MimeType:  req.MimeType,
 	}
 }
 
@@ -103,7 +120,11 @@ func (h *FileApi) GeneratePresignURL(w http.ResponseWriter, r *http.Request) err
 		return &xerror.ErrorDecodingRequest{Err: err}
 	}
 
-	// err = req.Validate()
+	err = req.Validate()
+	if err != nil {
+		return err
+	}
+
 	presignUrlReturn, err := h.FileService.GeneratePresignURL(r.Context(), req.ToDomainParam())
 	if err != nil {
 		return err

@@ -64,6 +64,7 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *InfraStorageClient) *Services {
 		AllowedTypes:  env.UPLOAD_ALLOWED_TYPES,
 		StorageClient: storageClient,
 		FileRepo:      fileRepo,
+		UOW:           uow,
 	})
 	chatSvc := service.NewChatService(service.ChatServiceDep{
 		RagRepo:   ragRepo,
