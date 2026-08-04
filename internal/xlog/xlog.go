@@ -9,6 +9,12 @@ import (
 
 var Logger *slog.Logger
 
+func init() {
+	if Logger == nil {
+		InitializeLogger()
+	}
+}
+
 // func init() {
 func InitializeLogger() {
 	lvl := env.GetLogLevel()

@@ -46,8 +46,8 @@ func (r *RiverQueue) EnqueueChat(ctx context.Context, words []string) error {
 }
 
 func (r *RiverQueue) EnqueueRagFile(ctx context.Context, ragFileID int64) error {
-	_, err := r.client.Insert(ctx, worker.ProccessDocArgs{
+	_, err := r.client.Insert(ctx, worker.ProcessDocArgs{
 		RagFileID: ragFileID,
-	}, nil)
+	}, nil) // add maxattempts here
 	return err
 }

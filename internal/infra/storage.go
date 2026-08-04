@@ -13,8 +13,8 @@ import (
 
 // Client Function
 type InfraStorageClient struct {
-	storageClient *s3.Client
-	presignClient *s3.PresignClient
+	StorageClient *s3.Client
+	PresignClient *s3.PresignClient
 }
 
 type S3ClientDependency struct {
@@ -43,8 +43,8 @@ func NewStorageClient(ctx context.Context, dep S3ClientDependency) (*InfraStorag
 
 	xlog.Logger.Info("Storage Client Connected")
 	return &InfraStorageClient{
-		storageClient: rustfs,
-		presignClient: presignClient,
+		StorageClient: rustfs,
+		PresignClient: presignClient,
 	}, nil
 }
 
@@ -68,8 +68,8 @@ type RustFSDependency struct {
 
 func NewRustFs(dep RustFSDependency) *RustFS {
 	return &RustFS{
-		client:        dep.StorageClient.storageClient,
-		presignClient: dep.StorageClient.presignClient,
+		client:        dep.StorageClient.StorageClient,
+		presignClient: dep.StorageClient.PresignClient,
 		bucketName:    dep.BucketName,
 		bucketPrefix:  dep.BucketPrefix,
 	}

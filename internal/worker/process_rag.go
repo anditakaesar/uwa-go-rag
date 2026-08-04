@@ -7,14 +7,14 @@ import (
 	"github.com/riverqueue/river"
 )
 
-type ProccessDocArgs struct {
-	RagFileID int64
+type ProcessDocArgs struct {
+	RagFileID int64 `json:"ragFileID"`
 }
 
-func (ProccessDocArgs) Kind() string { return "Process-RAG-File" }
+func (ProcessDocArgs) Kind() string { return "Process-RAG-File" }
 
 type ProcessDocWorker struct {
-	river.WorkerDefaults[ProccessDocArgs]
+	river.WorkerDefaults[ProcessDocArgs]
 	RagService service.IRagService
 }
 
@@ -22,6 +22,6 @@ func NewProcessDocWorker(ragService service.IRagService) *ProcessDocWorker {
 	return &ProcessDocWorker{RagService: ragService}
 }
 
-func (w *ProcessDocWorker) Work(ctx context.Context, job *river.Job[ProccessDocArgs]) error {
+func (w *ProcessDocWorker) Work(ctx context.Context, job *river.Job[ProcessDocArgs]) error {
 	return w.RagService.ProcessDocument(ctx, job.Args.RagFileID)
 }

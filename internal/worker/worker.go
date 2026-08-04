@@ -6,8 +6,8 @@ import (
 )
 
 type RegisterWorkerDep struct {
-	ChatService *service.ChatService
-	RagService  *service.RagService
+	ChatService service.IChatService
+	RagService  service.IRagService
 }
 
 func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
