@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/audit"
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
-	"github.com/anditakaesar/uwa-go-rag/internal/infra"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/handler"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
@@ -20,25 +18,42 @@ import (
 )
 
 // adapters
-type IUserService interface {
+type UserService interface {
 	CreateUser(ctx context.Context, user domain.User) (*domain.User, error)
 	AuthenticateUser(ctx context.Context, username string, password string) (*domain.User, error)
 }
 
+type AuditRecorder interface {
+	Record(ctx context.Context, auditlog domain.AuditLog) error
+}
+
+type CookieService interface {
+	Get(r *http.Request, name string) (*sessions.Session, error)
+	Save(ses *sessions.Session, r *http.Request, w http.ResponseWriter) error
+}
+
+type JWTService interface {
+	Verify(token string) (domain.UserClaims, error)
+	IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error)
+
+	VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error)
+	IssueRefreshToken(ctx context.Context, param common.RefreshTokenParam) (string, error)
+}
+
 type AuthApi struct {
-	UserService   IUserService
-	JWTService    infra.IJWTService
+	UserService   UserService
+	JWTService    JWTService
 	jwtSecret     []byte
-	CookieService infra.ICookieService
-	AuditService  audit.Recorder
+	CookieService CookieService
+	AuditService  AuditRecorder
 }
 
 type LoginApiDeps struct {
-	UserService   IUserService
-	JWTService    infra.IJWTService
+	UserService   UserService
+	JWTService    JWTService
 	JWTSecret     string
-	CookieService infra.ICookieService
-	AuditService  audit.Recorder
+	CookieService CookieService
+	AuditService  AuditRecorder
 }
 
 func NewLoginApi(dep LoginApiDeps) *AuthApi {
@@ -139,11 +154,11 @@ func (h *AuthApi) Login(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorSession{Message: err.Error()}
 	}
 
-	go func(recorder audit.Recorder) {
-		errAudit := recorder.Record(context.Background(), audit.AuditLog{
+	go func(recorder AuditRecorder) {
+		errAudit := recorder.Record(context.Background(), domain.AuditLog{
 			ResourceName: "users",
 			ResourceID:   fmt.Sprint(user.ID),
-			Action:       audit.USER_LOGIN,
+			Action:       domain.USER_LOGIN,
 			ActorName:    user.Username,
 			ActorID:      &user.ID,
 		})

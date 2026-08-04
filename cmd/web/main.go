@@ -9,7 +9,8 @@ import (
 	"syscall"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
-	"github.com/anditakaesar/uwa-go-rag/internal/infra"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/db"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/storage"
 	"github.com/anditakaesar/uwa-go-rag/internal/server"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 )
@@ -34,13 +35,13 @@ func main() {
 
 	manager := &ServiceManager{}
 
-	db, err := infra.NewDatabase(ctx, env.Values.DBUrl)
+	db, err := db.NewDatabase(ctx, env.Values.DBUrl)
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("unable to connect to database: %v", err))
 		os.Exit(1)
 	}
 
-	client, err := infra.NewStorageClient(ctx, infra.S3ClientDependency{
+	client, err := storage.NewStorageClient(ctx, storage.S3ClientDep{
 		EndpointURL: env.S3Conf.S3Endpoint,
 		AccessKey:   env.S3Conf.S3AccessKey,
 		SecretKey:   env.S3Conf.S3SecretKey,

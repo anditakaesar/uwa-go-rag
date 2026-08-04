@@ -15,27 +15,27 @@ type PermissionRepo interface {
 	GetPermissionsByUser(ctx context.Context, userID int64) ([]domain.Permission, error)
 }
 
-type JWTService struct {
+type Service struct {
 	secret             []byte
 	jwtExpire          int
 	rolePermissionRepo PermissionRepo
 }
 
-type JWTServiceDep struct {
+type ServiceDependency struct {
 	Secret             []byte
 	JWTExpire          int
 	RolePermissionRepo PermissionRepo
 }
 
-func NewJWTService(dep JWTServiceDep) *JWTService {
-	return &JWTService{
+func NewJWTService(dep ServiceDependency) *Service {
+	return &Service{
 		secret:             dep.Secret,
 		jwtExpire:          dep.JWTExpire,
 		rolePermissionRepo: dep.RolePermissionRepo,
 	}
 }
 
-func (s *JWTService) Verify(token string) (domain.UserClaims, error) {
+func (s *Service) Verify(token string) (domain.UserClaims, error) {
 	claims := &domain.UserClaims{}
 	parsed, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -50,7 +50,7 @@ func (s *JWTService) Verify(token string) (domain.UserClaims, error) {
 	return *claims, nil
 }
 
-func (s *JWTService) IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error) {
+func (s *Service) IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error) {
 	permissions, err := s.rolePermissionRepo.GetPermissionsByUser(ctx, userID)
 	if err != nil {
 		return "", err
@@ -71,7 +71,7 @@ func (s *JWTService) IssueJWT(ctx context.Context, userID int64, secret []byte) 
 	return token.SignedString(secret)
 }
 
-func (s *JWTService) IssueRefreshToken(ctx context.Context, param common.RefreshTokenParam) (string, error) {
+func (s *Service) IssueRefreshToken(ctx context.Context, param common.RefreshTokenParam) (string, error) {
 	claims := domain.RefreshTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: strconv.FormatInt(param.UserID, 10),
@@ -86,7 +86,7 @@ func (s *JWTService) IssueRefreshToken(ctx context.Context, param common.Refresh
 	return token.SignedString(param.Secret)
 }
 
-func (s *JWTService) VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error) {
+func (s *Service) VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error) {
 	claims := &domain.RefreshTokenClaims{}
 	parsed, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {

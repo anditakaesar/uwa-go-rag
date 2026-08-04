@@ -6,15 +6,16 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
-	"github.com/anditakaesar/uwa-go-rag/internal/infra"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/handler"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/csrf"
+	"github.com/gorilla/sessions"
 )
 
 const (
@@ -22,37 +23,50 @@ const (
 )
 
 // adapter
-type IFileService interface {
+type FileService interface {
 	Save(filename string, content io.Reader) (string, error)
 	ListFiles(ctx context.Context) ([]string, error)
 	GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error)
 }
 
-type IWebRenderer interface {
+type WebRenderer interface {
 	Render(w http.ResponseWriter, name string, data any)
 	Render2(ctx context.Context, w http.ResponseWriter, name string, data map[string]any)
 }
 
-type IUserService interface {
+type UserService interface {
 	AuthenticateUser(ctx context.Context, username string, password string) (*domain.User, error)
 }
 
+type JWTService interface {
+	Verify(token string) (domain.UserClaims, error)
+	IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error)
+
+	VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error)
+	IssueRefreshToken(ctx context.Context, param common.RefreshTokenParam) (string, error)
+}
+
+type CookieService interface {
+	Get(r *http.Request, name string) (*sessions.Session, error)
+	Save(ses *sessions.Session, r *http.Request, w http.ResponseWriter) error
+}
+
 type MainHandler struct {
-	UserService   IUserService
-	JWTService    infra.IJWTService
+	UserService   UserService
+	JWTService    JWTService
 	jwtSecret     []byte
-	CookieService infra.ICookieService
-	FileService   IFileService
+	CookieService CookieService
+	FileService   FileService
 	Render        func(context.Context, http.ResponseWriter, string, map[string]any)
 }
 
 type MainHandlerDeps struct {
-	UserService   IUserService
-	JWTService    infra.IJWTService
+	UserService   UserService
+	JWTService    JWTService
 	JWTSecret     string
-	CookieService infra.ICookieService
-	FileService   IFileService
-	WebRenderer   IWebRenderer
+	CookieService CookieService
+	FileService   FileService
+	WebRenderer   WebRenderer
 }
 
 func NewMainHandler(dep MainHandlerDeps) *MainHandler {

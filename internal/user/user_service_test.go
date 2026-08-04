@@ -6,27 +6,27 @@ import (
 	"testing"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/application/mocks/custom"
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
-	"github.com/anditakaesar/uwa-go-rag/internal/mocks"
-	"github.com/anditakaesar/uwa-go-rag/internal/mocks/custom"
 	"github.com/anditakaesar/uwa-go-rag/internal/user"
+	"github.com/anditakaesar/uwa-go-rag/internal/user/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 type mockItems2 struct {
 	ctx         context.Context
-	userRepo    *mocks.MockIUserRepository
-	passChecker *mocks.MockIPasswordChecker
+	userRepo    *mocks.MockUserRepository
+	passChecker *mocks.MockPasswordChecker
 	uow         *custom.IMockUow
 	anything    string
 	now         time.Time
 }
 
 func setupMocks2() *mockItems2 {
-	mockUserRepo := new(mocks.MockIUserRepository)
-	mockPassChecker := new(mocks.MockIPasswordChecker)
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockPassChecker := new(mocks.MockPasswordChecker)
 	mockUOW := new(custom.IMockUow)
 	return &mockItems2{
 		ctx:         context.Background(),
@@ -44,7 +44,7 @@ func TestNewUserService(test *testing.T) {
 	test.Run("success", func(t *testing.T) {
 		m := setupMocks2()
 
-		got := user.NewUserService(user.UserServiceDeps{
+		got := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			PassChecker: m.passChecker,
 			UOW:         m.uow,
@@ -64,7 +64,7 @@ func TestUserService_CreateUser(test *testing.T) {
 
 	test.Run("success", func(t *testing.T) {
 		m := setupMocks2()
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			PassChecker: m.passChecker,
 			UOW:         m.uow,
@@ -95,7 +95,7 @@ func TestUserService_CreateUser(test *testing.T) {
 
 	test.Run("error when hashing password", func(t *testing.T) {
 		m := setupMocks2()
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			PassChecker: m.passChecker,
 			UOW:         m.uow,
@@ -190,7 +190,7 @@ func TestUserService_AuthenticateUser(test *testing.T) {
 		}).Return(&userResponse, nil).Once()
 		m.passChecker.On("CheckPassword", userResponse.Password, userResponse.Password).Return(true, nil).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			PassChecker: m.passChecker,
 			UOW:         m.uow,
@@ -220,7 +220,7 @@ func TestUserService_AuthenticateUser(test *testing.T) {
 		}).Return(&userResponse, nil).Once()
 		m.passChecker.On("CheckPassword", userResponse.Password, userResponse.Password).Return(false, nil).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			PassChecker: m.passChecker,
 			UOW:         m.uow,
@@ -248,7 +248,7 @@ func TestUserService_AuthenticateUser(test *testing.T) {
 			Username: &userResponse.Username,
 		}).Return(nil, errors.New("error_FetchUserByParam")).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			PassChecker: m.passChecker,
 			UOW:         m.uow,
@@ -280,7 +280,7 @@ func TestUserService_GetUserByID(test *testing.T) {
 			ID: &userResponse.ID,
 		}).Return(&userResponse, nil).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			PassChecker: m.passChecker,
 			UOW:         m.uow,
@@ -333,7 +333,7 @@ func TestUserService_UpdatePassword(test *testing.T) {
 			Password: &newUser.Password,
 		}).Return(&newUser, nil).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			UOW:         m.uow,
 			PassChecker: m.passChecker,
@@ -369,7 +369,7 @@ func TestUserService_UpdatePassword(test *testing.T) {
 			Password: &newUser.Password,
 		}).Return(nil, errors.New("error_Update")).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			UOW:         m.uow,
 			PassChecker: m.passChecker,
@@ -398,7 +398,7 @@ func TestUserService_UpdatePassword(test *testing.T) {
 
 		m.passChecker.On("HashPassword", *updateParam.Password).Return("", errors.New("error_HashPassword")).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			UOW:         m.uow,
 			PassChecker: m.passChecker,
@@ -425,7 +425,7 @@ func TestUserService_UpdatePassword(test *testing.T) {
 
 		m.passChecker.On("CheckPassword", "oldpass", "hashedpassword").Return(true, errors.New("error_CheckPassword")).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			UOW:         m.uow,
 			PassChecker: m.passChecker,
@@ -450,7 +450,7 @@ func TestUserService_UpdatePassword(test *testing.T) {
 			ForUpdate: true,
 		}).Return(nil, errors.New("error_FetchUserByParam")).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo:    m.userRepo,
 			UOW:         m.uow,
 			PassChecker: m.passChecker,
@@ -490,7 +490,7 @@ func TestUserService_FindAll(test *testing.T) {
 			},
 		}, nil).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo: m.userRepo,
 		})
 
@@ -518,7 +518,7 @@ func TestUserService_FindAll(test *testing.T) {
 			},
 		}).Return([]domain.UserEnriched{}, errors.New("error_FindAll")).Once()
 
-		s := user.NewUserService(user.UserServiceDeps{
+		s := user.NewUserService(user.ServiceDependency{
 			UserRepo: m.userRepo,
 		})
 

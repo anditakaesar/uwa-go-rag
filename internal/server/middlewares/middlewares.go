@@ -8,15 +8,29 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
-	"github.com/anditakaesar/uwa-go-rag/internal/infra"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/gorilla/csrf"
+	"github.com/gorilla/sessions"
 )
 
-type IUserService interface {
+type CookieService interface {
+	Get(r *http.Request, name string) (*sessions.Session, error)
+	Save(ses *sessions.Session, r *http.Request, w http.ResponseWriter) error
+}
+
+type JWTService interface {
+	Verify(token string) (domain.UserClaims, error)
+	IssueJWT(ctx context.Context, userID int64, secret []byte) (string, error)
+
+	VerifyRefreshToken(ctx context.Context, token string) (domain.RefreshTokenClaims, error)
+	IssueRefreshToken(ctx context.Context, param common.RefreshTokenParam) (string, error)
+}
+
+type UserService interface {
 	GetUserByID(ctx context.Context, id int64) (*domain.User, error)
 }
 
@@ -45,9 +59,9 @@ func CSRFMiddleware() Middleware {
 }
 
 func ResolveAuth(
-	cookieStore infra.ICookieService,
-	userService IUserService,
-	jwtService infra.IJWTService,
+	cookieStore CookieService,
+	userService UserService,
+	jwtService JWTService,
 ) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +100,7 @@ func ResolveAuth(
 	}
 }
 
-func ResolveUser(userService IUserService) Middleware {
+func ResolveUser(userService UserService) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			identity, ok := r.Context().Value(domain.IdentityKey).(domain.Identity)

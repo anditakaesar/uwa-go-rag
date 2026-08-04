@@ -18,17 +18,17 @@ var allowedTypesTest = map[string]bool{
 
 func TestNewFileService(test *testing.T) {
 	test.Run("success", func(t *testing.T) {
-		got := file.NewFileService(file.FileServiceDep{
+		got := file.NewService(file.ServiceDependency{
 			DirName:      "uploadDir",
 			AllowedTypes: allowedTypesTest,
 		})
-		assert.Equal(t, reflect.TypeFor[*file.FileService](), reflect.TypeOf(got))
+		assert.Equal(t, reflect.TypeFor[*file.Service](), reflect.TypeOf(got))
 	})
 }
 
 func TestFileService_Save(test *testing.T) {
 	tmpDir := test.TempDir()
-	svc := file.NewFileService(file.FileServiceDep{
+	svc := file.NewService(file.ServiceDependency{
 		DirName:      tmpDir,
 		AllowedTypes: allowedTypesTest,
 	})

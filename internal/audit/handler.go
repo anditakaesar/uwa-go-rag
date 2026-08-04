@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/handler"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
@@ -40,7 +41,7 @@ type AuditLogResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-func AuditLogToResponse(auditlog AuditLog) AuditLogResponse {
+func AuditLogToResponse(auditlog domain.AuditLog) AuditLogResponse {
 	return AuditLogResponse{
 		ID:           auditlog.ID,
 		ResourceName: auditlog.ResourceName,
@@ -53,7 +54,7 @@ func AuditLogToResponse(auditlog AuditLog) AuditLogResponse {
 	}
 }
 
-func AuditLogsToListResponse(auditlogs []AuditLog) []AuditLogResponse {
+func AuditLogsToListResponse(auditlogs []domain.AuditLog) []AuditLogResponse {
 	results := make([]AuditLogResponse, 0, len(auditlogs))
 	for _, al := range auditlogs {
 		a := AuditLogToResponse(al)

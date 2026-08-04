@@ -14,8 +14,8 @@ import (
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
-	"github.com/anditakaesar/uwa-go-rag/internal/mocks"
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
+	"github.com/anditakaesar/uwa-go-rag/internal/web/mocks"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
@@ -23,11 +23,11 @@ import (
 )
 
 type mockItems struct {
-	cookieSvc   *mocks.MockICookieService
-	userSvc     *mocks.MockIUserService
-	jwtSvc      *mocks.MockIJWTService
-	fileSvc     *mocks.MockIFileService
-	webRenderer web.IWebRenderer
+	cookieSvc   *mocks.MockCookieService
+	userSvc     *mocks.MockUserService
+	jwtSvc      *mocks.MockJWTService
+	fileSvc     *mocks.MockFileService
+	webRenderer web.WebRenderer
 	anything    string
 }
 
@@ -41,17 +41,17 @@ func (r *mockWebRenderer) Render2(ctx context.Context, w http.ResponseWriter, na
 	r.render2Fn(ctx, w, name, data)
 }
 
-func newMockWebRenderer(render2Fn func(ctx context.Context, w http.ResponseWriter, s string, m map[string]any)) web.IWebRenderer {
+func newMockWebRenderer(render2Fn func(ctx context.Context, w http.ResponseWriter, s string, m map[string]any)) web.WebRenderer {
 	return &mockWebRenderer{
 		render2Fn: render2Fn,
 	}
 }
 
 func setupMocks() (*mockItems, web.MainHandlerDeps) {
-	cookieSvc := new(mocks.MockICookieService)
-	userSvc := new(mocks.MockIUserService)
-	jwtSvc := new(mocks.MockIJWTService)
-	fileSvc := new(mocks.MockIFileService)
+	cookieSvc := new(mocks.MockCookieService)
+	userSvc := new(mocks.MockUserService)
+	jwtSvc := new(mocks.MockJWTService)
+	fileSvc := new(mocks.MockFileService)
 	renderFn := func(ctx context.Context, w http.ResponseWriter, s string, m map[string]any) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "rendered")
@@ -77,15 +77,15 @@ func setupMocks() (*mockItems, web.MainHandlerDeps) {
 func TestNewMainHandler(test *testing.T) {
 	test.Run("success", func(t *testing.T) {
 		got := web.NewMainHandler(web.MainHandlerDeps{
-			UserService:   new(mocks.MockIUserService),
-			JWTService:    new(mocks.MockIJWTService),
-			CookieService: new(mocks.MockICookieService),
-			WebRenderer:   new(mocks.MockIWebRenderer),
+			UserService:   new(mocks.MockUserService),
+			JWTService:    new(mocks.MockJWTService),
+			CookieService: new(mocks.MockCookieService),
+			WebRenderer:   new(mocks.MockWebRenderer),
 		})
 		assert.NotNil(t, got)
-		assert.Equal(t, got.CookieService, new(mocks.MockICookieService))
-		assert.Equal(t, got.JWTService, new(mocks.MockIJWTService))
-		assert.Equal(t, got.UserService, new(mocks.MockIUserService))
+		assert.Equal(t, got.CookieService, new(mocks.MockCookieService))
+		assert.Equal(t, got.JWTService, new(mocks.MockJWTService))
+		assert.Equal(t, got.UserService, new(mocks.MockUserService))
 	})
 }
 

@@ -11,8 +11,8 @@ import (
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
-	"github.com/anditakaesar/uwa-go-rag/internal/mocks"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
+	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares/mocks"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/sessions"
@@ -21,16 +21,16 @@ import (
 )
 
 type mockItems struct {
-	cookieSvc *mocks.MockICookieService
-	userSvc   *mocks.MockIUserService
-	jwtSvc    *mocks.MockIJWTService
+	cookieSvc *mocks.MockCookieService
+	userSvc   *mocks.MockUserService
+	jwtSvc    *mocks.MockJWTService
 	anything  string
 }
 
 func setupMocks() *mockItems {
-	cookieSvc := new(mocks.MockICookieService)
-	userSvc := new(mocks.MockIUserService)
-	jwtSvc := new(mocks.MockIJWTService)
+	cookieSvc := new(mocks.MockCookieService)
+	userSvc := new(mocks.MockUserService)
+	jwtSvc := new(mocks.MockJWTService)
 
 	return &mockItems{
 		cookieSvc: cookieSvc,

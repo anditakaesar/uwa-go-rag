@@ -1,7 +1,6 @@
 package user
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -12,26 +11,17 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 )
 
-type IUserService interface {
-	CreateUser(ctx context.Context, user domain.User) (*domain.User, error)
-	GetUserByID(ctx context.Context, id int64) (*domain.User, error)
-	UpdatePassword(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)
-	Update(ctx context.Context, id int64, update *domain.UpdateUserParam) (*domain.User, error)
-	FindAll(ctx context.Context, param domain.FindAllUsersParam) ([]domain.UserEnriched, *domain.FindAllUsersParam, error)
-	Delete(ctx context.Context, id int64) error
-}
-
 type UserApi struct {
-	UserService IUserService
+	Service UserService
 }
 
 type UserApiDeps struct {
-	UserService IUserService
+	Service UserService
 }
 
 func NewUserApi(dep UserApiDeps) *UserApi {
 	return &UserApi{
-		UserService: dep.UserService,
+		Service: dep.Service,
 	}
 }
 
@@ -48,7 +38,7 @@ func (h *UserApi) CreateUser(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	user, err := h.UserService.CreateUser(r.Context(), domain.User{
+	user, err := h.Service.CreateUser(r.Context(), domain.User{
 		Username: strings.TrimSpace(req.Username),
 		Password: req.Password,
 		RoleID:   req.RoleID,
@@ -87,7 +77,7 @@ func (h *UserApi) UpdateUserPassword(w http.ResponseWriter, r *http.Request) err
 		return &xerror.ErrorPermission{Message: "unauthorized"}
 	}
 
-	_, err = h.UserService.UpdatePassword(r.Context(), id, req.ToDomainParam())
+	_, err = h.Service.UpdatePassword(r.Context(), id, req.ToDomainParam())
 	if err != nil {
 		return err
 	}
@@ -102,7 +92,7 @@ func (h *UserApi) FetchUsers(w http.ResponseWriter, r *http.Request) error {
 	var req FindUserRequest
 	req.parseParam(r)
 
-	users, param, err := h.UserService.FindAll(r.Context(), domain.FindAllUsersParam{
+	users, param, err := h.Service.FindAll(r.Context(), domain.FindAllUsersParam{
 		UsernameLike: req.UsernameLike,
 		Pagination:   pagination,
 	})
@@ -120,7 +110,7 @@ func (h *UserApi) Delete(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	err = h.UserService.Delete(r.Context(), id)
+	err = h.Service.Delete(r.Context(), id)
 	if err != nil {
 		return err
 	}
@@ -146,7 +136,7 @@ func (h *UserApi) Update(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	_, err = h.UserService.Update(r.Context(), id, req.ToDomainParam())
+	_, err = h.Service.Update(r.Context(), id, req.ToDomainParam())
 	if err != nil {
 		return err
 	}
@@ -158,7 +148,7 @@ func (h *UserApi) Update(w http.ResponseWriter, r *http.Request) error {
 func (h *UserApi) FetchMe(w http.ResponseWriter, r *http.Request) error {
 	identity := r.Context().Value(domain.IdentityKey).(domain.Identity)
 
-	user, err := h.UserService.GetUserByID(r.Context(), identity.UserID)
+	user, err := h.Service.GetUserByID(r.Context(), identity.UserID)
 	if err != nil {
 		return err
 	}

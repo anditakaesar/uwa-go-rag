@@ -90,11 +90,11 @@ func PresignURLReturnToResult(res *domain.GeneratePresignURLReturn) GeneratePres
 
 // handler
 type FileApi struct {
-	FileService IFileService
+	FileService FileService
 }
 
 type FileApiDependency struct {
-	FileService IFileService
+	FileService FileService
 }
 
 func NewFileApi(dep FileApiDependency) *FileApi {

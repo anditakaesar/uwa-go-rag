@@ -14,55 +14,51 @@ import (
 	"strings"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/application"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/google/uuid"
 )
 
-// adapters
-type IUnitOfWork interface {
-	Do(ctx context.Context, fn func(ctx context.Context) error) error
-}
-
-type IPasswordChecker interface {
+type PasswordChecker interface {
 	HashPassword(password string) (string, error)
 	CheckPassword(password string, hash string) (bool, error)
 }
 
-type IStorageClient interface {
+type StorageClient interface {
 	ListFiles(ctx context.Context) ([]string, error)
 	GetPresignURL(ctx context.Context, key string) (string, error)
 }
 
-type IFileRepository interface {
+type FileRepository interface {
 	Insert(ctx context.Context, newFile domain.File) (*domain.File, error)
 	Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error)
 }
 
-type IFileService interface {
+type FileService interface {
 	Save(filename string, content io.Reader) (string, error)
 	ListFiles(ctx context.Context) ([]string, error)
 	GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error)
 }
 
-type FileService struct {
+type Service struct {
 	uploadDir     string
 	allowedTypes  map[string]bool
-	storageClient IStorageClient
-	fileRepo      IFileRepository
-	uow           IUnitOfWork
+	storageClient StorageClient
+	fileRepo      FileRepository
+	uow           application.UnitOfWork
 }
 
-type FileServiceDep struct {
+type ServiceDependency struct {
 	DirName       string
 	AllowedTypes  map[string]bool
-	StorageClient IStorageClient
-	FileRepo      IFileRepository
-	UOW           IUnitOfWork
+	StorageClient StorageClient
+	FileRepo      FileRepository
+	UOW           application.UnitOfWork
 }
 
-func NewFileService(dep FileServiceDep) *FileService {
-	return &FileService{
+func NewService(dep ServiceDependency) *Service {
+	return &Service{
 		uploadDir:     dep.DirName,
 		allowedTypes:  dep.AllowedTypes,
 		storageClient: dep.StorageClient,
@@ -71,7 +67,7 @@ func NewFileService(dep FileServiceDep) *FileService {
 	}
 }
 
-func (svc *FileService) Save(filename string, file io.Reader) (string, error) {
+func (svc *Service) Save(filename string, file io.Reader) (string, error) {
 	buff := make([]byte, 512)
 	n, err := file.Read(buff)
 	if err != nil && err != io.EOF {
@@ -121,11 +117,11 @@ func sanitizeFilename(filename string) string {
 	return safeName + strings.ToLower(ext)
 }
 
-func (svc *FileService) ListFiles(ctx context.Context) ([]string, error) {
+func (svc *Service) ListFiles(ctx context.Context) ([]string, error) {
 	return svc.storageClient.ListFiles(ctx)
 }
 
-func (svc *FileService) GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error) {
+func (svc *Service) GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error) {
 	identity := ctx.Value(domain.IdentityKey).(domain.Identity)
 	cleanFilename := sanitizeFilename(param.Name)
 	extensionFile := filepath.Ext(param.Name)

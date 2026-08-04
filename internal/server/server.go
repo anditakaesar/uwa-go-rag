@@ -11,7 +11,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/chat"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/file"
-	"github.com/anditakaesar/uwa-go-rag/internal/infra"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/storage"
 	"github.com/anditakaesar/uwa-go-rag/internal/role"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
 	"github.com/anditakaesar/uwa-go-rag/internal/user"
@@ -24,18 +24,18 @@ import (
 	"github.com/riverqueue/river"
 )
 
-type IDatabase interface {
+type Database interface {
 	Get() *pgxpool.Pool
 	Close()
 }
 
-type IStorageClient interface {
-	Get() *infra.InfraStorageClient
+type StorageClient interface {
+	Get() *storage.S3Client
 }
 
 type ServerDependency struct {
-	DB            IDatabase
-	StorageClient IStorageClient
+	DB            Database
+	StorageClient StorageClient
 }
 
 type Executor struct {
@@ -81,7 +81,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 	})
 
 	userApi := user.NewUserApi(user.UserApiDeps{
-		UserService: infraSvc.UserService,
+		Service: infraSvc.UserService,
 	})
 
 	chatApi := chat.NewChatApi(chat.ChatApiDeps{

@@ -8,8 +8,13 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/chat"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/file"
-	"github.com/anditakaesar/uwa-go-rag/internal/infra"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/ai"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/cookie"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/db"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/jwt"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/password"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/queue"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/storage"
 	"github.com/anditakaesar/uwa-go-rag/internal/rag"
 	"github.com/anditakaesar/uwa-go-rag/internal/repo"
 	"github.com/anditakaesar/uwa-go-rag/internal/role"
@@ -23,49 +28,49 @@ import (
 )
 
 type Services struct {
-	UserService   *user.UserService
-	JWTService    *jwt.JWTService
-	CookieService *infra.CookieSvc
-	FileService   *file.FileService
+	UserService   *user.Service
+	JWTService    *jwt.Service
+	CookieService *cookie.Service
+	FileService   *file.Service
 	WebRenderer   *web.Renderer
 	ChatService   *chat.ChatService
 	RoleService   *role.RoleService
 	RiverClient   *river.Client[pgx.Tx]
 	AuditService  *audit.AuditRecorder
-	StorageClient *infra.RustFS
+	StorageClient *storage.RustFS
 }
 
-func NewInfra(pool *pgxpool.Pool, infraStorage *infra.InfraStorageClient) *Services {
+func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 	userRepo := repo.NewUserRepository(pool)
 	ragRepo := rag.NewRagRepository(pool)
 	auditRepo := audit.NewAuditRepository(pool)
 	roleRepo := repo.NewRoleRepository(pool)
 	rolePermissionRepo := repo.NewRolePermissionRepo(pool)
 	fileRepo := file.NewFileRepo(pool)
-	uow := infra.NewUnitOfWork(pool)
-	riverQueue := infra.NewRiverQueue()
-	storageClient := infra.NewRustFs(infra.RustFSDependency{
+	uow := db.NewUnitOfWork(pool)
+	riverQueue := queue.NewRiverQueue()
+	storageClient := storage.NewRustFs(storage.RustFSDependency{
 		StorageClient: infraStorage,
 		BucketName:    env.S3Conf.S3Bucket,
 		BucketPrefix:  env.S3Conf.S3Prefix,
 	})
-	aiClient := infra.NewAIClient(infra.AIClientDep{
+	aiClient := ai.NewClient(ai.ClientDependency{
 		BaseURL: env.Values.AIBaseURL,
 		ApiKey:  env.Values.AIAPIKey,
 	})
 
-	userSvc := user.NewUserService(user.UserServiceDeps{
+	userSvc := user.NewUserService(user.ServiceDependency{
 		UserRepo:    userRepo,
-		PassChecker: infra.NewPasswordHelper(env.Values.PassSecret),
+		PassChecker: password.NewArgonClientHelper(env.Values.PassSecret),
 		UOW:         uow,
 	})
-	jwtSvc := jwt.NewJWTService(jwt.JWTServiceDep{
+	jwtSvc := jwt.NewJWTService(jwt.ServiceDependency{
 		Secret:             []byte(env.Values.JWTSecret),
 		JWTExpire:          env.Values.JWTExpire,
 		RolePermissionRepo: rolePermissionRepo,
 	})
-	cookieService := infra.NewCookieService(env.Values.IsDevelopment(), env.Values.CookieSecret)
-	fileSvc := file.NewFileService(file.FileServiceDep{
+	cookieService := cookie.NewService(env.Values.IsDevelopment(), env.Values.CookieSecret)
+	fileSvc := file.NewService(file.ServiceDependency{
 		DirName:       env.Values.UploadDir,
 		AllowedTypes:  env.UPLOAD_ALLOWED_TYPES,
 		StorageClient: storageClient,
@@ -96,7 +101,7 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *infra.InfraStorageClient) *Servi
 
 	var riverClient *river.Client[pgx.Tx]
 	if pool != nil {
-		riverClient, err = infra.NewRiverClient(pool, workers)
+		riverClient, err = queue.NewRiverClient(pool, workers)
 		if err != nil {
 			xlog.Logger.Error(fmt.Sprintf("error setup worker client: %v", err))
 			os.Exit(1)

@@ -9,25 +9,25 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/jwt"
-	"github.com/anditakaesar/uwa-go-rag/internal/mocks"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/jwt/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 type mockItems struct {
-	ctx                context.Context
-	rolePermissionRepo *mocks.MockIInfraRolePermissionRepo
-	anything           string
-	now                time.Time
+	ctx      context.Context
+	repo     *mocks.MockPermissionRepo
+	anything string
+	now      time.Time
 }
 
 func setupMocks() *mockItems {
-	mockRolePermissionRepo := new(mocks.MockIInfraRolePermissionRepo)
+	mockRolePermissionRepo := new(mocks.MockPermissionRepo)
 	return &mockItems{
-		ctx:                context.Background(),
-		rolePermissionRepo: mockRolePermissionRepo,
-		anything:           mock.Anything,
-		now:                time.Now(),
+		ctx:      context.Background(),
+		repo:     mockRolePermissionRepo,
+		anything: mock.Anything,
+		now:      time.Now(),
 	}
 }
 
@@ -41,7 +41,7 @@ func TestJWTService(test *testing.T) {
 
 	test.Run("issue and verify success", func(t *testing.T) {
 		m := setupMocks()
-		m.rolePermissionRepo.On("GetPermissionsByUser", m.anything, userID).Return(
+		m.repo.On("GetPermissionsByUser", m.anything, userID).Return(
 			[]domain.Permission{
 				{
 					ID:   int64(1),
@@ -50,10 +50,10 @@ func TestJWTService(test *testing.T) {
 			}, nil,
 		).Once()
 
-		svc := jwt.NewJWTService(jwt.JWTServiceDep{
+		svc := jwt.NewJWTService(jwt.ServiceDependency{
 			Secret:             []byte(secret),
 			JWTExpire:          15,
-			RolePermissionRepo: m.rolePermissionRepo,
+			RolePermissionRepo: m.repo,
 		})
 
 		token, err := svc.IssueJWT(context.Background(), userID, []byte(secret))
@@ -70,7 +70,7 @@ func TestJWTService(test *testing.T) {
 
 	test.Run("invalid secret failure", func(t *testing.T) {
 		m := setupMocks()
-		m.rolePermissionRepo.On("GetPermissionsByUser", m.anything, userID).Return(
+		m.repo.On("GetPermissionsByUser", m.anything, userID).Return(
 			[]domain.Permission{
 				{
 					ID:   int64(1),
@@ -79,15 +79,15 @@ func TestJWTService(test *testing.T) {
 			}, nil,
 		).Once()
 
-		svc := jwt.NewJWTService(jwt.JWTServiceDep{
+		svc := jwt.NewJWTService(jwt.ServiceDependency{
 			Secret:             []byte(secret),
-			RolePermissionRepo: m.rolePermissionRepo,
+			RolePermissionRepo: m.repo,
 		})
 
 		token, err := svc.IssueJWT(context.Background(), userID, []byte(secret))
 		assert.NoError(t, err)
 
-		wrongSecretSvc := jwt.NewJWTService(jwt.JWTServiceDep{
+		wrongSecretSvc := jwt.NewJWTService(jwt.ServiceDependency{
 			Secret:             []byte("wrong-secret"),
 			RolePermissionRepo: nil,
 		})
@@ -97,9 +97,9 @@ func TestJWTService(test *testing.T) {
 
 	test.Run("malformed token", func(t *testing.T) {
 		m := setupMocks()
-		svc := jwt.NewJWTService(jwt.JWTServiceDep{
+		svc := jwt.NewJWTService(jwt.ServiceDependency{
 			Secret:             []byte(secret),
-			RolePermissionRepo: m.rolePermissionRepo,
+			RolePermissionRepo: m.repo,
 		})
 
 		_, err := svc.Verify("not-a-token")

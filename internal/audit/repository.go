@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/repo"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/henvic/pgq"
@@ -32,8 +33,8 @@ func (r *AuditRepository) GetExecutor(ctx context.Context) repo.IDBExecutor {
 
 const auditLogColumns = "id, resource_name, resource_id, actor_id, actor_name, actor_type, action, before, after, metadata, created_at"
 
-func scanAuditLog(row pgx.Row) (*AuditLog, error) {
-	var model AuditLog
+func scanAuditLog(row pgx.Row) (*domain.AuditLog, error) {
+	var model domain.AuditLog
 	err := row.Scan(
 		&model.ID,
 		&model.ResourceName,
@@ -57,7 +58,7 @@ func scanAuditLog(row pgx.Row) (*AuditLog, error) {
 	return &model, nil
 }
 
-func (r *AuditRepository) Insert(ctx context.Context, auditlog AuditLog) error {
+func (r *AuditRepository) Insert(ctx context.Context, auditlog domain.AuditLog) error {
 	query := `
 		INSERT INTO audit_logs
 		("resource_name", "resource_id", "actor_id", "actor_name", "actor_type", "action",
@@ -74,7 +75,7 @@ func (r *AuditRepository) Insert(ctx context.Context, auditlog AuditLog) error {
 	return nil
 }
 
-func (r *AuditRepository) FindAll(ctx context.Context, param *AuditLogFetchParam) ([]AuditLog, error) {
+func (r *AuditRepository) FindAll(ctx context.Context, param *AuditLogFetchParam) ([]domain.AuditLog, error) {
 	selectQuery := pgq.Select(auditLogColumns).From("audit_logs").OrderBy("audit_logs.id DESC")
 
 	if param.ResourceNameLike != nil {
@@ -103,7 +104,7 @@ func (r *AuditRepository) FindAll(ctx context.Context, param *AuditLogFetchParam
 	}
 	defer rows.Close()
 
-	auditLogs := []AuditLog{}
+	auditLogs := []domain.AuditLog{}
 
 	for rows.Next() {
 		al, err := scanAuditLog(rows)

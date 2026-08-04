@@ -1,5 +1,5 @@
 all: false
-dir: "internal/mocks"
+# dir: "internal/mocks"
 filename: "{{.InterfaceName}}.go"
 force-file-write: true
 formatter: goimports
@@ -12,29 +12,53 @@ require-template-schema-exists: true
 template: testify
 template-schema: "{{.Template}}.schema.json"
 packages:
-  # github.com/anditakaesar/uwa-go-rag/internal: # use this to generate all
-  #   config:
-  #     all: true
-  #     recursive: true
-  github.com/anditakaesar/uwa-go-rag/internal/handler:
+  github.com/anditakaesar/uwa-go-rag/internal/audit:
     config:
-      all: true
-      recursive: true
-  github.com/anditakaesar/uwa-go-rag/internal/infra:
-    config:
-      all: false
+      dir: "internal/audit/mocks"
     interfaces:
-      ICookieService:
-      IJWTService:
-      IInfraRolePermissionRepo:
+      Recorder:
+      Repository:
+  github.com/anditakaesar/uwa-go-rag/internal/file:
+    config:
+      dir: "internal/file/mocks"
+    interfaces:
+      PasswordChecker:
+      StorageClient:
+      FileRepository:
+      FileService:
+  github.com/anditakaesar/uwa-go-rag/internal/infra/jwt:
+    config:
+      dir: "internal/infra/jwt/mocks"
+    interfaces:
+      PermissionRepo:
   github.com/anditakaesar/uwa-go-rag/internal/server:
     config:
-      all: true
-  github.com/anditakaesar/uwa-go-rag/internal/service:
-    config:
-      all: false
+      dir: "internal/server/mocks"
     interfaces:
-      IUserRepository:
-      IPasswordChecker:
-      IUserService:
-      IFileService:
+      StorageClient:
+      Database:
+  github.com/anditakaesar/uwa-go-rag/internal/server/middlewares:
+    config:
+      dir: "internal/server/middlewares/mocks"
+    interfaces:
+      CookieService:
+      JWTService:
+      UserService:
+  github.com/anditakaesar/uwa-go-rag/internal/user:
+    config:
+      dir: "internal/user/mocks"
+    interfaces:
+      UserRepository:
+      PasswordChecker:
+      StorageClient:
+      FileRepository:
+      UserService:
+  github.com/anditakaesar/uwa-go-rag/internal/web:
+    config:
+      dir: "internal/web/mocks"
+    interfaces:
+      FileService:
+      WebRenderer:
+      UserService:
+      JWTService:
+      CookieService:

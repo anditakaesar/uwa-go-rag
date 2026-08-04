@@ -5,28 +5,29 @@ import (
 	"testing"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/audit"
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/stretchr/testify/assert"
 )
 
 type mockRepository struct {
 	inserted bool
-	lastLog  audit.AuditLog
+	lastLog  domain.AuditLog
 }
 
-func (m *mockRepository) Insert(ctx context.Context, auditlog audit.AuditLog) error {
+func (m *mockRepository) Insert(ctx context.Context, auditlog domain.AuditLog) error {
 	m.inserted = true
 	m.lastLog = auditlog
 	return nil
 }
 
-func (m *mockRepository) FindAll(ctx context.Context, param *audit.AuditLogFetchParam) ([]audit.AuditLog, error) {
+func (m *mockRepository) FindAll(ctx context.Context, param *audit.AuditLogFetchParam) ([]domain.AuditLog, error) {
 	m.inserted = false
 	return nil, nil
 }
 
 func TestAuditLog_Validate(test *testing.T) {
 	test.Run("valid audit log", func(t *testing.T) {
-		log := audit.AuditLog{
+		log := domain.AuditLog{
 			ResourceName: "users",
 			ResourceID:   "123",
 			ActorName:    "admin",
@@ -36,7 +37,7 @@ func TestAuditLog_Validate(test *testing.T) {
 	})
 
 	test.Run("missing all required fields", func(t *testing.T) {
-		log := audit.AuditLog{}
+		log := domain.AuditLog{}
 		err := log.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "resource_name")
@@ -45,7 +46,7 @@ func TestAuditLog_Validate(test *testing.T) {
 	})
 
 	test.Run("missing resource_id only", func(t *testing.T) {
-		log := audit.AuditLog{
+		log := domain.AuditLog{
 			ResourceName: "users",
 			ActorName:    "admin",
 		}
@@ -62,7 +63,7 @@ func TestAuditRecorder_Record(test *testing.T) {
 	recorder := audit.NewAuditLogRecorder(repo)
 
 	test.Run("successful record", func(t *testing.T) {
-		log := audit.AuditLog{
+		log := domain.AuditLog{
 			ResourceName: "users",
 			ResourceID:   "123",
 			ActorName:    "admin",
@@ -75,7 +76,7 @@ func TestAuditRecorder_Record(test *testing.T) {
 
 	test.Run("validation failure", func(t *testing.T) {
 		repo.inserted = false
-		log := audit.AuditLog{
+		log := domain.AuditLog{
 			ResourceName: "users",
 		}
 		err := recorder.Record(context.Background(), log)
