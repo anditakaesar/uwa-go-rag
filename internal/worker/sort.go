@@ -3,9 +3,13 @@ package worker
 import (
 	"context"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/service"
 	"github.com/riverqueue/river"
 )
+
+// adapters
+type IChatService interface {
+	DoSort(ctx context.Context, words []string) ([]string, error)
+}
 
 type SortArgs struct {
 	Strings []string `json:"strings"`
@@ -14,11 +18,11 @@ type SortArgs struct {
 func (SortArgs) Kind() string { return "sort" }
 
 type SortWorker struct {
-	ChatService service.IChatService
+	ChatService IChatService
 	river.WorkerDefaults[SortArgs]
 }
 
-func NewSortWorker(chatService service.IChatService) *SortWorker {
+func NewSortWorker(chatService IChatService) *SortWorker {
 	return &SortWorker{ChatService: chatService}
 }
 

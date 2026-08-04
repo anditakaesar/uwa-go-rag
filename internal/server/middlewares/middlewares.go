@@ -12,10 +12,13 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
-	"github.com/anditakaesar/uwa-go-rag/internal/service"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/gorilla/csrf"
 )
+
+type IUserService interface {
+	GetUserByID(ctx context.Context, id int64) (*domain.User, error)
+}
 
 type Middleware func(http.Handler) http.Handler
 
@@ -43,7 +46,7 @@ func CSRFMiddleware() Middleware {
 
 func ResolveAuth(
 	cookieStore infra.ICookieService,
-	userService service.IUserService,
+	userService IUserService,
 	jwtService infra.IJWTService,
 ) Middleware {
 	return func(next http.Handler) http.Handler {
@@ -83,7 +86,7 @@ func ResolveAuth(
 	}
 }
 
-func ResolveUser(userService service.IUserService) Middleware {
+func ResolveUser(userService IUserService) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			identity, ok := r.Context().Value(domain.IdentityKey).(domain.Identity)

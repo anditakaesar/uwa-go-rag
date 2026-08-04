@@ -1,13 +1,12 @@
 package worker
 
 import (
-	"github.com/anditakaesar/uwa-go-rag/internal/service"
 	"github.com/riverqueue/river"
 )
 
 type RegisterWorkerDep struct {
-	ChatService service.IChatService
-	RagService  service.IRagService
+	ChatService IChatService
+	RagService  IRagService
 }
 
 func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {

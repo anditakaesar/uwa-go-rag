@@ -6,10 +6,15 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/audit"
+	"github.com/anditakaesar/uwa-go-rag/internal/auth"
+	"github.com/anditakaesar/uwa-go-rag/internal/chat"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
-	"github.com/anditakaesar/uwa-go-rag/internal/handler"
+	"github.com/anditakaesar/uwa-go-rag/internal/file"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra"
+	"github.com/anditakaesar/uwa-go-rag/internal/role"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
+	"github.com/anditakaesar/uwa-go-rag/internal/user"
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/go-chi/chi/v5"
@@ -40,7 +45,7 @@ type Executor struct {
 
 func SetupServer(dep *ServerDependency) *Executor {
 	router := chi.NewRouter()
-	infraSvc := infra.NewInfra(dep.DB.Get(), dep.StorageClient.Get())
+	infraSvc := NewInfra(dep.DB.Get(), dep.StorageClient.Get())
 
 	// static files
 	sub, err := fs.Sub(web.PublicFS, "public")
@@ -66,7 +71,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 	)
 
 	// handlers and routes
-	mainHandler := handler.NewMainHandler(handler.MainHandlerDeps{
+	mainHandler := web.NewMainHandler(web.MainHandlerDeps{
 		UserService:   infraSvc.UserService,
 		JWTService:    infraSvc.JWTService,
 		JWTSecret:     env.Values.JWTSecret,
@@ -75,15 +80,15 @@ func SetupServer(dep *ServerDependency) *Executor {
 		WebRenderer:   infraSvc.WebRenderer,
 	})
 
-	userApi := handler.NewUserApi(handler.UserApiDeps{
+	userApi := user.NewUserApi(user.UserApiDeps{
 		UserService: infraSvc.UserService,
 	})
 
-	chatApi := handler.NewChatApi(handler.ChatApiDeps{
+	chatApi := chat.NewChatApi(chat.ChatApiDeps{
 		ChatService: infraSvc.ChatService,
 	})
 
-	loginApi := handler.NewLoginApi(handler.LoginApiDeps{
+	loginApi := auth.NewLoginApi(auth.LoginApiDeps{
 		UserService:   infraSvc.UserService,
 		JWTService:    infraSvc.JWTService,
 		JWTSecret:     env.Values.JWTSecret,
@@ -91,15 +96,15 @@ func SetupServer(dep *ServerDependency) *Executor {
 		AuditService:  infraSvc.AuditService,
 	})
 
-	roleApi := handler.NewRoleApi(handler.RoleApiDeps{
+	roleApi := role.NewRoleApi(role.RoleApiDeps{
 		RoleService: infraSvc.RoleService,
 	})
 
-	auditlogApi := handler.NewAuditLogApi(handler.AuditLogApiDep{
+	auditlogApi := audit.NewAuditLogApi(audit.AuditLogApiDep{
 		AuditLogService: infraSvc.AuditService,
 	})
 
-	fileApi := handler.NewFileApi(handler.FileApiDependency{
+	fileApi := file.NewFileApi(file.FileApiDependency{
 		FileService: infraSvc.FileService,
 	})
 
@@ -113,7 +118,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 		))
 		r.Use(middlewares.ResolveUser(infraSvc.UserService))
 
-		handler.SetupMainRoutes(r, mainHandler)
+		web.SetupMainRoutes(r, mainHandler)
 	})
 
 	router.Route("/api", func(r chi.Router) {
@@ -134,12 +139,12 @@ func SetupServer(dep *ServerDependency) *Executor {
 		))
 		r.Use(middlewares.ResolveUser(infraSvc.UserService))
 
-		handler.SetupUserApiRoutes(r, userApi)
-		handler.SetupChatApiRoutes(r, chatApi)
-		handler.SetupLoginApiRoutes(r, loginApi)
-		handler.SetupRoleApiRoutes(r, roleApi)
-		handler.SetupAuditLogApiRoutes(r, auditlogApi)
-		handler.SetupFileApiRoutes(r, fileApi)
+		user.SetupUserApiRoutes(r, userApi)
+		chat.SetupChatApiRoutes(r, chatApi)
+		auth.SetupLoginApiRoutes(r, loginApi)
+		role.SetupRoleApiRoutes(r, roleApi)
+		audit.SetupAuditLogApiRoutes(r, auditlogApi)
+		file.SetupFileApiRoutes(r, fileApi)
 	})
 
 	return &Executor{

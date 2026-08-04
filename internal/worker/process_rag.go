@@ -3,9 +3,13 @@ package worker
 import (
 	"context"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/service"
 	"github.com/riverqueue/river"
 )
+
+// adapters
+type IRagService interface {
+	ProcessDocument(ctx context.Context, ragFileID int64) error
+}
 
 type ProcessDocArgs struct {
 	RagFileID int64 `json:"ragFileID"`
@@ -15,10 +19,10 @@ func (ProcessDocArgs) Kind() string { return "Process-RAG-File" }
 
 type ProcessDocWorker struct {
 	river.WorkerDefaults[ProcessDocArgs]
-	RagService service.IRagService
+	RagService IRagService
 }
 
-func NewProcessDocWorker(ragService service.IRagService) *ProcessDocWorker {
+func NewProcessDocWorker(ragService IRagService) *ProcessDocWorker {
 	return &ProcessDocWorker{RagService: ragService}
 }
 

@@ -1,0 +1,138 @@
+package user
+
+import (
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
+	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
+)
+
+type CreateUserRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	RoleID   int64  `json:"roleID"`
+}
+
+func (req *CreateUserRequest) Validate() error {
+	if strings.TrimSpace(req.Username) == "" {
+		return &xerror.ErrorValidation{Message: "username is required"}
+	}
+
+	if strings.TrimSpace(req.Password) == "" {
+		return &xerror.ErrorValidation{Message: "password is required"}
+	}
+
+	if req.RoleID <= 0 {
+		return &xerror.ErrorValidation{Message: "role id is required"}
+	}
+
+	return nil
+}
+
+type UserResponse struct {
+	ID        int64     `json:"id"`
+	Username  string    `json:"username"`
+	RoleID    int64     `json:"roleID"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type UserEnrichedResponse struct {
+	ID        int64     `json:"id"`
+	Username  string    `json:"username"`
+	RoleID    int64     `json:"roleID"`
+	CreatedAt time.Time `json:"createdAt"`
+	RoleName  string    `json:"roleName"`
+}
+
+func UserDomainToResponse(user *domain.User) UserResponse {
+	return UserResponse{
+		ID:        user.ID,
+		Username:  user.Username,
+		RoleID:    user.RoleID,
+		CreatedAt: user.CreatedAt,
+	}
+}
+
+func UserEnrichedDomainToResponse(user *domain.UserEnriched) UserEnrichedResponse {
+	return UserEnrichedResponse{
+		ID:        user.ID,
+		Username:  user.Username,
+		RoleID:    user.RoleID,
+		CreatedAt: user.CreatedAt,
+		RoleName:  user.RoleName,
+	}
+}
+
+func UserListToResponse(users []domain.User) []UserResponse {
+	results := make([]UserResponse, 0, len(users))
+	for _, user := range users {
+		u := UserDomainToResponse(&user)
+		results = append(results, u)
+	}
+
+	return results
+}
+
+func UserEnrichedListToResponse(users []domain.UserEnriched) []UserEnrichedResponse {
+	results := make([]UserEnrichedResponse, 0, len(users))
+	for _, user := range users {
+		u := UserEnrichedDomainToResponse(&user)
+		results = append(results, u)
+	}
+
+	return results
+}
+
+type UpdateUserPasswordReq struct {
+	OldPassword string `json:"oldPassword"`
+	Password    string `json:"password"`
+}
+
+func (req *UpdateUserPasswordReq) Validate() error {
+	if strings.TrimSpace(req.OldPassword) == "" {
+		return &xerror.ErrorValidation{Message: "old password is required"}
+	}
+
+	if strings.TrimSpace(req.Password) == "" {
+		return &xerror.ErrorValidation{Message: "password is required"}
+	}
+
+	return nil
+}
+
+func (req *UpdateUserPasswordReq) ToDomainParam() *domain.UpdateUserParam {
+	return &domain.UpdateUserParam{
+		OldPassword: req.OldPassword,
+		Password:    &req.Password,
+	}
+}
+
+type UpdateUserRequest struct {
+	Password string `json:"password"`
+	RoleID   int64  `json:"roleID"`
+}
+
+func (req *UpdateUserRequest) Validate() error {
+	return nil
+}
+
+func (req *UpdateUserRequest) ToDomainParam() *domain.UpdateUserParam {
+	return &domain.UpdateUserParam{
+		Password: &req.Password,
+		RoleID:   &req.RoleID,
+	}
+}
+
+type FindUserRequest struct {
+	UsernameLike *string `json:"usernamelike"`
+}
+
+func (req *FindUserRequest) parseParam(r *http.Request) {
+	q := r.URL.Query()
+	username := q.Get("username")
+	if strings.TrimSpace(username) != "" {
+		req.UsernameLike = &username
+	}
+}

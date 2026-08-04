@@ -401,7 +401,7 @@ paths:
       description: Fetch files within object storage bucket
       security:
         - BearerAuth: []
-  
+
   /files/generate-presign-url:
     post:
       tags:

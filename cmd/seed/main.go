@@ -11,7 +11,7 @@ import (
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
-	"github.com/anditakaesar/uwa-go-rag/internal/infra"
+	"github.com/anditakaesar/uwa-go-rag/internal/server"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -34,7 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	services := infra.NewInfra(pool, nil)
+	services := server.NewInfra(pool, nil)
 	seedSQL(ctx, pool)
 	seedUsers(ctx, services)
 }
@@ -82,7 +82,7 @@ func readUserFromCSV(path string) ([]UserSeed, error) {
 	return users, nil
 }
 
-func seedUsers(ctx context.Context, services *infra.Services) {
+func seedUsers(ctx context.Context, services *server.Services) {
 	// users, err := readUserFromCSV("users.csv") // for debug use this
 	users, err := readUserFromCSV(filepath.Join("db", "seed", "users.csv"))
 	if err != nil {
