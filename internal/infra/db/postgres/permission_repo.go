@@ -1,4 +1,4 @@
-package repo
+package postgres
 
 import (
 	"context"
@@ -8,17 +8,17 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type RolePermissionRepo struct {
-	db IDBExecutor
+type PermissionRepo struct {
+	db DBExecutor
 }
 
-func NewRolePermissionRepo(db IDBExecutor) *RolePermissionRepo {
-	return &RolePermissionRepo{
+func NewPermissionRepo(db DBExecutor) *PermissionRepo {
+	return &PermissionRepo{
 		db: db,
 	}
 }
 
-func (r *RolePermissionRepo) GetExecutor(ctx context.Context) IDBExecutor {
+func (r *PermissionRepo) GetExecutor(ctx context.Context) DBExecutor {
 	tx, ok := ctx.Value(common.TxKey).(pgx.Tx)
 	if ok {
 		return tx
@@ -42,7 +42,7 @@ func scanPermission(row pgx.Row) (*domain.Permission, error) {
 	return &model, nil
 }
 
-func (r *RolePermissionRepo) GetPermissionsByUser(ctx context.Context, userID int64) ([]domain.Permission, error) {
+func (r *PermissionRepo) GetPermissionsByUser(ctx context.Context, userID int64) ([]domain.Permission, error) {
 	const query = `
 		SELECT "permissions"."id", "permissions"."resource", "permissions"."action", "permissions"."name"
 		FROM "role_permissions"

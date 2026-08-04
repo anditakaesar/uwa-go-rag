@@ -1,11 +1,10 @@
-package repo
+package postgres
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/henvic/pgq"
@@ -13,22 +12,13 @@ import (
 )
 
 type RoleRepository struct {
-	db IDBExecutor
+	db DBExecutor
 }
 
-func NewRoleRepository(db IDBExecutor) *RoleRepository {
+func NewRoleRepository(db DBExecutor) *RoleRepository {
 	return &RoleRepository{
 		db: db,
 	}
-}
-
-func (r *RoleRepository) GetExecutor(ctx context.Context) IDBExecutor {
-	tx, ok := ctx.Value(common.TxKey).(pgx.Tx)
-	if ok {
-		return tx
-	}
-
-	return r.db
 }
 
 const roleColumns = "id, name, description, created_at, updated_at, is_system"
@@ -80,7 +70,7 @@ func (r *RoleRepository) FetchRoleByParam(ctx context.Context, param domain.Fetc
 		return nil, &xerror.ErrorValidation{Message: "fetch role param required"}
 	}
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, qb.String(), args...)
+	row := Executor(ctx, r.db).QueryRow(ctx, qb.String(), args...)
 	return scanRole(row)
 }
 
@@ -97,7 +87,7 @@ func (r *RoleRepository) FetchAll(ctx context.Context, param *domain.FetchAllRol
 		return nil, err
 	}
 
-	err = r.GetExecutor(ctx).QueryRow(ctx, query, args...).Scan(
+	err = Executor(ctx, r.db).QueryRow(ctx, query, args...).Scan(
 		&param.Pagination.Total,
 	)
 	if err != nil {
@@ -110,7 +100,7 @@ func (r *RoleRepository) FetchAll(ctx context.Context, param *domain.FetchAllRol
 		return nil, err
 	}
 
-	rows, err := r.GetExecutor(ctx).Query(ctx, query, args...)
+	rows, err := Executor(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

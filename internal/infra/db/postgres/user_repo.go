@@ -1,4 +1,4 @@
-package repo
+package postgres
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/henvic/pgq"
@@ -14,22 +13,13 @@ import (
 )
 
 type UserRepository struct {
-	db IDBExecutor
+	db DBExecutor
 }
 
-func NewUserRepository(db IDBExecutor) *UserRepository {
+func NewUserRepository(db DBExecutor) *UserRepository {
 	return &UserRepository{
 		db: db,
 	}
-}
-
-func (r *UserRepository) GetExecutor(ctx context.Context) IDBExecutor {
-	tx, ok := ctx.Value(common.TxKey).(pgx.Tx)
-	if ok {
-		return tx
-	}
-
-	return r.db
 }
 
 const userColumns = "id, username, password, role_id, created_at, updated_at, deleted_at"
@@ -86,7 +76,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, newUser domain.User) (*
     `
 	query = fmt.Sprintf(query, userColumns)
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password, newUser.RoleID)
+	row := Executor(ctx, r.db).QueryRow(ctx, query, newUser.Username, newUser.Password, newUser.RoleID)
 	user, err := scanUser(row)
 	if err != nil {
 		return nil, err
@@ -103,7 +93,7 @@ func (r *UserRepository) CreateUserWithRole(ctx context.Context, newUser domain.
     `
 	query = fmt.Sprintf(query, userColumns)
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, query, newUser.Username, newUser.Password, role)
+	row := Executor(ctx, r.db).QueryRow(ctx, query, newUser.Username, newUser.Password, role)
 
 	return scanUser(row)
 }
@@ -138,7 +128,7 @@ func (r *UserRepository) FetchUserByParam(ctx context.Context, param domain.Fetc
 		qb.WriteString("FOR UPDATE")
 	}
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, qb.String(), args...)
+	row := Executor(ctx, r.db).QueryRow(ctx, qb.String(), args...)
 
 	return scanUser(row)
 }
@@ -168,7 +158,7 @@ func (r *UserRepository) Update(ctx context.Context, id int64, param domain.Upda
 		return nil, err
 	}
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, query, args...)
+	row := Executor(ctx, r.db).QueryRow(ctx, query, args...)
 	return scanUser(row)
 }
 
@@ -187,7 +177,7 @@ func (r *UserRepository) FindAll(ctx context.Context, param *domain.FindAllUsers
 		return nil, err
 	}
 
-	err = r.GetExecutor(ctx).QueryRow(ctx, countQuery, countArgs...).Scan(&param.Pagination.Total)
+	err = Executor(ctx, r.db).QueryRow(ctx, countQuery, countArgs...).Scan(&param.Pagination.Total)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +188,7 @@ func (r *UserRepository) FindAll(ctx context.Context, param *domain.FindAllUsers
 		return nil, err
 	}
 
-	rows, err := r.GetExecutor(ctx).Query(ctx, query, args...)
+	rows, err := Executor(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +211,7 @@ func (r *UserRepository) Delete(ctx context.Context, id int64) (*domain.User, er
 	query := "UPDATE users SET deleted_at = NOW() WHERE id = $1 RETURNING %s"
 	query = fmt.Sprintf(query, userColumns)
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, query, id)
+	row := Executor(ctx, r.db).QueryRow(ctx, query, id)
 
 	return scanUser(row)
 }

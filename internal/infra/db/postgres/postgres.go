@@ -1,4 +1,4 @@
-package db
+package postgres
 
 import (
 	"context"
@@ -11,6 +11,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+const COUNT_AS_TOTAL string = "count(*) as total"
 
 type connector struct {
 	db *pgxpool.Pool
@@ -34,7 +36,7 @@ func (tracer *queryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, dat
 func (tracer *queryTracer) TraceQueryEnd(_ context.Context, _ *pgx.Conn, _ pgx.TraceQueryEndData) {
 }
 
-func NewDatabase(ctx context.Context, dbURL string) (*connector, error) {
+func New(ctx context.Context, dbURL string) (*connector, error) {
 	config, err := pgxpool.ParseConfig(dbURL)
 	if err != nil {
 		return nil, err

@@ -411,7 +411,7 @@ paths:
       security:
         - BearerAuth: []
       requestBody:
-        required: true`
+        required: true
         content:
           application/json:
             schema:
@@ -435,6 +435,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /files/{id}:
+    patch:
+      tags:
+        - File Management
+      summary: Update files
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFilesRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
 
 components:
   schemas:
@@ -664,6 +685,11 @@ components:
         presignURL:
           type: string
           example: "https://presign-url-to-s3"
+    UpdateFilesRequest:
+      type: object
+      properties:
+        status: string
+        example: "completed"
 
   securitySchemes:
     BearerAuth: # Logical name for the scheme

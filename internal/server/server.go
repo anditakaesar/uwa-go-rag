@@ -100,7 +100,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 		RoleService: infraSvc.RoleService,
 	})
 
-	auditlogApi := audit.NewAuditLogApi(audit.AuditLogApiDep{
+	auditlogApi := audit.NewAuditLogApi(audit.ApiDependency{
 		AuditLogService: infraSvc.AuditService,
 	})
 

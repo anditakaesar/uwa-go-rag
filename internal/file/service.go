@@ -35,12 +35,6 @@ type FileRepository interface {
 	Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error)
 }
 
-type FileService interface {
-	Save(filename string, content io.Reader) (string, error)
-	ListFiles(ctx context.Context) ([]string, error)
-	GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error)
-}
-
 type Service struct {
 	uploadDir     string
 	allowedTypes  map[string]bool

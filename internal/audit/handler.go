@@ -65,7 +65,7 @@ func AuditLogsToListResponse(auditlogs []domain.AuditLog) []AuditLogResponse {
 }
 
 // routes
-func SetupAuditLogApiRoutes(router chi.Router, h *AuditLogApi) {
+func SetupAuditLogApiRoutes(router chi.Router, h *Api) {
 	endpoints := []handler.EndpointWithMiddleware{
 		{
 			Endpoint: handler.Endpoint{
@@ -91,21 +91,21 @@ func SetupAuditLogApiRoutes(router chi.Router, h *AuditLogApi) {
 }
 
 // handler
-type AuditLogApi struct {
+type Api struct {
 	AuditLogService Recorder
 }
 
-type AuditLogApiDep struct {
+type ApiDependency struct {
 	AuditLogService Recorder
 }
 
-func NewAuditLogApi(dep AuditLogApiDep) *AuditLogApi {
-	return &AuditLogApi{
+func NewAuditLogApi(dep ApiDependency) *Api {
+	return &Api{
 		AuditLogService: dep.AuditLogService,
 	}
 }
 
-func (h *AuditLogApi) FindAll(w http.ResponseWriter, r *http.Request) error {
+func (h *Api) FindAll(w http.ResponseWriter, r *http.Request) error {
 	pagination := handler.ParsePagination(r)
 	var req FetchAuditLogRequest
 	req.parseParam(r)

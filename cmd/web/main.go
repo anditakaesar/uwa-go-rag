@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
-	"github.com/anditakaesar/uwa-go-rag/internal/infra/db"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/db/postgres"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/storage"
 	"github.com/anditakaesar/uwa-go-rag/internal/server"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
@@ -35,7 +35,7 @@ func main() {
 
 	manager := &ServiceManager{}
 
-	db, err := db.NewDatabase(ctx, env.Values.DBUrl)
+	db, err := postgres.New(ctx, env.Values.DBUrl)
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("unable to connect to database: %v", err))
 		os.Exit(1)

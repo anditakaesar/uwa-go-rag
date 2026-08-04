@@ -1,34 +1,23 @@
-package file
+package postgres
 
 import (
 	"context"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
-	"github.com/anditakaesar/uwa-go-rag/internal/repo"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/google/uuid"
 	"github.com/henvic/pgq"
 	"github.com/jackc/pgx/v5"
 )
 
-type FileRepo struct {
-	db repo.IDBExecutor
+type FileRepository struct {
+	db DBExecutor
 }
 
-func NewFileRepo(db repo.IDBExecutor) *FileRepo {
-	return &FileRepo{
+func NewFileRepository(db DBExecutor) *FileRepository {
+	return &FileRepository{
 		db: db,
 	}
-}
-
-func (r *FileRepo) GetExecutor(ctx context.Context) repo.IDBExecutor {
-	tx, ok := ctx.Value(common.TxKey).(pgx.Tx)
-	if ok {
-		return tx
-	}
-
-	return r.db
 }
 
 const fileColumns = "id, user_id, original_name, mime_type, size_bytes, s3_bucket, s3_key, status, metadata, created_at, updated_at"
@@ -62,7 +51,7 @@ var insertColumns = []string{
 	"id", "user_id", "original_name", "mime_type", "size_bytes", "s3_bucket", "s3_key", "status", "metadata",
 }
 
-func (r *FileRepo) Insert(ctx context.Context, newFile domain.File) (*domain.File, error) {
+func (r *FileRepository) Insert(ctx context.Context, newFile domain.File) (*domain.File, error) {
 	insertQuery := pgq.Insert("files").Columns(insertColumns...).
 		Values(
 			newFile.ID,
@@ -80,11 +69,11 @@ func (r *FileRepo) Insert(ctx context.Context, newFile domain.File) (*domain.Fil
 		return nil, err
 	}
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, sql, args...)
+	row := Executor(ctx, r.db).QueryRow(ctx, sql, args...)
 	return scanFileRow(row)
 }
 
-func (r *FileRepo) Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error) {
+func (r *FileRepository) Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error) {
 	selectQuery := pgq.Select(fileColumns).From("files").Where("id = ?", fileID)
 
 	sql, args, err := selectQuery.SQL()
@@ -92,6 +81,6 @@ func (r *FileRepo) Get(ctx context.Context, fileID uuid.UUID) (*domain.File, err
 		return nil, err
 	}
 
-	row := r.GetExecutor(ctx).QueryRow(ctx, sql, args...)
+	row := Executor(ctx, r.db).QueryRow(ctx, sql, args...)
 	return scanFileRow(row)
 }

@@ -1,4 +1,4 @@
-package db
+package postgres
 
 import (
 	"context"
@@ -12,14 +12,14 @@ import (
 )
 
 // Unit of work
-type IInfraDB interface {
+type AtomicDB interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
 	Close()
 	Ping(ctx context.Context) error
 }
 
 type unitOfWork struct {
-	db IInfraDB
+	db AtomicDB
 }
 
 func (u *unitOfWork) Do(ctx context.Context, fn func(ctx context.Context) error) error {
@@ -51,6 +51,6 @@ func (u *unitOfWork) Do(ctx context.Context, fn func(ctx context.Context) error)
 	return nil
 }
 
-func NewUnitOfWork(idb IInfraDB) *unitOfWork {
+func NewUnitOfWork(idb AtomicDB) *unitOfWork {
 	return &unitOfWork{db: idb}
 }

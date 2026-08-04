@@ -72,8 +72,8 @@ func (_c *MockStorageClient_Get_Call) Run(run func()) *MockStorageClient_Get_Cal
 	return _c
 }
 
-func (_c *MockStorageClient_Get_Call) Return(s3ObjectClient *storage.S3Client) *MockStorageClient_Get_Call {
-	_c.Call.Return(s3ObjectClient)
+func (_c *MockStorageClient_Get_Call) Return(s3Client *storage.S3Client) *MockStorageClient_Get_Call {
+	_c.Call.Return(s3Client)
 	return _c
 }
 

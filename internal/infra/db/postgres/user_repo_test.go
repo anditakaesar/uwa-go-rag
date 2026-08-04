@@ -1,4 +1,4 @@
-package repo_test
+package postgres_test
 
 import (
 	"context"
@@ -8,9 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
-	"github.com/anditakaesar/uwa-go-rag/internal/repo"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/db/postgres"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -35,37 +34,6 @@ func setupMocks() (*mockItems, error) {
 }
 
 const userColumns = "id, username, password, role_id, created_at, updated_at, deleted_at"
-
-func TestUserRepository_GetExecutor(test *testing.T) {
-	test.Parallel()
-
-	test.Run("success return from context", func(t *testing.T) {
-		m, err := setupMocks()
-		assert.NoError(t, err)
-		defer m.mockDB.Close()
-
-		m.mockDB.ExpectBegin()
-
-		newTx, err := m.mockDB.Begin(m.ctx)
-		assert.NoError(t, err)
-
-		ctxWithValue := context.WithValue(m.ctx, common.TxKey, newTx)
-		r := repo.NewUserRepository(m.mockDB)
-
-		got := r.GetExecutor(ctxWithValue)
-		assert.Equal(t, newTx, got)
-	})
-
-	test.Run("success return default", func(t *testing.T) {
-		m, err := setupMocks()
-		assert.NoError(t, err)
-		defer m.mockDB.Close()
-
-		r := repo.NewUserRepository(m.mockDB)
-		got := r.GetExecutor(m.ctx)
-		assert.Equal(t, m.mockDB, got)
-	})
-}
 
 func TestUserRepository_CreateUser(test *testing.T) {
 	test.Parallel()
@@ -93,7 +61,7 @@ func TestUserRepository_CreateUser(test *testing.T) {
 			WithArgs(newUser.Username, newUser.Password, newUser.RoleID).
 			WillReturnRows(rows)
 
-		r := repo.NewUserRepository(m.mockDB)
+		r := postgres.NewUserRepository(m.mockDB)
 		res, err := r.CreateUser(m.ctx, newUser)
 
 		assert.NoError(t, err)
@@ -111,7 +79,7 @@ func TestUserRepository_CreateUser(test *testing.T) {
 			WithArgs(newUser.Username, newUser.Password, newUser.RoleID).
 			WillReturnError(errors.New("query_error"))
 
-		r := repo.NewUserRepository(m.mockDB)
+		r := postgres.NewUserRepository(m.mockDB)
 		res, err := r.CreateUser(m.ctx, newUser)
 
 		assert.Error(t, err)
@@ -150,7 +118,7 @@ func TestUserRepository_FetchUserByParam(test *testing.T) {
 				username,
 			).WillReturnRows(rows)
 
-		r := repo.NewUserRepository(m.mockDB)
+		r := postgres.NewUserRepository(m.mockDB)
 		got, gotErr := r.FetchUserByParam(m.ctx, domain.FetchUserParam{
 			ID:        &userID,
 			Username:  &username,
@@ -186,7 +154,7 @@ func TestUserRepository_FetchUserByParam(test *testing.T) {
 				userID,
 			).WillReturnRows(rows)
 
-		r := repo.NewUserRepository(m.mockDB)
+		r := postgres.NewUserRepository(m.mockDB)
 		got, gotErr := r.FetchUserByParam(m.ctx, domain.FetchUserParam{
 			ID: &userID,
 		})
@@ -213,7 +181,7 @@ func TestUserRepository_FetchUserByParam(test *testing.T) {
 				userID,
 			).WillReturnError(errors.New("error_fetchUser"))
 
-		r := repo.NewUserRepository(m.mockDB)
+		r := postgres.NewUserRepository(m.mockDB)
 		got, gotErr := r.FetchUserByParam(m.ctx, domain.FetchUserParam{
 			ID: &userID,
 		})
@@ -227,7 +195,7 @@ func TestUserRepository_FetchUserByParam(test *testing.T) {
 		assert.NoError(t, err)
 		defer m.mockDB.Close()
 
-		r := repo.NewUserRepository(m.mockDB)
+		r := postgres.NewUserRepository(m.mockDB)
 		got, gotErr := r.FetchUserByParam(m.ctx, domain.FetchUserParam{})
 
 		assert.Error(t, gotErr)
@@ -264,7 +232,7 @@ func TestUserRepository_Update(test *testing.T) {
 				userID,
 			).WillReturnRows(rows)
 
-		r := repo.NewUserRepository(m.mockDB)
+		r := postgres.NewUserRepository(m.mockDB)
 		got, gotErr := r.Update(m.ctx, userID, domain.UpdateUserParam{
 			Password: &hashedPass,
 		})
@@ -293,7 +261,7 @@ func TestUserRepository_Update(test *testing.T) {
 				userID,
 			).WillReturnError(errors.New("error_Execute"))
 
-		r := repo.NewUserRepository(m.mockDB)
+		r := postgres.NewUserRepository(m.mockDB)
 		got, gotErr := r.Update(m.ctx, userID, domain.UpdateUserParam{
 			Password: &hashedPass,
 		})
@@ -310,7 +278,7 @@ func TestUserRepository_Update(test *testing.T) {
 
 		userID := int64(1)
 
-		r := repo.NewUserRepository(m.mockDB)
+		r := postgres.NewUserRepository(m.mockDB)
 		got, gotErr := r.Update(m.ctx, userID, domain.UpdateUserParam{})
 
 		assert.Error(t, gotErr)

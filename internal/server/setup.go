@@ -10,13 +10,12 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/file"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/ai"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/cookie"
-	"github.com/anditakaesar/uwa-go-rag/internal/infra/db"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/db/postgres"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/jwt"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/password"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/queue"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/storage"
 	"github.com/anditakaesar/uwa-go-rag/internal/rag"
-	"github.com/anditakaesar/uwa-go-rag/internal/repo"
 	"github.com/anditakaesar/uwa-go-rag/internal/role"
 	"github.com/anditakaesar/uwa-go-rag/internal/user"
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
@@ -41,13 +40,13 @@ type Services struct {
 }
 
 func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
-	userRepo := repo.NewUserRepository(pool)
-	ragRepo := rag.NewRagRepository(pool)
-	auditRepo := audit.NewAuditRepository(pool)
-	roleRepo := repo.NewRoleRepository(pool)
-	rolePermissionRepo := repo.NewRolePermissionRepo(pool)
-	fileRepo := file.NewFileRepo(pool)
-	uow := db.NewUnitOfWork(pool)
+	userRepo := postgres.NewUserRepository(pool)
+	ragRepo := postgres.NewRagRepository(pool)
+	auditRepo := postgres.NewAuditRepository(pool)
+	roleRepo := postgres.NewRoleRepository(pool)
+	rolePermissionRepo := postgres.NewPermissionRepo(pool)
+	fileRepo := postgres.NewFileRepository(pool)
+	uow := postgres.NewUnitOfWork(pool)
 	riverQueue := queue.NewRiverQueue()
 	storageClient := storage.NewRustFs(storage.RustFSDependency{
 		StorageClient: infraStorage,
