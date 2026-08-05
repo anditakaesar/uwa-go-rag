@@ -11,6 +11,7 @@ import (
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/storage"
 	"github.com/anditakaesar/uwa-go-rag/internal/server"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -34,7 +35,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	services := server.NewInfra(pool, nil)
+	client, err := storage.NewStorageClient(ctx, storage.S3ClientDep{
+		EndpointURL: env.S3Conf.S3Endpoint,
+		AccessKey:   env.S3Conf.S3AccessKey,
+		SecretKey:   env.S3Conf.S3SecretKey,
+		Region:      env.S3Conf.S3Region,
+	})
+	if err != nil {
+		xlog.Logger.Error(fmt.Sprintf("unable to connect to storage service: %v", err))
+		os.Exit(1)
+	}
+
+	services := server.NewInfra(pool, client)
 	seedSQL(ctx, pool)
 	seedUsers(ctx, services)
 }
