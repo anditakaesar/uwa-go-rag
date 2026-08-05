@@ -1,11 +1,11 @@
 openapi: "3.0.3"
 info:
-  title: User API
+  title: Uwa Go Rag
   version: "1.0"
 servers:
+  - url: https://localhost:3000/api
   - url: http://localhost:3000/api
     description: unsecure
-  - url: https://localhost:3000/api
 paths:
   /auth/login:
     post:
@@ -398,9 +398,27 @@ paths:
       tags:
         - File Management
       summary: Fetch files
-      description: Fetch files within object storage bucket
+      description: Fetch files stored at the server
       security:
         - BearerAuth: []
+      parameters:
+        - in: query
+          name: size
+          schema:
+            type: number
+          description: limit the size (default 10)
+        - in: query
+          name: page
+          schema:
+            type: number
+          description: page number (default 1)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FetchFilesResponse"
 
   /files/generate-presign-url:
     post:
@@ -529,21 +547,18 @@ components:
     SingleUserEnrichedResponse:
       type: "object"
       properties:
-        data:
-          type: "object"
-          properties:
-            id:
-              type: "integer"
-            username:
-              type: "string"
-            roleID:
-              type: integer
-            createdAt:
-              type: "string"
-              example: "2026-07-14T22:32:12.062975+07:00"
-            roleName:
-              type: "string"
-              example: "RoleName"
+        id:
+          type: "integer"
+        username:
+          type: "string"
+        roleID:
+          type: integer
+        createdAt:
+          type: "string"
+          example: "2026-07-14T22:32:12.062975+07:00"
+        roleName:
+          type: "string"
+          example: "RoleName"
     FetchUserResponse:
       type: "object"
       properties:
@@ -690,6 +705,39 @@ components:
       properties:
         status: string
         example: "completed"
+    SingleFileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "uuid-string-here"
+        userID:
+          type: number
+          example: 101
+        originalName:
+          type: string
+          example: "file_name.jpg"
+        mimeType:
+          type: string
+          example: "image/png"
+        sizeBytes:
+          type: integer
+          example: 1024
+        createdAt:
+          type: string
+          example: "20270101T00:00:00.000"
+    FetchFilesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SingleFileResponse"
+        meta:
+          type: "object"
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
 
   securitySchemes:
     BearerAuth: # Logical name for the scheme
