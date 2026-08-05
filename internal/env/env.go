@@ -6,11 +6,56 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
-var Values *Object
-var CorsOpts *CorsOptions
-var S3Conf *S3Config
+type Config struct {
+	Values      *Object
+	CorsOptions *CorsOptions
+	S3Config    *S3Config
+}
+
+var loadOnce = sync.OnceValue(func() Config {
+	return Config{
+		Values: &Object{
+			Env:          os.Getenv("ENV"),
+			Port:         os.Getenv("PORT"),
+			DBUrl:        os.Getenv("DB_URL"),
+			CookieSecret: os.Getenv("COOKIE_SECRET"),
+			CSRFSecret:   os.Getenv("CSRF_SECRET"),
+			JWTSecret:    os.Getenv("JWT_SECRET"),
+			JWTExpire:    getJWTExpireSession(),
+			PassSecret:   os.Getenv("PASS_SECRET"),
+			UploadDir:    os.Getenv("UPLOAD_DIR"),
+			HostName:     os.Getenv("HOSTNAME"),
+			AIBaseURL:    os.Getenv("AI_BASE_URL"),
+			AIAPIKey:     os.Getenv("AI_API_KEY"),
+			LogToFile:    getLogToFile(),
+		},
+
+		CorsOptions: &CorsOptions{
+			AllowedOrigins:   getCorsOpt("AllowedOrigins"),
+			AllowedMethods:   getCorsOpt("AllowedMethods"),
+			AllowedHeaders:   getCorsOpt("AllowedHeaders"),
+			ExposedHeaders:   getCorsOpt("ExposedHeaders"),
+			AllowCredentials: getCorsOptAllowCredentials(),
+			MaxAge:           getCorsOptMaxAge(),
+		},
+
+		S3Config: &S3Config{
+			S3Endpoint:  os.Getenv("S3_ENDPOINT"),
+			S3AccessKey: os.Getenv("S3_ACCESS_KEY"),
+			S3SecretKey: os.Getenv("S3_SECRET_KEY"),
+			S3Region:    os.Getenv("S3_REGION"),
+			S3Bucket:    os.Getenv("S3_BUCKET"),
+			S3Prefix:    os.Getenv("S3_PREFIX"),
+		},
+	}
+})
+
+func Get() Config {
+	return loadOnce()
+}
 
 type Object struct {
 	Env          string
@@ -44,43 +89,6 @@ type S3Config struct {
 	S3Region    string
 	S3Bucket    string
 	S3Prefix    string
-}
-
-func Load() {
-	Values = &Object{
-		Env:          os.Getenv("ENV"),
-		Port:         os.Getenv("PORT"),
-		DBUrl:        os.Getenv("DB_URL"),
-		CookieSecret: os.Getenv("COOKIE_SECRET"),
-		CSRFSecret:   os.Getenv("CSRF_SECRET"),
-		JWTSecret:    os.Getenv("JWT_SECRET"),
-		JWTExpire:    getJWTExpireSession(),
-		PassSecret:   os.Getenv("PASS_SECRET"),
-		UploadDir:    os.Getenv("UPLOAD_DIR"),
-		HostName:     os.Getenv("HOSTNAME"),
-		AIBaseURL:    os.Getenv("AI_BASE_URL"),
-		AIAPIKey:     os.Getenv("AI_API_KEY"),
-		LogToFile:    getLogToFile(),
-	}
-
-	CorsOpts = &CorsOptions{
-		AllowedOrigins:   getCorsOpt("AllowedOrigins"),
-		AllowedMethods:   getCorsOpt("AllowedMethods"),
-		AllowedHeaders:   getCorsOpt("AllowedHeaders"),
-		ExposedHeaders:   getCorsOpt("ExposedHeaders"),
-		AllowCredentials: getCorsOptAllowCredentials(),
-		MaxAge:           getCorsOptMaxAge(),
-	}
-
-	S3Conf = &S3Config{
-		S3Endpoint:  os.Getenv("S3_ENDPOINT"),
-		S3AccessKey: os.Getenv("S3_ACCESS_KEY"),
-		S3SecretKey: os.Getenv("S3_SECRET_KEY"),
-		S3Region:    os.Getenv("S3_REGION"),
-		S3Bucket:    os.Getenv("S3_BUCKET"),
-		S3Prefix:    os.Getenv("S3_PREFIX"),
-	}
-
 }
 
 func getJWTExpireSession() int {
@@ -119,24 +127,6 @@ func GetLogLevel() slog.Level {
 func (v *Object) IsDevelopment() bool {
 	return v.Env == "dev" || v.Env == "development"
 }
-
-const (
-	CSRF_TOKEN_FIELD_NAME        = "csrf_token"
-	IDENTITY_KEY                 = "identity-key"
-	USER_CTX_KEY                 = "registered_user_ctx"
-	MAX_UPLOAD_SIZE              = 10 * 1024 * 1024 // 10 MB limit
-	SESSION_KEY           string = "auth_session"
-)
-
-var (
-	UPLOAD_ALLOWED_TYPES = map[string]bool{
-		"image/jpeg":                true,
-		"image/png":                 true,
-		"image/gif":                 true,
-		"image/webp":                true,
-		"text/plain; charset=utf-8": true,
-	}
-)
 
 func getCorsOpt(key string) []string {
 	str := os.Getenv(fmt.Sprint("CORS_OPT_", key))

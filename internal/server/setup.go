@@ -50,27 +50,27 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 	riverQueue := queue.NewRiverQueue()
 	storageClient := storage.NewRustFs(storage.RustFSDependency{
 		StorageClient: infraStorage,
-		BucketName:    env.S3Conf.S3Bucket,
-		BucketPrefix:  env.S3Conf.S3Prefix,
+		BucketName:    env.Get().S3Config.S3Bucket,
+		BucketPrefix:  env.Get().S3Config.S3Prefix,
 	})
 	aiClient := ai.NewClient(ai.ClientDependency{
-		BaseURL: env.Values.AIBaseURL,
-		ApiKey:  env.Values.AIAPIKey,
+		BaseURL: env.Get().Values.AIBaseURL,
+		ApiKey:  env.Get().Values.AIAPIKey,
 	})
 
 	userSvc := user.NewUserService(user.ServiceDependency{
 		UserRepo:    userRepo,
-		PassChecker: password.NewArgonClientHelper(env.Values.PassSecret),
+		PassChecker: password.NewArgonClientHelper(env.Get().Values.PassSecret),
 		UOW:         uow,
 	})
 	jwtSvc := jwt.NewJWTService(jwt.ServiceDependency{
-		Secret:             []byte(env.Values.JWTSecret),
-		JWTExpire:          env.Values.JWTExpire,
+		Secret:             []byte(env.Get().Values.JWTSecret),
+		JWTExpire:          env.Get().Values.JWTExpire,
 		RolePermissionRepo: rolePermissionRepo,
 	})
-	cookieService := cookie.NewService(env.Values.IsDevelopment(), env.Values.CookieSecret)
+	cookieService := cookie.NewService(env.Get().Values.IsDevelopment(), env.Get().Values.CookieSecret)
 	fileSvc := file.NewService(file.ServiceDependency{
-		DirName:       env.Values.UploadDir,
+		DirName:       env.Get().Values.UploadDir,
 		AllowedTypes:  env.UPLOAD_ALLOWED_TYPES,
 		StorageClient: storageClient,
 		FileRepo:      fileRepo,
@@ -80,7 +80,7 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 		RagRepo:   ragRepo,
 		AIClient:  aiClient,
 		JobQueue:  riverQueue,
-		UploadDir: env.Values.UploadDir,
+		UploadDir: env.Get().Values.UploadDir,
 	})
 	ragSvc := rag.NewRagService()
 	auditSvc := audit.NewAuditLogRecorder(auditRepo)

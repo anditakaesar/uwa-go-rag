@@ -133,8 +133,8 @@ func (svc *Service) GeneratePresignURL(ctx context.Context, param domain.Generat
 			OriginalName: cleanFilename,
 			MimeType:     param.MimeType,
 			SizeBytes:    param.SizeBytes,
-			S3Bucket:     env.S3Conf.S3Bucket,
-			S3Key:        path.Join(env.S3Conf.S3Prefix, fmt.Sprintf("%v%v", newID.String(), extensionFile)),
+			S3Bucket:     env.Get().S3Config.S3Bucket,
+			S3Key:        path.Join(env.Get().S3Config.S3Prefix, fmt.Sprintf("%v%v", newID.String(), extensionFile)),
 			Status:       domain.UPLOAD_STATUS_PENDING,
 		})
 		if err != nil {

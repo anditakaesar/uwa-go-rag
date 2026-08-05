@@ -19,10 +19,10 @@ import (
 
 func main() {
 	ctx := context.Background()
-	env.Load()
+
 	xlog.InitializeLogger()
 
-	pool, err := pgxpool.New(context.Background(), env.Values.DBUrl)
+	pool, err := pgxpool.New(context.Background(), env.Get().Values.DBUrl)
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("Unable to connect database: %v", err))
 		os.Exit(1)
@@ -36,10 +36,10 @@ func main() {
 	}
 
 	client, err := storage.NewStorageClient(ctx, storage.S3ClientDep{
-		EndpointURL: env.S3Conf.S3Endpoint,
-		AccessKey:   env.S3Conf.S3AccessKey,
-		SecretKey:   env.S3Conf.S3SecretKey,
-		Region:      env.S3Conf.S3Region,
+		EndpointURL: env.Get().S3Config.S3Endpoint,
+		AccessKey:   env.Get().S3Config.S3AccessKey,
+		SecretKey:   env.Get().S3Config.S3SecretKey,
+		Region:      env.Get().S3Config.S3Region,
 	})
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("unable to connect to storage service: %v", err))

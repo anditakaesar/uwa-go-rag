@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
-	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares/mocks"
 	"github.com/golang-jwt/jwt/v5"
@@ -42,10 +41,6 @@ func setupMocks() *mockItems {
 
 func TestCSRFMiddleware(test *testing.T) {
 	test.Parallel()
-	env.Values = &env.Object{}
-
-	env.Values.CSRFSecret = "32-byte-long-auth-key-goes-here-"
-	env.Values.Env = "development"
 
 	test.Run("reject missing token", func(t *testing.T) {
 		// Setup a dummy handler that should only be reached if CSRF passes

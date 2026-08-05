@@ -15,7 +15,6 @@ func init() {
 	}
 }
 
-// func init() {
 func InitializeLogger() {
 	lvl := env.GetLogLevel()
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{

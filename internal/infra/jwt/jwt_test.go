@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
-	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/jwt"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/jwt/mocks"
 	"github.com/stretchr/testify/assert"
@@ -33,10 +32,7 @@ func setupMocks() *mockItems {
 
 func TestJWTService(test *testing.T) {
 	secret := "super-secret"
-	env.Values = &env.Object{
-		JWTSecret: secret,
-		JWTExpire: 15,
-	}
+
 	userID := int64(112)
 
 	test.Run("issue and verify success", func(t *testing.T) {

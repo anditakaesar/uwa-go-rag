@@ -66,7 +66,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 		"/uploads/*",
 		http.StripPrefix(
 			"/uploads/",
-			http.FileServer(http.Dir(env.Values.UploadDir)),
+			http.FileServer(http.Dir(env.Get().Values.UploadDir)),
 		),
 	)
 
@@ -74,7 +74,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 	mainHandler := web.NewMainHandler(web.MainHandlerDeps{
 		UserService:   infraSvc.UserService,
 		JWTService:    infraSvc.JWTService,
-		JWTSecret:     env.Values.JWTSecret,
+		JWTSecret:     env.Get().Values.JWTSecret,
 		CookieService: infraSvc.CookieService,
 		FileService:   infraSvc.FileService,
 		WebRenderer:   infraSvc.WebRenderer,
@@ -91,7 +91,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 	loginApi := auth.NewLoginApi(auth.LoginApiDeps{
 		UserService:   infraSvc.UserService,
 		JWTService:    infraSvc.JWTService,
-		JWTSecret:     env.Values.JWTSecret,
+		JWTSecret:     env.Get().Values.JWTSecret,
 		CookieService: infraSvc.CookieService,
 		AuditService:  infraSvc.AuditService,
 	})
@@ -124,12 +124,12 @@ func SetupServer(dep *ServerDependency) *Executor {
 	router.Route("/api", func(r chi.Router) {
 		// middlewares
 		r.Use(cors.Handler(cors.Options{
-			AllowedOrigins:   env.CorsOpts.AllowedOrigins,
-			AllowedMethods:   env.CorsOpts.AllowedMethods,
-			AllowedHeaders:   env.CorsOpts.AllowedHeaders,
-			ExposedHeaders:   env.CorsOpts.ExposedHeaders,
-			AllowCredentials: env.CorsOpts.AllowCredentials,
-			MaxAge:           env.CorsOpts.MaxAge,
+			AllowedOrigins:   env.Get().CorsOptions.AllowedOrigins,
+			AllowedMethods:   env.Get().CorsOptions.AllowedMethods,
+			AllowedHeaders:   env.Get().CorsOptions.AllowedHeaders,
+			ExposedHeaders:   env.Get().CorsOptions.ExposedHeaders,
+			AllowCredentials: env.Get().CorsOptions.AllowCredentials,
+			MaxAge:           env.Get().CorsOptions.MaxAge,
 		}))
 		r.Use(middlewares.GlobalErrorMiddleware)
 		r.Use(middlewares.ResolveAuth(

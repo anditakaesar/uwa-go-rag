@@ -96,7 +96,7 @@ func (r *RustFS) ListFiles(ctx context.Context) ([]string, error) {
 
 func (r *RustFS) GetPresignURL(ctx context.Context, key string) (string, error) {
 	objectInput := &s3.PutObjectInput{
-		Bucket: aws.String(env.S3Conf.S3Bucket),
+		Bucket: aws.String(env.Get().S3Config.S3Bucket),
 		Key:    aws.String(key),
 	}
 

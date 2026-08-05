@@ -133,7 +133,7 @@ func (h *AuthApi) Login(w http.ResponseWriter, r *http.Request) error {
 
 	samesiteMode := http.SameSiteLaxMode
 
-	if env.Values.IsDevelopment() {
+	if env.Get().Values.IsDevelopment() {
 		samesiteMode = http.SameSiteNoneMode
 	}
 

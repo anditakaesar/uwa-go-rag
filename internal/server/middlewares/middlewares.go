@@ -37,7 +37,7 @@ type UserService interface {
 type Middleware func(http.Handler) http.Handler
 
 func CSRFMiddleware() Middleware {
-	secure := !env.Values.IsDevelopment()
+	secure := !env.Get().Values.IsDevelopment()
 
 	opts := []csrf.Option{
 		csrf.FieldName(env.CSRF_TOKEN_FIELD_NAME),
@@ -47,13 +47,13 @@ func CSRFMiddleware() Middleware {
 	if !secure {
 		opts = append(opts,
 			csrf.TrustedOrigins([]string{
-				"localhost" + env.Values.Port,
+				"localhost" + env.Get().Values.Port,
 			}),
 		)
 	}
 
 	return csrf.Protect(
-		[]byte(env.Values.CSRFSecret),
+		[]byte(env.Get().Values.CSRFSecret),
 		opts...,
 	)
 }

@@ -19,9 +19,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	env.Load()
-
-	if env.Values.LogToFile {
+	if env.Get().Values.LogToFile {
 		logFile, err := os.OpenFile("logs/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatalf("Failed to open log file: %v", err)
@@ -35,17 +33,17 @@ func main() {
 
 	manager := &ServiceManager{}
 
-	db, err := postgres.New(ctx, env.Values.DBUrl)
+	db, err := postgres.New(ctx, env.Get().Values.DBUrl)
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("unable to connect to database: %v", err))
 		os.Exit(1)
 	}
 
 	client, err := storage.NewStorageClient(ctx, storage.S3ClientDep{
-		EndpointURL: env.S3Conf.S3Endpoint,
-		AccessKey:   env.S3Conf.S3AccessKey,
-		SecretKey:   env.S3Conf.S3SecretKey,
-		Region:      env.S3Conf.S3Region,
+		EndpointURL: env.Get().S3Config.S3Endpoint,
+		AccessKey:   env.Get().S3Config.S3AccessKey,
+		SecretKey:   env.Get().S3Config.S3SecretKey,
+		Region:      env.Get().S3Config.S3Region,
 	})
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("unable to connect to storage service: %v", err))
@@ -56,7 +54,7 @@ func main() {
 		DB: db, StorageClient: client,
 	})
 	manager.Register(NewDBServer(db))
-	manager.Register(NewWebServer("web-server", executor.Mux, env.Values.Port))
+	manager.Register(NewWebServer("web-server", executor.Mux, env.Get().Values.Port))
 	manager.Register(NewWorkerServer("river-worker", executor.RiverClient))
 
 	if err := manager.Start(ctx); err != nil {

@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/storage"
 	"github.com/anditakaesar/uwa-go-rag/internal/server"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/mocks"
@@ -13,9 +12,6 @@ import (
 )
 
 func TestSetupServer(test *testing.T) {
-	env.Values = &env.Object{}
-	env.CorsOpts = &env.CorsOptions{}
-	env.S3Conf = &env.S3Config{}
 	test.Run("success generate setup server", func(t *testing.T) {
 
 		mockDB := new(mocks.MockDatabase)

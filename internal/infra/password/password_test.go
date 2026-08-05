@@ -3,7 +3,6 @@ package password
 import (
 	"testing"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,8 +29,7 @@ func Test_passwordArgon(test *testing.T) {
 
 func Test_passwordArgon_CheckPassword(test *testing.T) {
 	secret := "hardly-a-secret-2"
-	env.Values = &env.Object{}
-	env.Values.JWTSecret = secret
+
 	test.Run("fail encode hash", func(t *testing.T) {
 		ph := NewArgonClientHelper(secret)
 		got, gotErr := ph.CheckPassword("test-pass", "a$2$")

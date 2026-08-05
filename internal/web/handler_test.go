@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
-	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
 	"github.com/anditakaesar/uwa-go-rag/internal/web/mocks"
 	"github.com/go-chi/chi/v5"
@@ -592,8 +591,6 @@ func TestMainHandler_PostUpload(test *testing.T) {
 }
 
 func TestSetupMainRoutes(test *testing.T) {
-	env.Values = &env.Object{}
-
 	test.Run("setup routes registration", func(t *testing.T) {
 		// 1. Setup a dummy handler (doesn't need real services)
 		h := &web.MainHandler{}
