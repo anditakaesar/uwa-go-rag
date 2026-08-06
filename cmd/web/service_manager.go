@@ -7,6 +7,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/sync/errgroup"
@@ -58,15 +59,17 @@ func (m *ServiceManager) Start(ctx context.Context) error {
 type WebServer struct {
 	name   string
 	server *http.Server
+	config *env.WebServerConfig
 }
 
-func NewWebServer(name string, router *chi.Mux, port string) *WebServer {
+func NewWebServer(name string, router *chi.Mux, config *env.WebServerConfig) *WebServer {
 	return &WebServer{
 		name: name,
 		server: &http.Server{
-			Addr:    port,
+			Addr:    config.Port,
 			Handler: router,
 		},
+		config: config,
 	}
 }
 
@@ -75,8 +78,14 @@ func (w *WebServer) Name() string {
 }
 
 func (w *WebServer) Run(ctx context.Context) error {
-	// err := w.server.ListenAndServe()
-	err := w.server.ListenAndServeTLS("localhost.pem", "localhost-key.pem")
+	var err error
+
+	if w.config.UseTLS {
+		err = w.server.ListenAndServeTLS(w.config.CertFilePath, w.config.KeyFilePath)
+	} else {
+		err = w.server.ListenAndServe()
+	}
+
 	if err != nil && err != http.ErrServerClosed {
 		return err
 	}

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
@@ -38,7 +39,7 @@ func scanAuditLog(row pgx.Row) (*domain.AuditLog, error) {
 		&model.CreatedAt,
 	)
 	if err != nil {
-		if err.Error() == pgx.ErrNoRows.Error() {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, &xerror.ErrorResourceNotFound{Message: "audit_log not found"}
 		}
 		return nil, err

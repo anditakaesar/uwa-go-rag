@@ -54,7 +54,7 @@ func main() {
 		DB: db, StorageClient: client,
 	})
 	manager.Register(NewDBServer(db))
-	manager.Register(NewWebServer("web-server", executor.Mux, env.Get().Values.Port))
+	manager.Register(NewWebServer("web-server", executor.Mux, env.Get().WebServerConfig))
 	manager.Register(NewWorkerServer("river-worker", executor.RiverClient))
 
 	if err := manager.Start(ctx); err != nil {

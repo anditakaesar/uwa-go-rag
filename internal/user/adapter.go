@@ -21,11 +21,6 @@ type PasswordChecker interface {
 	CheckPassword(password string, hash string) (bool, error)
 }
 
-type StorageClient interface {
-	ListFiles(ctx context.Context) ([]string, error)
-	GetPresignURL(ctx context.Context, key string) (string, error)
-}
-
 type FileRepository interface {
 	Insert(ctx context.Context, newFile domain.File) (*domain.File, error)
 	Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error)

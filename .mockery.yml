@@ -50,7 +50,6 @@ packages:
     interfaces:
       UserRepository:
       PasswordChecker:
-      StorageClient:
       FileRepository:
       UserService:
   github.com/anditakaesar/uwa-go-rag/internal/web:

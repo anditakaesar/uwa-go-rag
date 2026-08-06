@@ -73,6 +73,14 @@ func (e *ErrorResourceNotFound) Error() string {
 	return e.Message
 }
 
+type ErrorPasswordAttempt struct {
+	Message string
+}
+
+func (e *ErrorPasswordAttempt) Error() string {
+	return e.Message
+}
+
 // DefineStatusCode maps custom error types to HTTP Status Codes
 func DefineStatusCode(err error) int {
 	if err == nil {
@@ -81,7 +89,9 @@ func DefineStatusCode(err error) int {
 
 	// Use errors.As to detect wrapped errors or specific types
 	var errSession *ErrorSession
-	if errors.As(err, &errSession) {
+	var errPassAtp *ErrorPasswordAttempt
+	if errors.As(err, &errSession) ||
+		errors.As(err, &errPassAtp) {
 		return http.StatusUnauthorized
 	}
 

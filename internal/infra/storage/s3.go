@@ -86,7 +86,7 @@ func (r *RustFS) ListFiles(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	files := make([]string, *output.KeyCount)
+	files := make([]string, 0, *output.KeyCount)
 	for _, obj := range output.Contents {
 		files = append(files, *obj.Key) // key is name
 	}

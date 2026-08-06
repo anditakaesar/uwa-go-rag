@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -36,7 +37,7 @@ func scanRole(row pgx.Row) (*domain.Role, error) {
 	)
 
 	if err != nil {
-		if err.Error() == pgx.ErrNoRows.Error() {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, &xerror.ErrorResourceNotFound{Message: "role not found"}
 		}
 		return nil, err

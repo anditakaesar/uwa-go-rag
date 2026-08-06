@@ -7,6 +7,7 @@ import (
 
 	"github.com/anditakaesar/uwa-go-rag/internal/application"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
+	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 )
 
 type Service struct {
@@ -59,7 +60,7 @@ func (s *Service) AuthenticateUser(ctx context.Context, username string, passwor
 
 	success, err := s.passChecker.CheckPassword(password, getUser.Password)
 	if err != nil || !success {
-		return nil, fmt.Errorf("wrong password attempt: %s", password)
+		return nil, &xerror.ErrorPasswordAttempt{Message: "checking password failed"}
 	}
 
 	return getUser, nil

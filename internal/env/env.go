@@ -10,16 +10,16 @@ import (
 )
 
 type Config struct {
-	Values      *Object
-	CorsOptions *CorsOptions
-	S3Config    *S3Config
+	Values          *Object
+	CorsOptions     *CorsOptions
+	S3Config        *S3Config
+	WebServerConfig *WebServerConfig
 }
 
 var loadOnce = sync.OnceValue(func() Config {
 	return Config{
 		Values: &Object{
 			Env:          os.Getenv("ENV"),
-			Port:         os.Getenv("PORT"),
 			DBUrl:        os.Getenv("DB_URL"),
 			CookieSecret: os.Getenv("COOKIE_SECRET"),
 			CSRFSecret:   os.Getenv("CSRF_SECRET"),
@@ -49,6 +49,13 @@ var loadOnce = sync.OnceValue(func() Config {
 			S3Region:    os.Getenv("S3_REGION"),
 			S3Bucket:    os.Getenv("S3_BUCKET"),
 			S3Prefix:    os.Getenv("S3_PREFIX"),
+		},
+
+		WebServerConfig: &WebServerConfig{
+			UseTLS:       getServerUseTLS(),
+			CertFilePath: os.Getenv("SERVER_CERT_FILE"),
+			KeyFilePath:  os.Getenv("SERVER_KEY_FILE"),
+			Port:         os.Getenv("PORT"),
 		},
 	}
 })
@@ -89,6 +96,22 @@ type S3Config struct {
 	S3Region    string
 	S3Bucket    string
 	S3Prefix    string
+}
+
+type WebServerConfig struct {
+	UseTLS       bool
+	CertFilePath string
+	KeyFilePath  string
+	Port         string
+}
+
+func getServerUseTLS() bool {
+	str := os.Getenv("SERVER_USE_TLS")
+	if strings.HasPrefix(str, "true") {
+		return true
+	}
+
+	return false
 }
 
 func getJWTExpireSession() int {

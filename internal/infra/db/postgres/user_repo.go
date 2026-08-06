@@ -37,7 +37,7 @@ func scanUser(row pgx.Row) (*domain.User, error) {
 		&model.DeletedAt,
 	)
 	if err != nil {
-		if err.Error() == pgx.ErrNoRows.Error() {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, &xerror.ErrorResourceNotFound{Message: "user not found"}
 		}
 		return nil, err
@@ -59,7 +59,7 @@ func scanUserEnriched(row pgx.Row) (*domain.UserEnriched, error) {
 		&model.RoleName,
 	)
 	if err != nil {
-		if err.Error() == pgx.ErrNoRows.Error() {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, &xerror.ErrorResourceNotFound{Message: "user not found"}
 		}
 		return nil, err

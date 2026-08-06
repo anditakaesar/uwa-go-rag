@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -41,12 +40,16 @@ func MakeHandler(h AppHandler) http.HandlerFunc {
 func ParseIDParam(r *http.Request) (int64, error) {
 	idParam := chi.URLParam(r, "id")
 	if idParam == "" {
-		return 0, errors.New("invalid id param")
+		return 0, &xerror.ErrorResourceNotFound{
+			Message: "id param is not valid",
+		}
 	}
 
 	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
-		return 0, errors.New("invalid id param")
+		return 0, &xerror.ErrorResourceNotFound{
+			Message: "id param is not valid",
+		}
 	}
 
 	return id, nil

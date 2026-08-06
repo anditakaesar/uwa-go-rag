@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
@@ -38,7 +39,7 @@ func scanFileRow(row pgx.Row) (*domain.File, error) {
 		&f.UpdatedAt,
 	)
 	if err != nil {
-		if err.Error() == pgx.ErrNoRows.Error() {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, &xerror.ErrorResourceNotFound{Message: "resource file not found"}
 		}
 		return nil, err
