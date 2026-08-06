@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -11,6 +12,12 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
 	"github.com/go-chi/chi/v5"
 )
+
+// adapter
+type Recorder interface {
+	Record(ctx context.Context, auditlog domain.AuditLog) error
+	FindAll(ctx context.Context, param domain.AuditLogFetchParam) ([]domain.AuditLog, *domain.AuditLogFetchParam, error)
+}
 
 // dto
 type FetchAuditLogRequest struct {

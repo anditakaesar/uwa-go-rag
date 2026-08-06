@@ -93,7 +93,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 		JWTService:    infraSvc.JWTService,
 		JWTSecret:     env.Get().Values.JWTSecret,
 		CookieService: infraSvc.CookieService,
-		AuditService:  infraSvc.AuditService,
+		JobQueue:      infraSvc.JobQueue,
 	})
 
 	roleApi := role.NewRoleApi(role.RoleApiDeps{

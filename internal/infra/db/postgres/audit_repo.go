@@ -52,7 +52,7 @@ func (r *AuditRepository) Insert(ctx context.Context, auditlog domain.AuditLog) 
 		INSERT INTO audit_logs
 		("resource_name", "resource_id", "actor_id", "actor_name", "actor_type", "action",
 		"before", "after", "metadata", "created_at") VALUES
-		($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW());
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
 	`
 
 	rows, err := Executor(ctx, r.db).Query(ctx, query, auditlog.ToArgs()...)

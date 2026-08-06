@@ -17,19 +17,19 @@ const (
 )
 
 type AuditLog struct {
-	ID int64
+	ID int64 `json:"id"`
 
-	ResourceName string
-	ResourceID   string
-	ActorID      *int64
-	ActorName    string
-	ActorType    string
-	Action       AuditAction
+	ResourceName string      `json:"resourceName"`
+	ResourceID   string      `json:"resourceID"`
+	ActorID      *int64      `json:"actorID"`
+	ActorName    string      `json:"actorName"`
+	ActorType    string      `json:"actorType"`
+	Action       AuditAction `json:"action"`
 
-	Before    any
-	After     any
-	Metadata  any
-	CreatedAt time.Time
+	Before    any       `json:"before"`
+	After     any       `json:"after"`
+	Metadata  any       `json:"metadata"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 func (auditlog *AuditLog) ToArgs() []any {
@@ -43,6 +43,7 @@ func (auditlog *AuditLog) ToArgs() []any {
 		auditlog.Before,
 		auditlog.After,
 		auditlog.Metadata,
+		auditlog.CreatedAt,
 	}
 }
 

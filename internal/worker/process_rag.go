@@ -6,11 +6,6 @@ import (
 	"github.com/riverqueue/river"
 )
 
-// adapters
-type IRagService interface {
-	ProcessDocument(ctx context.Context, ragFileID int64) error
-}
-
 type ProcessDocArgs struct {
 	RagFileID int64 `json:"ragFileID"`
 }
@@ -19,10 +14,10 @@ func (ProcessDocArgs) Kind() string { return "Process-RAG-File" }
 
 type ProcessDocWorker struct {
 	river.WorkerDefaults[ProcessDocArgs]
-	RagService IRagService
+	RagService RagService
 }
 
-func NewProcessDocWorker(ragService IRagService) *ProcessDocWorker {
+func NewProcessDocWorker(ragService RagService) *ProcessDocWorker {
 	return &ProcessDocWorker{RagService: ragService}
 }
 

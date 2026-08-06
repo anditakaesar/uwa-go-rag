@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/worker"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -49,5 +50,12 @@ func (r *RiverQueue) EnqueueRagFile(ctx context.Context, ragFileID int64) error 
 	_, err := r.client.Insert(ctx, worker.ProcessDocArgs{
 		RagFileID: ragFileID,
 	}, nil) // add maxattempts here
+	return err
+}
+
+func (r *RiverQueue) EnqueueAuditLog(ctx context.Context, auditLog domain.AuditLog) error {
+	_, err := r.client.Insert(ctx, worker.InsertAuditLogArgs{
+		AuditLog: auditLog,
+	}, nil)
 	return err
 }

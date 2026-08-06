@@ -6,11 +6,6 @@ import (
 	"github.com/riverqueue/river"
 )
 
-// adapters
-type IChatService interface {
-	DoSort(ctx context.Context, words []string) ([]string, error)
-}
-
 type SortArgs struct {
 	Strings []string `json:"strings"`
 }
@@ -18,11 +13,11 @@ type SortArgs struct {
 func (SortArgs) Kind() string { return "sort" }
 
 type SortWorker struct {
-	ChatService IChatService
+	ChatService ChatService
 	river.WorkerDefaults[SortArgs]
 }
 
-func NewSortWorker(chatService IChatService) *SortWorker {
+func NewSortWorker(chatService ChatService) *SortWorker {
 	return &SortWorker{ChatService: chatService}
 }
 

@@ -37,6 +37,7 @@ type Services struct {
 	RiverClient   *river.Client[pgx.Tx]
 	AuditService  *audit.AuditRecorder
 	StorageClient *storage.RustFS
+	JobQueue      *queue.RiverQueue
 }
 
 func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
@@ -48,11 +49,13 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 	fileRepo := postgres.NewFileRepository(pool)
 	uow := postgres.NewUnitOfWork(pool)
 	riverQueue := queue.NewRiverQueue()
+
 	storageClient := storage.NewRustFs(storage.RustFSDependency{
 		StorageClient: infraStorage,
 		BucketName:    env.Get().S3Config.S3Bucket,
 		BucketPrefix:  env.Get().S3Config.S3Prefix,
 	})
+
 	aiClient := ai.NewClient(ai.ClientDependency{
 		BaseURL: env.Get().Values.AIBaseURL,
 		ApiKey:  env.Get().Values.AIAPIKey,
@@ -63,12 +66,15 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 		PassChecker: password.NewArgonClientHelper(env.Get().Values.PassSecret),
 		UOW:         uow,
 	})
+
 	jwtSvc := jwt.NewJWTService(jwt.ServiceDependency{
 		Secret:             []byte(env.Get().Values.JWTSecret),
 		JWTExpire:          env.Get().Values.JWTExpire,
 		RolePermissionRepo: rolePermissionRepo,
 	})
+
 	cookieService := cookie.NewService(env.Get().Values.IsDevelopment(), env.Get().Values.CookieSecret)
+
 	fileSvc := file.NewService(file.ServiceDependency{
 		DirName:       env.Get().Values.UploadDir,
 		AllowedTypes:  env.UPLOAD_ALLOWED_TYPES,
@@ -76,14 +82,18 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 		FileRepo:      fileRepo,
 		UOW:           uow,
 	})
+
 	chatSvc := chat.NewChatService(chat.ChatServiceDep{
 		RagRepo:   ragRepo,
 		AIClient:  aiClient,
 		JobQueue:  riverQueue,
 		UploadDir: env.Get().Values.UploadDir,
 	})
+
 	ragSvc := rag.NewRagService()
+
 	auditSvc := audit.NewAuditLogRecorder(auditRepo)
+
 	roleSvc := role.NewRoleService(role.RoleServiceDep{
 		RoleRepo: roleRepo,
 	})
@@ -92,6 +102,7 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 	workers, err := worker.RegisterWorkers(worker.RegisterWorkerDep{
 		ChatService: chatSvc,
 		RagService:  ragSvc,
+		Recorder:    auditSvc,
 	})
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("error setup worker client: %v", err))
@@ -119,5 +130,6 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 		RiverClient:   riverClient,
 		AuditService:  auditSvc,
 		StorageClient: storageClient,
+		JobQueue:      riverQueue,
 	}
 }

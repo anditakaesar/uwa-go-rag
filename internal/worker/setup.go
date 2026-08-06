@@ -5,8 +5,9 @@ import (
 )
 
 type RegisterWorkerDep struct {
-	ChatService IChatService
-	RagService  IRagService
+	ChatService ChatService
+	RagService  RagService
+	Recorder    Recorder
 }
 
 func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
@@ -18,6 +19,11 @@ func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
 	}
 
 	err = river.AddWorkerSafely(workers, NewProcessDocWorker(dep.RagService))
+	if err != nil {
+		return nil, err
+	}
+
+	err = river.AddWorkerSafely(workers, NewInsertAuditLogWorker(dep.Recorder))
 	if err != nil {
 		return nil, err
 	}

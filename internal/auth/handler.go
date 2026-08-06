@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
@@ -23,8 +24,8 @@ type UserService interface {
 	AuthenticateUser(ctx context.Context, username string, password string) (*domain.User, error)
 }
 
-type AuditRecorder interface {
-	Record(ctx context.Context, auditlog domain.AuditLog) error
+type JobQueue interface {
+	EnqueueAuditLog(ctx context.Context, auditLog domain.AuditLog) error
 }
 
 type CookieService interface {
@@ -45,7 +46,7 @@ type AuthApi struct {
 	JWTService    JWTService
 	jwtSecret     []byte
 	CookieService CookieService
-	AuditService  AuditRecorder
+	JobQueue      JobQueue
 }
 
 type LoginApiDeps struct {
@@ -53,7 +54,7 @@ type LoginApiDeps struct {
 	JWTService    JWTService
 	JWTSecret     string
 	CookieService CookieService
-	AuditService  AuditRecorder
+	JobQueue      JobQueue
 }
 
 func NewLoginApi(dep LoginApiDeps) *AuthApi {
@@ -62,7 +63,7 @@ func NewLoginApi(dep LoginApiDeps) *AuthApi {
 		JWTService:    dep.JWTService,
 		jwtSecret:     []byte(dep.JWTSecret),
 		CookieService: dep.CookieService,
-		AuditService:  dep.AuditService,
+		JobQueue:      dep.JobQueue,
 	}
 }
 
@@ -154,18 +155,17 @@ func (h *AuthApi) Login(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorSession{Message: err.Error()}
 	}
 
-	go func(recorder AuditRecorder) {
-		errAudit := recorder.Record(context.Background(), domain.AuditLog{
-			ResourceName: "users",
-			ResourceID:   fmt.Sprint(user.ID),
-			Action:       domain.USER_LOGIN,
-			ActorName:    user.Username,
-			ActorID:      &user.ID,
-		})
-		if errAudit != nil {
-			xlog.Logger.Error(fmt.Sprintf("error when audit logging: %v", errAudit))
-		}
-	}(h.AuditService)
+	queueErr := h.JobQueue.EnqueueAuditLog(r.Context(), domain.AuditLog{
+		ResourceName: "users",
+		ResourceID:   fmt.Sprint(user.ID),
+		Action:       domain.USER_LOGIN,
+		ActorName:    user.Username,
+		ActorID:      &user.ID,
+		CreatedAt:    time.Now(),
+	})
+	if queueErr != nil {
+		xlog.Logger.Error("error while enqueue job", "queueErr", queueErr)
+	}
 
 	transport.SendJSON(w, http.StatusOK, map[string]string{
 		"token": jwtToken,

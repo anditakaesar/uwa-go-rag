@@ -16,11 +16,6 @@ type Repository interface {
 	FindAll(ctx context.Context, param *domain.AuditLogFetchParam) ([]domain.AuditLog, error)
 }
 
-type Recorder interface {
-	Record(ctx context.Context, auditlog domain.AuditLog) error
-	FindAll(ctx context.Context, param domain.AuditLogFetchParam) ([]domain.AuditLog, *domain.AuditLogFetchParam, error)
-}
-
 type AuditRecorder struct {
 	repo Repository
 }
