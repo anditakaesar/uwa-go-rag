@@ -110,7 +110,7 @@ func (h *Api) FindAll(w http.ResponseWriter, r *http.Request) error {
 	var req FetchAuditLogRequest
 	req.parseParam(r)
 
-	auditlogs, param, err := h.AuditLogService.FindAll(r.Context(), AuditLogFetchParam{
+	auditlogs, param, err := h.AuditLogService.FindAll(r.Context(), domain.AuditLogFetchParam{
 		ResourceNameLike: req.ResourceNameLike,
 		Pagination:       pagination,
 	})

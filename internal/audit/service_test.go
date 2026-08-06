@@ -20,7 +20,7 @@ func (m *mockRepository) Insert(ctx context.Context, auditlog domain.AuditLog) e
 	return nil
 }
 
-func (m *mockRepository) FindAll(ctx context.Context, param *audit.AuditLogFetchParam) ([]domain.AuditLog, error) {
+func (m *mockRepository) FindAll(ctx context.Context, param *domain.AuditLogFetchParam) ([]domain.AuditLog, error) {
 	m.inserted = false
 	return nil, nil
 }

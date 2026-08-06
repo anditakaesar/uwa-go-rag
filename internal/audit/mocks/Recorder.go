@@ -7,7 +7,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/audit"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -40,7 +39,7 @@ func (_m *MockRecorder) EXPECT() *MockRecorder_Expecter {
 }
 
 // FindAll provides a mock function for the type MockRecorder
-func (_mock *MockRecorder) FindAll(ctx context.Context, param audit.AuditLogFetchParam) ([]domain.AuditLog, *audit.AuditLogFetchParam, error) {
+func (_mock *MockRecorder) FindAll(ctx context.Context, param domain.AuditLogFetchParam) ([]domain.AuditLog, *domain.AuditLogFetchParam, error) {
 	ret := _mock.Called(ctx, param)
 
 	if len(ret) == 0 {
@@ -48,26 +47,26 @@ func (_mock *MockRecorder) FindAll(ctx context.Context, param audit.AuditLogFetc
 	}
 
 	var r0 []domain.AuditLog
-	var r1 *audit.AuditLogFetchParam
+	var r1 *domain.AuditLogFetchParam
 	var r2 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, audit.AuditLogFetchParam) ([]domain.AuditLog, *audit.AuditLogFetchParam, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.AuditLogFetchParam) ([]domain.AuditLog, *domain.AuditLogFetchParam, error)); ok {
 		return returnFunc(ctx, param)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, audit.AuditLogFetchParam) []domain.AuditLog); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.AuditLogFetchParam) []domain.AuditLog); ok {
 		r0 = returnFunc(ctx, param)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.AuditLog)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, audit.AuditLogFetchParam) *audit.AuditLogFetchParam); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.AuditLogFetchParam) *domain.AuditLogFetchParam); ok {
 		r1 = returnFunc(ctx, param)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*audit.AuditLogFetchParam)
+			r1 = ret.Get(1).(*domain.AuditLogFetchParam)
 		}
 	}
-	if returnFunc, ok := ret.Get(2).(func(context.Context, audit.AuditLogFetchParam) error); ok {
+	if returnFunc, ok := ret.Get(2).(func(context.Context, domain.AuditLogFetchParam) error); ok {
 		r2 = returnFunc(ctx, param)
 	} else {
 		r2 = ret.Error(2)
@@ -82,20 +81,20 @@ type MockRecorder_FindAll_Call struct {
 
 // FindAll is a helper method to define mock.On call
 //   - ctx context.Context
-//   - param audit.AuditLogFetchParam
+//   - param domain.AuditLogFetchParam
 func (_e *MockRecorder_Expecter) FindAll(ctx any, param any) *MockRecorder_FindAll_Call {
 	return &MockRecorder_FindAll_Call{Call: _e.mock.On("FindAll", ctx, param)}
 }
 
-func (_c *MockRecorder_FindAll_Call) Run(run func(ctx context.Context, param audit.AuditLogFetchParam)) *MockRecorder_FindAll_Call {
+func (_c *MockRecorder_FindAll_Call) Run(run func(ctx context.Context, param domain.AuditLogFetchParam)) *MockRecorder_FindAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 audit.AuditLogFetchParam
+		var arg1 domain.AuditLogFetchParam
 		if args[1] != nil {
-			arg1 = args[1].(audit.AuditLogFetchParam)
+			arg1 = args[1].(domain.AuditLogFetchParam)
 		}
 		run(
 			arg0,
@@ -105,12 +104,12 @@ func (_c *MockRecorder_FindAll_Call) Run(run func(ctx context.Context, param aud
 	return _c
 }
 
-func (_c *MockRecorder_FindAll_Call) Return(auditLogs []domain.AuditLog, auditLogFetchParam *audit.AuditLogFetchParam, err error) *MockRecorder_FindAll_Call {
+func (_c *MockRecorder_FindAll_Call) Return(auditLogs []domain.AuditLog, auditLogFetchParam *domain.AuditLogFetchParam, err error) *MockRecorder_FindAll_Call {
 	_c.Call.Return(auditLogs, auditLogFetchParam, err)
 	return _c
 }
 
-func (_c *MockRecorder_FindAll_Call) RunAndReturn(run func(ctx context.Context, param audit.AuditLogFetchParam) ([]domain.AuditLog, *audit.AuditLogFetchParam, error)) *MockRecorder_FindAll_Call {
+func (_c *MockRecorder_FindAll_Call) RunAndReturn(run func(ctx context.Context, param domain.AuditLogFetchParam) ([]domain.AuditLog, *domain.AuditLogFetchParam, error)) *MockRecorder_FindAll_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/audit"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/henvic/pgq"
@@ -65,7 +64,7 @@ func (r *AuditRepository) Insert(ctx context.Context, auditlog domain.AuditLog) 
 	return nil
 }
 
-func (r *AuditRepository) FindAll(ctx context.Context, param *audit.AuditLogFetchParam) ([]domain.AuditLog, error) {
+func (r *AuditRepository) FindAll(ctx context.Context, param *domain.AuditLogFetchParam) ([]domain.AuditLog, error) {
 	selectQuery := pgq.Select(auditLogColumns).From("audit_logs").OrderBy("audit_logs.id DESC")
 
 	if param.ResourceNameLike != nil {

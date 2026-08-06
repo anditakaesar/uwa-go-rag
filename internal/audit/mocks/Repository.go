@@ -7,7 +7,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/audit"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -40,7 +39,7 @@ func (_m *MockRepository) EXPECT() *MockRepository_Expecter {
 }
 
 // FindAll provides a mock function for the type MockRepository
-func (_mock *MockRepository) FindAll(ctx context.Context, param *audit.AuditLogFetchParam) ([]domain.AuditLog, error) {
+func (_mock *MockRepository) FindAll(ctx context.Context, param *domain.AuditLogFetchParam) ([]domain.AuditLog, error) {
 	ret := _mock.Called(ctx, param)
 
 	if len(ret) == 0 {
@@ -49,17 +48,17 @@ func (_mock *MockRepository) FindAll(ctx context.Context, param *audit.AuditLogF
 
 	var r0 []domain.AuditLog
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *audit.AuditLogFetchParam) ([]domain.AuditLog, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.AuditLogFetchParam) ([]domain.AuditLog, error)); ok {
 		return returnFunc(ctx, param)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *audit.AuditLogFetchParam) []domain.AuditLog); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.AuditLogFetchParam) []domain.AuditLog); ok {
 		r0 = returnFunc(ctx, param)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.AuditLog)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, *audit.AuditLogFetchParam) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.AuditLogFetchParam) error); ok {
 		r1 = returnFunc(ctx, param)
 	} else {
 		r1 = ret.Error(1)
@@ -74,20 +73,20 @@ type MockRepository_FindAll_Call struct {
 
 // FindAll is a helper method to define mock.On call
 //   - ctx context.Context
-//   - param *audit.AuditLogFetchParam
+//   - param *domain.AuditLogFetchParam
 func (_e *MockRepository_Expecter) FindAll(ctx any, param any) *MockRepository_FindAll_Call {
 	return &MockRepository_FindAll_Call{Call: _e.mock.On("FindAll", ctx, param)}
 }
 
-func (_c *MockRepository_FindAll_Call) Run(run func(ctx context.Context, param *audit.AuditLogFetchParam)) *MockRepository_FindAll_Call {
+func (_c *MockRepository_FindAll_Call) Run(run func(ctx context.Context, param *domain.AuditLogFetchParam)) *MockRepository_FindAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *audit.AuditLogFetchParam
+		var arg1 *domain.AuditLogFetchParam
 		if args[1] != nil {
-			arg1 = args[1].(*audit.AuditLogFetchParam)
+			arg1 = args[1].(*domain.AuditLogFetchParam)
 		}
 		run(
 			arg0,
@@ -102,7 +101,7 @@ func (_c *MockRepository_FindAll_Call) Return(auditLogs []domain.AuditLog, err e
 	return _c
 }
 
-func (_c *MockRepository_FindAll_Call) RunAndReturn(run func(ctx context.Context, param *audit.AuditLogFetchParam) ([]domain.AuditLog, error)) *MockRepository_FindAll_Call {
+func (_c *MockRepository_FindAll_Call) RunAndReturn(run func(ctx context.Context, param *domain.AuditLogFetchParam) ([]domain.AuditLog, error)) *MockRepository_FindAll_Call {
 	_c.Call.Return(run)
 	return _c
 }

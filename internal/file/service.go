@@ -126,7 +126,7 @@ func (svc *Service) GeneratePresignURL(ctx context.Context, param domain.Generat
 
 	var result domain.GeneratePresignURLReturn
 
-	presignUrlErr := svc.uow.Do(ctx, func(txCtx context.Context) error {
+	presignUrlErr := svc.uow.Do(ctx, func(ctx context.Context) error {
 		newFile, err := svc.fileRepo.Insert(ctx, domain.File{
 			ID:           newID,
 			UserID:       identity.UserID,

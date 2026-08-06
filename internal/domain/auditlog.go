@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 )
 
@@ -66,4 +67,13 @@ func (auditlog *AuditLog) Validate() error {
 	}
 
 	return nil
+}
+
+type AuditLogFetchParam struct {
+	ResourceNameLike *string           `json:"resourceNameLike"`
+	Pagination       common.Pagination `json:"pagination"`
+}
+
+func (p *AuditLogFetchParam) Normalize() {
+	p.Pagination.Normalize()
 }
