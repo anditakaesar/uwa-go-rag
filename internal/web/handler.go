@@ -25,7 +25,6 @@ const (
 // adapter
 type FileService interface {
 	Save(filename string, content io.Reader) (string, error)
-	ListFiles(ctx context.Context) ([]string, error)
 	GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error)
 }
 

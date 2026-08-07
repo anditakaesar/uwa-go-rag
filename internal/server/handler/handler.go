@@ -10,6 +10,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type AppHandler func(w http.ResponseWriter, r *http.Request) error
@@ -53,6 +54,52 @@ func ParseIDParam(r *http.Request) (int64, error) {
 	}
 
 	return id, nil
+}
+
+type ParseableID interface {
+	int64 | string | uuid.UUID
+}
+
+func ParsePathParam[T ParseableID](r *http.Request, name string) (T, error) {
+	var zero T
+	rawVal := chi.URLParam(r, name)
+	if rawVal == "" {
+		return zero, &xerror.ErrorPathParamValue{
+			ExpectedName: name,
+		}
+	}
+
+	// Use type switch on the zero value of T to determine parsing logic
+	switch any(zero).(type) {
+	case string:
+		return any(rawVal).(T), nil
+
+	case int64:
+		val, err := strconv.ParseInt(rawVal, 10, 64)
+		if err != nil {
+			return zero, &xerror.ErrorPathParamValue{
+				Message:      "invalid int64 format: " + err.Error(),
+				ExpectedName: name,
+			}
+		}
+		return any(val).(T), nil
+
+	case uuid.UUID:
+		parsedUUID, err := uuid.Parse(rawVal)
+		if err != nil {
+			return zero, &xerror.ErrorPathParamValue{
+				Message:      "invalid uuid format: " + err.Error(),
+				ExpectedName: name,
+			}
+		}
+		return any(parsedUUID).(T), nil
+
+	default:
+		return zero, &xerror.ErrorPathParamValue{
+			Message:      "unsupported format",
+			ExpectedName: name,
+		}
+	}
 }
 
 func ParsePagination(r *http.Request) common.Pagination {

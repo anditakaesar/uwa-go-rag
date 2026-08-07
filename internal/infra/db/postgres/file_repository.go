@@ -85,3 +85,67 @@ func (r *FileRepository) Get(ctx context.Context, fileID uuid.UUID) (*domain.Fil
 	row := Executor(ctx, r.db).QueryRow(ctx, sql, args...)
 	return scanFileRow(row)
 }
+
+func (r *FileRepository) FindAll(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error) {
+	selectQuery := pgq.Select(fileColumns).
+		From("files").OrderBy("created_at DESC")
+
+	countQuery, countArgs, err := pgq.Select(COUNT_AS_TOTAL).FromSelect(selectQuery, "u").SQL()
+	if err != nil {
+		return nil, err
+	}
+
+	err = Executor(ctx, r.db).QueryRow(ctx, countQuery, countArgs...).Scan(&param.Pagination.Total)
+	if err != nil {
+		return nil, err
+	}
+
+	param.Pagination.WrapPaging(&selectQuery)
+	query, args, err := selectQuery.SQL()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := Executor(ctx, r.db).Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := []domain.File{}
+
+	for rows.Next() {
+		f, err := scanFileRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, *f)
+	}
+
+	return list, rows.Err()
+}
+
+func (r *FileRepository) Update(ctx context.Context, id uuid.UUID, updateParam domain.UpdateFileParam) (*domain.File, error) {
+	updateQuery := pgq.Update("files").
+		Where("id = ?", id).Returning(fileColumns)
+	argCount := 0
+
+	if updateParam.Status != nil {
+		updateQuery = updateQuery.Set("status", *updateParam.Status)
+		argCount++
+	}
+
+	if argCount == 0 {
+		return nil, errors.New("nothing to update")
+	}
+
+	updateQuery = updateQuery.Set("updated_at", "NOW()")
+
+	query, args, err := updateQuery.SQL()
+	if err != nil {
+		return nil, err
+	}
+
+	row := Executor(ctx, r.db).QueryRow(ctx, query, args...)
+	return scanFileRow(row)
+}

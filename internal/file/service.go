@@ -26,13 +26,14 @@ type PasswordChecker interface {
 }
 
 type StorageClient interface {
-	ListFiles(ctx context.Context) ([]string, error)
 	GetPresignURL(ctx context.Context, key string) (string, error)
 }
 
 type FileRepository interface {
 	Insert(ctx context.Context, newFile domain.File) (*domain.File, error)
 	Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error)
+	FindAll(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error)
+	Update(ctx context.Context, id uuid.UUID, updateParam domain.UpdateFileParam) (*domain.File, error)
 }
 
 type Service struct {
@@ -111,10 +112,6 @@ func sanitizeFilename(filename string) string {
 	return safeName + strings.ToLower(ext)
 }
 
-func (svc *Service) ListFiles(ctx context.Context) ([]string, error) {
-	return svc.storageClient.ListFiles(ctx)
-}
-
 func (svc *Service) GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error) {
 	identity := ctx.Value(domain.IdentityKey).(domain.Identity)
 	cleanFilename := sanitizeFilename(param.Name)
@@ -157,4 +154,13 @@ func (svc *Service) GeneratePresignURL(ctx context.Context, param domain.Generat
 	}
 
 	return &result, nil
+}
+
+func (svc *Service) FetchAll(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error) {
+	param.Normalize()
+	return svc.fileRepo.FindAll(ctx, param)
+}
+
+func (svc *Service) Update(ctx context.Context, id uuid.UUID, param domain.UpdateFileParam) (*domain.File, error) {
+	return svc.fileRepo.Update(ctx, id, param)
 }

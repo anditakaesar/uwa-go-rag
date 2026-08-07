@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // ErrorSession represents authentication or session-related issues
@@ -81,6 +82,19 @@ func (e *ErrorPasswordAttempt) Error() string {
 	return e.Message
 }
 
+type ErrorPathParamValue struct {
+	Message      string
+	ExpectedName string
+}
+
+func (e *ErrorPathParamValue) Error() string {
+	if strings.TrimSpace(e.Message) != "" {
+		return fmt.Sprintf("%s, expected param name: %s", e.Message, e.ExpectedName)
+	}
+
+	return fmt.Sprintf("expected param name: %s", e.ExpectedName)
+}
+
 // DefineStatusCode maps custom error types to HTTP Status Codes
 func DefineStatusCode(err error) int {
 	if err == nil {
@@ -102,7 +116,10 @@ func DefineStatusCode(err error) int {
 
 	var errNotFound *ErrorNotFound
 	var errResourceNotFound *ErrorResourceNotFound
-	if errors.As(err, &errNotFound) || errors.As(err, &errResourceNotFound) {
+	var errPathParamValue *ErrorPathParamValue
+	if errors.As(err, &errNotFound) ||
+		errors.As(err, &errResourceNotFound) ||
+		errors.As(err, &errPathParamValue) {
 		return http.StatusNotFound
 	}
 

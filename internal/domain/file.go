@@ -3,6 +3,8 @@ package domain
 import (
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
+	"github.com/dustin/go-humanize"
 	"github.com/google/uuid"
 )
 
@@ -28,6 +30,18 @@ type File struct {
 	UpdatedAt    time.Time
 }
 
+func (f *File) SizeHumanize() string {
+	return humanize.Bytes(uint64(f.SizeBytes))
+}
+
+type FindAllFilesParam struct {
+	Pagination common.Pagination `json:"pagination"`
+}
+
+func (p *FindAllFilesParam) Normalize() {
+	p.Pagination.Normalize()
+}
+
 type GeneratePresignURLParam struct {
 	Name      string
 	SizeBytes int64
@@ -37,4 +51,8 @@ type GeneratePresignURLParam struct {
 type GeneratePresignURLReturn struct {
 	File
 	PresignURL string
+}
+
+type UpdateFileParam struct {
+	Status *UploadStatus
 }

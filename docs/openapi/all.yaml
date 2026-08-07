@@ -454,26 +454,51 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /files/{id}:
+  /files/{uuid}/status:
     patch:
       tags:
         - File Management
-      summary: Update files
+      summary: Update file with uuid with new status
       security:
         - BearerAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          description: The uuid of the file
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateFilesRequest"
+              $ref: "#/components/schemas/UpdateStatusFilesRequest"
       responses:
         "200":
           description: ok
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessResponse"
+                $ref: "#/components/schemas/UpdateStatusFileResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -700,11 +725,12 @@ components:
         presignURL:
           type: string
           example: "https://presign-url-to-s3"
-    UpdateFilesRequest:
+    UpdateStatusFilesRequest:
       type: object
       properties:
-        status: string
-        example: "completed"
+        status:
+          type: string
+          example: "completed|failed"
     SingleFileResponse:
       type: object
       properties:
@@ -723,9 +749,20 @@ components:
         sizeBytes:
           type: integer
           example: 1024
+        sizeHumanize:
+          type: string
+          example: "1 KB"
+        status:
+          type: string
+          example: "completed"
         createdAt:
           type: string
           example: "20270101T00:00:00.000"
+    UpdateStatusFileResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/SingleFileResponse"
     FetchFilesResponse:
       type: object
       properties:
