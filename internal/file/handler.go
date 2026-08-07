@@ -193,7 +193,7 @@ func (h *FileApi) FetchFiles(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	transport.SendJSON(w, http.StatusOK, ListToResponse(result), transport.WithMeta(param.Pagination))
+	transport.SendJSON(w, http.StatusOK, ListToResponse(result), transport.WithMeta(*param))
 	return nil
 }
 
