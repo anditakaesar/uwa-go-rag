@@ -26,7 +26,8 @@ type PasswordChecker interface {
 }
 
 type StorageClient interface {
-	GetPresignURL(ctx context.Context, key string) (string, error)
+	GetPresignPutURL(ctx context.Context, key string) (string, error)
+	GetPresignGetURL(ctx context.Context, key string) (string, error)
 }
 
 type FileRepository interface {
@@ -138,7 +139,7 @@ func (svc *Service) GeneratePresignURL(ctx context.Context, param domain.Generat
 			return err
 		}
 
-		presignUrl, err := svc.storageClient.GetPresignURL(ctx, newFile.S3Key)
+		presignUrl, err := svc.storageClient.GetPresignPutURL(ctx, newFile.S3Key)
 		if err != nil {
 			return err
 		}
@@ -154,6 +155,20 @@ func (svc *Service) GeneratePresignURL(ctx context.Context, param domain.Generat
 	}
 
 	return &result, nil
+}
+
+func (svc *Service) GeneratePresignDownloadURL(ctx context.Context, fileID uuid.UUID) (string, error) {
+	file, err := svc.fileRepo.Get(ctx, fileID)
+	if err != nil {
+		return "", err
+	}
+
+	presignGetURL, err := svc.storageClient.GetPresignGetURL(ctx, file.S3Key)
+	if err != nil {
+		return "", err
+	}
+
+	return presignGetURL, nil
 }
 
 func (svc *Service) FetchAll(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error) {

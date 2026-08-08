@@ -94,13 +94,29 @@ func (r *RustFS) ListFiles(ctx context.Context) ([]string, error) {
 	return files, nil
 }
 
-func (r *RustFS) GetPresignURL(ctx context.Context, key string) (string, error) {
+func (r *RustFS) GetPresignPutURL(ctx context.Context, key string) (string, error) {
 	objectInput := &s3.PutObjectInput{
 		Bucket: aws.String(env.Get().S3Config.S3Bucket),
 		Key:    aws.String(key),
 	}
 
 	req, err := r.presignClient.PresignPutObject(ctx, objectInput, func(opts *s3.PresignOptions) {
+		opts.Expires = 15 * time.Minute
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return req.URL, nil
+}
+
+func (r *RustFS) GetPresignGetURL(ctx context.Context, key string) (string, error) {
+	objectInput := &s3.GetObjectInput{
+		Bucket: aws.String(env.Get().S3Config.S3Bucket),
+		Key:    aws.String(key),
+	}
+
+	req, err := r.presignClient.PresignGetObject(ctx, objectInput, func(opts *s3.PresignOptions) {
 		opts.Expires = 15 * time.Minute
 	})
 	if err != nil {

@@ -22,6 +22,7 @@ type FileService interface {
 	Save(filename string, content io.Reader) (string, error)
 	FetchAll(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error)
 	GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error)
+	GeneratePresignDownloadURL(ctx context.Context, fileID uuid.UUID) (string, error)
 	Update(ctx context.Context, id uuid.UUID, param domain.UpdateFileParam) (*domain.File, error)
 }
 
@@ -101,6 +102,16 @@ func SetupFileApiRoutes(router chi.Router, h *FileApi) {
 				HttpMethod: http.MethodPatch,
 				Path:       "/files/{uuid}/status",
 				Handler:    handler.MakeHandler(h.UpdateStatus),
+			},
+			Middlewares: []func(http.Handler) http.Handler{
+				middlewares.RequireAuth(),
+			},
+		},
+		{
+			Endpoint: handler.Endpoint{
+				HttpMethod: http.MethodGet,
+				Path:       "/files/{uuid}/download",
+				Handler:    handler.MakeHandler(h.GetDownloadURL),
 			},
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
@@ -241,5 +252,20 @@ func (h *FileApi) UpdateStatus(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	transport.SendJSON(w, http.StatusOK, FileDomainToResponse(updatedFile))
+	return nil
+}
+
+func (h *FileApi) GetDownloadURL(w http.ResponseWriter, r *http.Request) error {
+	id, err := handler.ParsePathParam[uuid.UUID](r, "uuid")
+	if err != nil {
+		return err
+	}
+
+	downloadURL, err := h.FileService.GeneratePresignDownloadURL(r.Context(), id)
+	if err != nil {
+		return err
+	}
+
+	transport.SendJSON(w, http.StatusOK, downloadURL)
 	return nil
 }
