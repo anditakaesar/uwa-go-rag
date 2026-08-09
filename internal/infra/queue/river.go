@@ -68,3 +68,10 @@ func (r *RiverQueue) EnqueueThumbnailGen(ctx context.Context, id uuid.UUID) erro
 
 	return err
 }
+
+func (r *RiverQueue) EnqueueDeleteFile(ctx context.Context, key string) error {
+	_, err := r.client.Insert(ctx, worker.DeleteFileArgs{
+		Key: key,
+	}, nil)
+	return err
+}

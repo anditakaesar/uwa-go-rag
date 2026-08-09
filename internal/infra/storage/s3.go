@@ -160,3 +160,12 @@ func (r *RustFS) UploadObject(ctx context.Context, key string, mimeType string, 
 
 	return nil
 }
+
+func (r *RustFS) DeleteObject(ctx context.Context, key string) error {
+	_, err := r.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(env.Get().S3Config.S3Bucket),
+		Key:    aws.String(key),
+	})
+
+	return err
+}

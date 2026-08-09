@@ -149,3 +149,16 @@ func (r *FileRepository) Update(ctx context.Context, id uuid.UUID, updateParam d
 	row := Executor(ctx, r.db).QueryRow(ctx, query, args...)
 	return scanFileRow(row)
 }
+
+func (r *FileRepository) Delete(ctx context.Context, id uuid.UUID) (*domain.File, error) {
+	deleteQ := pgq.Delete("files").
+		Where("id = ?", id).Returning(fileColumns)
+
+	query, args, err := deleteQ.SQL()
+	if err != nil {
+		return nil, err
+	}
+
+	row := Executor(ctx, r.db).QueryRow(ctx, query, args...)
+	return scanFileRow(row)
+}

@@ -81,6 +81,7 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 		StorageClient: storageClient,
 		FileRepo:      fileRepo,
 		UOW:           uow,
+		JobQueue:      riverQueue,
 	})
 
 	chatSvc := chat.NewChatService(chat.ChatServiceDep{

@@ -20,29 +20,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type PasswordChecker interface {
-	HashPassword(password string) (string, error)
-	CheckPassword(password string, hash string) (bool, error)
-}
-
-type StorageClient interface {
-	GetPresignPutURL(ctx context.Context, key string) (string, error)
-	GetPresignGetURL(ctx context.Context, key string) (string, error)
-}
-
-type FileRepository interface {
-	Insert(ctx context.Context, newFile domain.File) (*domain.File, error)
-	Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error)
-	FindAll(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error)
-	Update(ctx context.Context, id uuid.UUID, updateParam domain.UpdateFileParam) (*domain.File, error)
-}
-
 type Service struct {
 	uploadDir     string
 	allowedTypes  map[string]bool
 	storageClient StorageClient
 	fileRepo      FileRepository
 	uow           application.UnitOfWork
+	queue         JobQueue
 }
 
 type ServiceDependency struct {
@@ -51,6 +35,7 @@ type ServiceDependency struct {
 	StorageClient StorageClient
 	FileRepo      FileRepository
 	UOW           application.UnitOfWork
+	JobQueue      JobQueue
 }
 
 func NewService(dep ServiceDependency) *Service {
@@ -60,6 +45,7 @@ func NewService(dep ServiceDependency) *Service {
 		storageClient: dep.StorageClient,
 		fileRepo:      dep.FileRepo,
 		uow:           dep.UOW,
+		queue:         dep.JobQueue,
 	}
 }
 
@@ -182,4 +168,24 @@ func (svc *Service) Update(ctx context.Context, id uuid.UUID, param domain.Updat
 
 func (svc *Service) Get(ctx context.Context, id uuid.UUID) (*domain.File, error) {
 	return svc.fileRepo.Get(ctx, id)
+}
+
+func (svc *Service) Delete(ctx context.Context, id uuid.UUID) error {
+	file, err := svc.fileRepo.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// enqueue for deletion
+	err = svc.queue.EnqueueDeleteFile(ctx, file.S3Key)
+	if err != nil {
+		return err
+	}
+
+	err = svc.queue.EnqueueDeleteFile(ctx, file.GeneratePublicThumbnailKey())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

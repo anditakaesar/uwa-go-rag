@@ -9,18 +9,12 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/chai2010/webp"
 	"github.com/google/uuid"
 	"github.com/riverqueue/river"
 	"golang.org/x/image/draw"
 	_ "golang.org/x/image/webp"
 )
-
-// adapter
-type FileService interface {
-	Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error)
-}
 
 type ThumbnailWorkerArgs struct {
 	ID uuid.UUID `json:"id"`

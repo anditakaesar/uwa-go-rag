@@ -26,10 +26,7 @@ type FileService interface {
 	GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error)
 	GeneratePresignDownloadURL(ctx context.Context, fileID uuid.UUID) (string, error)
 	Update(ctx context.Context, id uuid.UUID, param domain.UpdateFileParam) (*domain.File, error)
-}
-
-type JobQueue interface {
-	EnqueueThumbnailGen(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 // dto
@@ -140,6 +137,16 @@ func SetupFileApiRoutes(router chi.Router, h *FileApi) {
 				HttpMethod: http.MethodPost,
 				Path:       "/files/{uuid}/enqueue-thumbnail",
 				Handler:    handler.MakeHandler(h.RegisterThumbnailGen),
+			},
+			Middlewares: []func(http.Handler) http.Handler{
+				middlewares.RequireAuth(),
+			},
+		},
+		{
+			Endpoint: handler.Endpoint{
+				HttpMethod: http.MethodDelete,
+				Path:       "/files/{uuid}",
+				Handler:    handler.MakeHandler(h.DeleteFile),
 			},
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
@@ -298,6 +305,21 @@ func (h *FileApi) RegisterThumbnailGen(w http.ResponseWriter, r *http.Request) e
 	}
 
 	err = h.JobQueue.EnqueueThumbnailGen(r.Context(), id)
+	if err != nil {
+		return err
+	}
+
+	transport.SendJSON(w, http.StatusOK, handler.DefaultSuccessResponse)
+	return nil
+}
+
+func (h *FileApi) DeleteFile(w http.ResponseWriter, r *http.Request) error {
+	id, err := handler.ParsePathParam[uuid.UUID](r, "uuid")
+	if err != nil {
+		return err
+	}
+
+	err = h.FileService.Delete(r.Context(), id)
 	if err != nil {
 		return err
 	}

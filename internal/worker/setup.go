@@ -38,5 +38,10 @@ func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
 		return nil, err
 	}
 
+	err = river.AddWorkerSafely(workers, NewDeleteFileWorker(dep.StorageClient))
+	if err != nil {
+		return nil, err
+	}
+
 	return workers, nil
 }
