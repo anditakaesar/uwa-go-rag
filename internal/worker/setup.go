@@ -5,9 +5,11 @@ import (
 )
 
 type RegisterWorkerDep struct {
-	ChatService ChatService
-	RagService  RagService
-	Recorder    Recorder
+	ChatService   ChatService
+	RagService    RagService
+	Recorder      Recorder
+	FileService   FileService
+	StorageClient StorageClient
 }
 
 func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
@@ -24,6 +26,14 @@ func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
 	}
 
 	err = river.AddWorkerSafely(workers, NewInsertAuditLogWorker(dep.Recorder))
+	if err != nil {
+		return nil, err
+	}
+
+	err = river.AddWorkerSafely(workers, NewThumbnailWorker(ThumbnailWorkerDep{
+		FileService:   dep.FileService,
+		StorageClient: dep.StorageClient,
+	}))
 	if err != nil {
 		return nil, err
 	}

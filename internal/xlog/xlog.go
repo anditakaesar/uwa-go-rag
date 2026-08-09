@@ -19,7 +19,7 @@ func InitializeLogger() {
 	lvl := env.GetLogLevel()
 	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     lvl,
-		AddSource: false,
+		AddSource: true,
 	})
 
 	Logger = slog.New(handler)

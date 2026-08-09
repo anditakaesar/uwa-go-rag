@@ -106,6 +106,7 @@ func SetupServer(dep *ServerDependency) *Executor {
 
 	fileApi := file.NewFileApi(file.FileApiDependency{
 		FileService: infraSvc.FileService,
+		JobQueue:    infraSvc.JobQueue,
 	})
 
 	router.Group(func(r chi.Router) {

@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
@@ -124,4 +126,37 @@ func (r *RustFS) GetPresignGetURL(ctx context.Context, key string) (string, erro
 	}
 
 	return req.URL, nil
+}
+
+func (r *RustFS) GetObjectIntoBuffer(ctx context.Context, key string) ([]byte, error) {
+	object, err := r.client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(env.Get().S3Config.S3Bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	defer object.Body.Close()
+
+	buff, err := io.ReadAll(object.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return buff, nil
+}
+
+func (r *RustFS) UploadObject(ctx context.Context, key string, mimeType string, buff []byte) error {
+	_, err := r.client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(env.Get().S3Config.S3Bucket),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(buff),
+		ContentType: aws.String(mimeType),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

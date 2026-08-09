@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"path"
+	"strings"
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
@@ -32,6 +34,17 @@ type File struct {
 
 func (f *File) SizeHumanize() string {
 	return humanize.Bytes(uint64(f.SizeBytes))
+}
+
+func (f *File) GeneratePublicThumbnailKey() string {
+	dir := path.Dir(f.S3Key)
+	name := path.Base(f.S3Key)
+
+	ext := path.Ext(name)
+	nameWithoutExt := strings.TrimSuffix(name, ext)
+	webpName := nameWithoutExt + ".webp"
+
+	return path.Join(dir, "public", webpName)
 }
 
 type FindAllFilesParam struct {

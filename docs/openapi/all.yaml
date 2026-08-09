@@ -752,6 +752,9 @@ components:
         sizeHumanize:
           type: string
           example: "1 KB"
+        thumbnailURL:
+          type: string
+          example: "https://s3bucket.local/bucket/public/image.webp"
         status:
           type: string
           example: "completed"

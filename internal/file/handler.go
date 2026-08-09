@@ -3,6 +3,7 @@ package file
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"slices"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
+	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/handler"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
@@ -26,6 +28,10 @@ type FileService interface {
 	Update(ctx context.Context, id uuid.UUID, param domain.UpdateFileParam) (*domain.File, error)
 }
 
+type JobQueue interface {
+	EnqueueThumbnailGen(ctx context.Context, id uuid.UUID) error
+}
+
 // dto
 type SingleFileResponse struct {
 	ID           uuid.UUID `json:"id"`
@@ -35,6 +41,7 @@ type SingleFileResponse struct {
 	SizeBytes    int64     `json:"sizeBytes"`
 	SizeHumanize string    `json:"sizeHumanize"`
 	Status       string    `json:"status"`
+	ThumbnailURL string    `json:"thumbnailURL"`
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
@@ -46,6 +53,7 @@ func FileDomainToResponse(data *domain.File) SingleFileResponse {
 		MimeType:     data.MimeType,
 		SizeBytes:    data.SizeBytes,
 		SizeHumanize: data.SizeHumanize(),
+		ThumbnailURL: fmt.Sprintf("%s/%s/%s", env.Get().S3Config.S3Endpoint, env.Get().S3Config.S3Bucket, data.GeneratePublicThumbnailKey()),
 		Status:       string(data.Status),
 		CreatedAt:    data.CreatedAt,
 	}
@@ -127,6 +135,16 @@ func SetupFileApiRoutes(router chi.Router, h *FileApi) {
 				middlewares.RequireAuth(),
 			},
 		},
+		{
+			Endpoint: handler.Endpoint{
+				HttpMethod: http.MethodPost,
+				Path:       "/files/{uuid}/enqueue-thumbnail",
+				Handler:    handler.MakeHandler(h.RegisterThumbnailGen),
+			},
+			Middlewares: []func(http.Handler) http.Handler{
+				middlewares.RequireAuth(),
+			},
+		},
 	}
 
 	for _, e := range endpoints {
@@ -182,15 +200,18 @@ func PresignURLReturnToResult(res *domain.GeneratePresignURLReturn) GeneratePres
 // handler
 type FileApi struct {
 	FileService FileService
+	JobQueue    JobQueue
 }
 
 type FileApiDependency struct {
 	FileService FileService
+	JobQueue    JobQueue
 }
 
 func NewFileApi(dep FileApiDependency) *FileApi {
 	return &FileApi{
 		FileService: dep.FileService,
+		JobQueue:    dep.JobQueue,
 	}
 }
 
@@ -267,5 +288,20 @@ func (h *FileApi) GetDownloadURL(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	transport.SendJSON(w, http.StatusOK, downloadURL)
+	return nil
+}
+
+func (h *FileApi) RegisterThumbnailGen(w http.ResponseWriter, r *http.Request) error {
+	id, err := handler.ParsePathParam[uuid.UUID](r, "uuid")
+	if err != nil {
+		return err
+	}
+
+	err = h.JobQueue.EnqueueThumbnailGen(r.Context(), id)
+	if err != nil {
+		return err
+	}
+
+	transport.SendJSON(w, http.StatusOK, handler.DefaultSuccessResponse)
 	return nil
 }

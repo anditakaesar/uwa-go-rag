@@ -179,3 +179,7 @@ func (svc *Service) FetchAll(ctx context.Context, param *domain.FindAllFilesPara
 func (svc *Service) Update(ctx context.Context, id uuid.UUID, param domain.UpdateFileParam) (*domain.File, error) {
 	return svc.fileRepo.Update(ctx, id, param)
 }
+
+func (svc *Service) Get(ctx context.Context, id uuid.UUID) (*domain.File, error) {
+	return svc.fileRepo.Get(ctx, id)
+}

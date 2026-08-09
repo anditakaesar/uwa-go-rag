@@ -100,9 +100,11 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 
 	// queue workers
 	workers, err := worker.RegisterWorkers(worker.RegisterWorkerDep{
-		ChatService: chatSvc,
-		RagService:  ragSvc,
-		Recorder:    auditSvc,
+		ChatService:   chatSvc,
+		RagService:    ragSvc,
+		Recorder:      auditSvc,
+		FileService:   fileSvc,
+		StorageClient: storageClient,
 	})
 	if err != nil {
 		xlog.Logger.Error(fmt.Sprintf("error setup worker client: %v", err))

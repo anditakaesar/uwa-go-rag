@@ -5,6 +5,7 @@ import (
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/worker"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
@@ -57,5 +58,13 @@ func (r *RiverQueue) EnqueueAuditLog(ctx context.Context, auditLog domain.AuditL
 	_, err := r.client.Insert(ctx, worker.InsertAuditLogArgs{
 		AuditLog: auditLog,
 	}, nil)
+	return err
+}
+
+func (r *RiverQueue) EnqueueThumbnailGen(ctx context.Context, id uuid.UUID) error {
+	_, err := r.client.Insert(ctx, worker.ThumbnailWorkerArgs{
+		ID: id,
+	}, nil)
+
 	return err
 }

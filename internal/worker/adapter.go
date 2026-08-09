@@ -17,3 +17,10 @@ type Recorder interface {
 type ChatService interface {
 	DoSort(ctx context.Context, words []string) ([]string, error)
 }
+
+type StorageClient interface {
+	GetPresignPutURL(ctx context.Context, key string) (string, error)
+	GetPresignGetURL(ctx context.Context, key string) (string, error)
+	GetObjectIntoBuffer(ctx context.Context, key string) ([]byte, error)
+	UploadObject(ctx context.Context, key string, mimeType string, buff []byte) error
+}
