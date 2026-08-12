@@ -1,6 +1,6 @@
-# Informasi Terkait Prosedur Layanan
-## Prosedur Layanan
-### Pendaftaran Online
+# Prosedur Layanan
+Informasi Terkait Prosedur Layanan, Dokumen dan Informasi Lainnya
+## Pendaftaran Online
 1. Klik portal layanan pendaftaran [di sini](https://pom.bpjsketenagakerjaan.go.id/pu)
 2. Pilih : “Pendaftaran Peserta” dan pilih Penerima Upah
 3. Masukkan alamat email dan kode captcha, klik DAFTAR
@@ -8,7 +8,7 @@
 5. Isi data yang tampil pada layar monitor sesuai data perusahaan anda.
 6. Lakukan pembayaran setelah mendapatkan kode iuran melalui email
 7. Peserta mendapatkan kartu digital melalui email atau diambil di Kantor Cabang terdekat
-### Pendaftaran Di Kantor Cabang
+## Pendaftaran Di Kantor Cabang
 1. Isi formulir dokumen pendaftaran kepesertaan dengan lengkap
 2. Ambil nomor antrian dulu untuk layanan pendaftaran ya
 3. Tunggu hingga nomor antrian kamu dipanggil.
@@ -17,7 +17,7 @@
 6. Melakukan pembayaran iuran
 7. Setelah pembayaran iuran kamu berhasil, kamu akan menerima sertifikat kepesertaan dan Kartu Peserta.
 8. Jangan lupa berikan penilaian kepuasan melalui e-survey ya
-## Dokumen Pendaftaran
+# Dokumen Pendaftaran
 Pemberi kerja mempersiapkan kelengkapan dokumen sebagai syarat pendaftaran peserta program BPJS Ketenagakerjaan
 1. Formulir Pendaftaraan Pemberi Kerja/Badan Usaha
 2. Formulir Pendaftaran/Perubahan Data Pekerja; dan/atau
@@ -26,8 +26,8 @@ Pemberi kerja mempersiapkan kelengkapan dokumen sebagai syarat pendaftaran peser
 5. KTP Pemilik Perusahaan
 6. KTP Tenaga Kerja
 7. Surat Izin Tempat Usaha/Surat Izin Usaha Perdagangan/Nomor Induk Berusaha
-## Kanal dan Cara Pendaftaran
-### Website
+# Kanal dan Cara Pendaftaran
+## Website
 1. HRD/ PIC perusahaan melakukan registrasi melalui website  [BPJS Ketenagakerjaan](https://pom.bpjsketenagakerjaan.go.id/pu)
 2. Pilih Tombol Pendaftaran Peserta lalu pilih Bukan Penerima Upah (PU)
 3. Masukkan alamat email dan kode captcha, klik DAFTAR
@@ -35,8 +35,10 @@ Pemberi kerja mempersiapkan kelengkapan dokumen sebagai syarat pendaftaran peser
 5. Isi data pendaftaran seperti: data pemberi kerja, kontak PIC Perusahaan, Program yang didaftar, data tenaga kerja
 6. Lakukan pembayaran setelah mendapatkan kode iuran melalui email
 7. Pembayaran iuran dapat dilakukan di kanal pembayaran yang telah ditentukan
-8. Kartu Peserta dan Sertifikat diberikan paling lama 7 (tujuh) hari setelah pembayaran iuran melalui fasilitas perbankan baik secara langsung melalui teller maupun transaksi elektronik (ATM/EDC/Online Banking/Autodebet) dan sebagainya Lakukan registrasi SIPP Online untuk pelaporan dan pengelolaan data kepesertaan setiap bulannya. SIPP Online merupakan website pelaporan peserta online yang dikembangkan sebagai alat bantu perusahaan untuk melakukan pengelolan data kepesertaan berupa data Perusahaan, data Tenaga Kerja, data upah dan penghitungan iuran secara cepat dan akurat.
-### Kantor Cabang
+8. Kartu Peserta dan Sertifikat diberikan paling lama 7 (tujuh) hari setelah pembayaran iuran melalui fasilitas perbankan baik secara langsung melalui teller maupun transaksi elektronik (ATM/EDC/Online Banking/Autodebet dan sebagainya Lakukan registrasi SIPP Online untuk pelaporan dan pengelolaan data kepesertaan setiap bulannya.
+
+\*) SIPP Online merupakan website pelaporan peserta online yang dikembangkan sebagai alat bantu perusahaan untuk melakukan pengelolan data kepesertaan berupa data Perusahaan, data Tenaga Kerja, data upah dan penghitungan iuran secara cepat dan akurat.
+## Kantor Cabang
 1. Datang ke kantor cabang.
 2. Isi formulir dan lengkapi dokumen pendaftaran kepesertaan
 3. Ambil nomor antrian untuk layanan pendaftaran
@@ -48,8 +50,9 @@ Pemberi kerja mempersiapkan kelengkapan dokumen sebagai syarat pendaftaran peser
 9. Tanda bukti kepesertaan (sertifikat dan kartu kepesertaan) diterima paling lama 7 (tujuh) hari setelah pembayaran iuran melalui fasilitas perbankan baik secara langsung melalui teller maupun transaksi elektronik (ATM/EDC/Online Banking/Autodebet) dan sebagainya
 10. Petugas akan memberitahukan tentang proses registrasi SIPP Online untuk pelaporan dan pengelolaan data kepesertaan setiap bulannya
 11. Berikan penilaian kepuasan melalui e-suvey
-## Perhitungan Iuran
-### Jaminan Kecelakaan Kerja
+# Perhitungan Iuran
+
+## Jaminan Kecelakaan Kerja
 1. Tingkat risiko sangat rendah : 0,24% dari Upah sebulan
 2. Tingkat risiko rendah : 0,54% dari Upah sebulan
 3. Tingkat risiko sedang : 0,89% dari Upah sebulan
@@ -67,16 +70,17 @@ Bagi Industri padat karya tertentu meliputi industri makanan, minuman, dan temba
 | e. Sangat Tinggi                | 0,870%                                 |
 
 Perpanjangan masa relaksasi iuran Jaminan Kecelakaan Kerja sebesar 50% bagi industri padat karya, mulai bulan Agustus 2025 - Januari 2026
-### Jaminan Kematian
+## Jaminan Kematian
 1. 0,3% dari Upah sebulan
-### Jaminan Hari Tua
+## Jaminan Hari Tua
 1. Pemberi kerja 3,7% dari Upah sebulan
 2. Pekerja 2% dari Upah sebulan
-### Jaminan Pensiun
+## Jaminan Pensiun
 1. Pemberi kerja 2% dari Upah sebulan
 2. Pekerja 1% dari Upah sebulan
 Dasar perhitungan iuran dengan upah maksimal sebesar Rp 10.547.400,00.
-### Simulasi Perhitungan Iuran
+
+## Simulasi Perhitungan Iuran
 Contoh : Seorang tenaga kerja dengan upah sebulan Rp. 1.000.000, bekerja di rumah makan
 (kategori tingkat risiko rendah), maka jumlah iuran yang dibayarkan adalah:
 
@@ -92,7 +96,10 @@ Contoh : Seorang tenaga kerja dengan upah sebulan Rp. 1.000.000, bekerja di ruma
 | **Total Iuran yang dibayarkan oleh Pemberi Kerja** |                       |              | **Rp 65.400,00** |
 | **Total Iuran yang dibayarkan oleh Pekerja**       |                       |              | **Rp 30.000,00** |
 
-## Pembayaran Iuran
+* [Tanda Bukti Kepesertaan](#tandaBuktiKepesertaan)
+* [Standar Pelayanan](#standarPelayanan1)
+# Pembayaran Iuran
+## Bank Kerjasama
 ### Bank Mandiri
 #### Teller
 1. Ambil slip setoran/transfer/kliring/inkaso dan isikan tanggal sesuai dengan tanggal pada saat melakukan transaksi
@@ -338,8 +345,9 @@ pembayaran Anda
 6. Muncul Layar Konfirmasi yang berisi Kode Iuran ,Nama Nasabah dan Nomin- Apabila sudah benar pilih "Benar"
    - Pilih Rekening Anda yang akan digunakan untuk pembayaran
    - Selesai
+
 ### Bank Jateng
-### Teller
+#### Teller
 1. Ambil slip setoran/transfer dan isikan tanggal sesuai dengan tanggal pada saat melakukan transaksi
 2. Isi nama dan alamat pengirim sesuai dengan data penyetor dan penerima setoran
 3. Isi sumber dana transaksi (tunai/debet rekening) Pada kolom keterangan, isi dengan kode iuran
@@ -364,7 +372,7 @@ pembayaran Anda
 5. Masukan nomor peserta
 6. Setelah tampil data peserta pilih Benar
 7. Hasil Struk
-#### Bank Sulselbar
+### Bank Sulselbar
 #### Teller
 1. Ambil Slip Setoran, isikan tanggal sesuai dengan tanggal transaksi dilakukan.
 2. Isi Nama, Alamat, Nomor Telepon/Handphone yang bisa dihubungi.
@@ -374,7 +382,7 @@ pembayaran Anda
 6. Berikan Slip Kepada Teller
 7. Teller melakukan proses transaksi, dan mencetak slip pembayaran.
 8. Simpan Slip Pembayaran sebagai bukti pembayaran.
-#### Bank Sulutgo
+### Bank Sulutgo
 #### Teller
 1. Ambil Slip Setoran, isikan tanggal sesuai dengan tanggal transaksi dilakukan.
 2. Isi Nama, Alamat, Nomor Telepon/Handphone yang bisa dihubungi.
@@ -420,6 +428,7 @@ pembayaran Anda
 6. Teller Melakukan Pembayaran.
 7. Transaksi selesai dan simpan bukti pembayaran Anda.
 ### Bank Lampung
+
 #### Teller
 1. Ambil slip setoran/transfer dan isikan tanggal sesuai dengan tanggal pada saat melakukan transaksi.
 2. Isi nama dan alamat pengirim sesuai dengan data penyetor dan penerima setoran.
@@ -435,6 +444,7 @@ pembayaran Anda
 4. Teller melakukan konfirmasi kepada Anda dan Teller memproses Transaksi.
 5. Apabila transaksi sukses anda akan menerima bukti pembayaran dari teller tersebut.
 ### Bank Aceh
+
 #### Teller
 1. Ambil Slip Setoran, isikan tanggal sesuai dengan tanggal transaksi dilakukan.
 2. Isi Nama, Alamat, Nomor Telepon/Handphone yang bisa dihubungi.
