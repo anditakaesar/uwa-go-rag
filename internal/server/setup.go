@@ -34,7 +34,7 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 	repos := newRepositorySet(pool)
 	clients := newClientSet(infraStorage)
 	svcs := newServiceSet(repos, clients)
-	riverClient := mustRegisterRiver(pool, svcs, clients)
+	riverClient := mustRegisterRiver(pool, repos, svcs, clients)
 
 	return &Services{
 		UserService:   svcs.userSvc,

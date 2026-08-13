@@ -31,6 +31,16 @@ packages:
       dir: "internal/infra/jwt/mocks"
     interfaces:
       PermissionRepo:
+  github.com/anditakaesar/uwa-go-rag/internal/infra/tokenization:
+    config:
+      dir: "internal/infra/tokenization/mocks"
+    interfaces:
+      Tokenizer:
+  github.com/anditakaesar/uwa-go-rag/internal/rag:
+    config:
+      dir: "internal/rag/mocks"
+    interfaces:
+      ChunkRepository:
   github.com/anditakaesar/uwa-go-rag/internal/server:
     config:
       dir: "internal/server/mocks"
@@ -61,3 +71,11 @@ packages:
       UserService:
       JWTService:
       CookieService:
+  github.com/anditakaesar/uwa-go-rag/internal/worker:
+    config:
+      dir: "internal/worker/mocks"
+    interfaces:
+      RagService:
+      ChunkRepository:
+      JobQueue:
+      StorageClient:

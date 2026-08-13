@@ -37,12 +37,12 @@ func (_m *MockStorageClient) EXPECT() *MockStorageClient_Expecter {
 	return &MockStorageClient_Expecter{mock: &_m.Mock}
 }
 
-// GetPresignURL provides a mock function for the type MockStorageClient
-func (_mock *MockStorageClient) GetPresignURL(ctx context.Context, key string) (string, error) {
+// GetPresignGetURL provides a mock function for the type MockStorageClient
+func (_mock *MockStorageClient) GetPresignGetURL(ctx context.Context, key string) (string, error) {
 	ret := _mock.Called(ctx, key)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetPresignURL")
+		panic("no return value specified for GetPresignGetURL")
 	}
 
 	var r0 string
@@ -63,19 +63,19 @@ func (_mock *MockStorageClient) GetPresignURL(ctx context.Context, key string) (
 	return r0, r1
 }
 
-// MockStorageClient_GetPresignURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPresignURL'
-type MockStorageClient_GetPresignURL_Call struct {
+// MockStorageClient_GetPresignGetURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPresignGetURL'
+type MockStorageClient_GetPresignGetURL_Call struct {
 	*mock.Call
 }
 
-// GetPresignURL is a helper method to define mock.On call
+// GetPresignGetURL is a helper method to define mock.On call
 //   - ctx context.Context
 //   - key string
-func (_e *MockStorageClient_Expecter) GetPresignURL(ctx any, key any) *MockStorageClient_GetPresignURL_Call {
-	return &MockStorageClient_GetPresignURL_Call{Call: _e.mock.On("GetPresignURL", ctx, key)}
+func (_e *MockStorageClient_Expecter) GetPresignGetURL(ctx any, key any) *MockStorageClient_GetPresignGetURL_Call {
+	return &MockStorageClient_GetPresignGetURL_Call{Call: _e.mock.On("GetPresignGetURL", ctx, key)}
 }
 
-func (_c *MockStorageClient_GetPresignURL_Call) Run(run func(ctx context.Context, key string)) *MockStorageClient_GetPresignURL_Call {
+func (_c *MockStorageClient_GetPresignGetURL_Call) Run(run func(ctx context.Context, key string)) *MockStorageClient_GetPresignGetURL_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -93,74 +93,78 @@ func (_c *MockStorageClient_GetPresignURL_Call) Run(run func(ctx context.Context
 	return _c
 }
 
-func (_c *MockStorageClient_GetPresignURL_Call) Return(s string, err error) *MockStorageClient_GetPresignURL_Call {
+func (_c *MockStorageClient_GetPresignGetURL_Call) Return(s string, err error) *MockStorageClient_GetPresignGetURL_Call {
 	_c.Call.Return(s, err)
 	return _c
 }
 
-func (_c *MockStorageClient_GetPresignURL_Call) RunAndReturn(run func(ctx context.Context, key string) (string, error)) *MockStorageClient_GetPresignURL_Call {
+func (_c *MockStorageClient_GetPresignGetURL_Call) RunAndReturn(run func(ctx context.Context, key string) (string, error)) *MockStorageClient_GetPresignGetURL_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ListFiles provides a mock function for the type MockStorageClient
-func (_mock *MockStorageClient) ListFiles(ctx context.Context) ([]string, error) {
-	ret := _mock.Called(ctx)
+// GetPresignPutURL provides a mock function for the type MockStorageClient
+func (_mock *MockStorageClient) GetPresignPutURL(ctx context.Context, key string) (string, error) {
+	ret := _mock.Called(ctx, key)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListFiles")
+		panic("no return value specified for GetPresignPutURL")
 	}
 
-	var r0 []string
+	var r0 string
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]string, error)); ok {
-		return returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+		return returnFunc(ctx, key)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) []string); ok {
-		r0 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) string); ok {
+		r0 = returnFunc(ctx, key)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
-		}
+		r0 = ret.Get(0).(string)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, key)
 	} else {
 		r1 = ret.Error(1)
 	}
 	return r0, r1
 }
 
-// MockStorageClient_ListFiles_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListFiles'
-type MockStorageClient_ListFiles_Call struct {
+// MockStorageClient_GetPresignPutURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPresignPutURL'
+type MockStorageClient_GetPresignPutURL_Call struct {
 	*mock.Call
 }
 
-// ListFiles is a helper method to define mock.On call
+// GetPresignPutURL is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockStorageClient_Expecter) ListFiles(ctx any) *MockStorageClient_ListFiles_Call {
-	return &MockStorageClient_ListFiles_Call{Call: _e.mock.On("ListFiles", ctx)}
+//   - key string
+func (_e *MockStorageClient_Expecter) GetPresignPutURL(ctx any, key any) *MockStorageClient_GetPresignPutURL_Call {
+	return &MockStorageClient_GetPresignPutURL_Call{Call: _e.mock.On("GetPresignPutURL", ctx, key)}
 }
 
-func (_c *MockStorageClient_ListFiles_Call) Run(run func(ctx context.Context)) *MockStorageClient_ListFiles_Call {
+func (_c *MockStorageClient_GetPresignPutURL_Call) Run(run func(ctx context.Context, key string)) *MockStorageClient_GetPresignPutURL_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
 }
 
-func (_c *MockStorageClient_ListFiles_Call) Return(strings []string, err error) *MockStorageClient_ListFiles_Call {
-	_c.Call.Return(strings, err)
+func (_c *MockStorageClient_GetPresignPutURL_Call) Return(s string, err error) *MockStorageClient_GetPresignPutURL_Call {
+	_c.Call.Return(s, err)
 	return _c
 }
 
-func (_c *MockStorageClient_ListFiles_Call) RunAndReturn(run func(ctx context.Context) ([]string, error)) *MockStorageClient_ListFiles_Call {
+func (_c *MockStorageClient_GetPresignPutURL_Call) RunAndReturn(run func(ctx context.Context, key string) (string, error)) *MockStorageClient_GetPresignPutURL_Call {
 	_c.Call.Return(run)
 	return _c
 }

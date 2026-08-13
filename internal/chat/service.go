@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
+	"github.com/google/uuid"
 )
 
 type IRagRepository interface {
@@ -20,7 +21,7 @@ type AIClient interface {
 
 type IJobQueue interface {
 	EnqueueChat(ctx context.Context, words []string) error
-	EnqueueRagFile(ctx context.Context, ragFileID int64) error
+	EnqueueRagFile(ctx context.Context, fileID uuid.UUID, objectKey string) error
 }
 
 type ChatService struct {
@@ -33,7 +34,7 @@ type ChatService struct {
 type IChatService interface {
 	SendPrompt(ctx context.Context, prompt string) (string, error)
 	SendSortJob(ctx context.Context, words []string) error
-	SendProcessDocJob(ctx context.Context, ragFileID int64) error
+	SendProcessDocJob(ctx context.Context, fileID uuid.UUID, objectKey string) error
 	SendTextIntoEmbedding(ctx context.Context, text string) error
 	DoSort(ctx context.Context, words []string) ([]string, error)
 	//CreateRagFile(ctx context.Context, ragFile domain.RagFile) (*domain.RagFile, error)
@@ -63,8 +64,8 @@ func (s *ChatService) SendSortJob(ctx context.Context, words []string) error {
 	return s.JobQueue.EnqueueChat(ctx, words)
 }
 
-func (s *ChatService) SendProcessDocJob(ctx context.Context, ragFileID int64) error {
-	return s.JobQueue.EnqueueRagFile(ctx, ragFileID)
+func (s *ChatService) SendProcessDocJob(ctx context.Context, fileID uuid.UUID, objectKey string) error {
+	return s.JobQueue.EnqueueRagFile(ctx, fileID, objectKey)
 }
 
 func (s *ChatService) SendTextIntoEmbedding(ctx context.Context, text string) error {

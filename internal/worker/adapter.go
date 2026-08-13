@@ -4,11 +4,20 @@ import (
 	"context"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
+	"github.com/anditakaesar/uwa-go-rag/internal/rag"
 	"github.com/google/uuid"
 )
 
 type RagService interface {
-	ProcessDocument(ctx context.Context, ragFileID int64) error
+	BuildChunks(ctx context.Context, source []byte) ([]rag.FinalChunk, error)
+}
+
+type ChunkRepository interface {
+	StoreBatch(ctx context.Context, chunks []domain.Chunk) error
+}
+
+type JobQueue interface {
+	EnqueueGenerateChunks(ctx context.Context, args GenerateChunksArgs) error
 }
 
 type Recorder interface {

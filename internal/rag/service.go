@@ -3,70 +3,91 @@ package rag
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"strings"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
+	"github.com/anditakaesar/uwa-go-rag/internal/infra/tokenization"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/extension"
+	gast "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/text"
 )
 
-type Service struct{}
-
-func NewRagService() *Service {
-	return &Service{}
+type ServiceDependency struct {
+	Tokenizer tokenization.Tokenizer
 }
 
-func (s *Service) ProcessDocument(ctx context.Context, ragFileID int64) error {
-	xlog.Logger.Info(fmt.Sprintf("processing file with id: %d", ragFileID))
-	return nil
+type Service struct {
+	tokenizer tokenization.Tokenizer
 }
+
+func NewRagService(dep ServiceDependency) *Service {
+	return &Service{
+		tokenizer: dep.Tokenizer,
+	}
+}
+
+const (
+	TargetMinChunkTokens = 128
+	TargetMaxChunkTokens = 512
+	ChunkOverlapTokens   = 32
+)
 
 type RawChunkHeading struct {
 	Text  string
 	Level int
 }
 
+// RawChunk is a structural section from the AST parse: the blocks following a
+// heading, together with the heading hierarchy they belong to.
 type RawChunk struct {
-	Headings []RawChunkHeading
-	Texts    []string
+	Headings   []RawChunkHeading
+	Blocks     []Block
+	TokenCount int
 }
 
-const (
-	TargetMinChunkSize = 200
-	TargetMaxChunkSize = 1200
-)
+// BuildChunks parses markdown into heading sections and sizes them into final
+// chunks following the token boundary rules. Convenience wrapper around
+// ParseSections + ChunkSections.
+func (s *Service) BuildChunks(ctx context.Context, source []byte) ([]FinalChunk, error) {
+	sections, err := s.ParseSections(ctx, source)
+	if err != nil {
+		return nil, err
+	}
+	return s.ChunkSections(ctx, sections)
+}
 
-func (s *Service) BuildChunks(ctx context.Context, source []byte) ([]RawChunk, error) {
-	mdParser := goldmark.DefaultParser()
+// ParseSections walks the markdown AST and groups content into one section per
+// heading. Content before the first heading forms a section with an empty
+// heading path. Token counts are computed per block.
+func (s *Service) ParseSections(ctx context.Context, source []byte) ([]RawChunk, error) {
+	mdParser := goldmark.New(goldmark.WithExtensions(extension.Table)).Parser()
 	reader := text.NewReader(source)
 	doc := mdParser.Parse(reader)
 
 	result := make([]RawChunk, 0)
 
 	var (
-		headingStack []RawChunkHeading
-		currentTexts []string
-		currentLen   int
+		headingStack  []RawChunkHeading
+		currentBlocks []Block
+		currentLen    int
 	)
 
-	// Flushes the current accumulated text into a RawChunk
-	flushChunk := func() {
-		if len(currentTexts) == 0 {
+	flushSection := func() {
+		if len(currentBlocks) == 0 {
 			return
 		}
 
-		// Preserve current headings context by making a deep copy
 		headingsCopy := make([]RawChunkHeading, len(headingStack))
 		copy(headingsCopy, headingStack)
 
 		result = append(result, RawChunk{
-			Headings: headingsCopy,
-			Texts:    currentTexts,
+			Headings:   headingsCopy,
+			Blocks:     currentBlocks,
+			TokenCount: currentLen,
 		})
 
-		currentTexts = make([]string, 0)
+		currentBlocks = nil
 		currentLen = 0
 	}
 
@@ -78,23 +99,21 @@ func (s *Service) BuildChunks(ctx context.Context, source []byte) ([]RawChunk, e
 		switch node := n.(type) {
 		case *ast.Heading:
 			headingText := strings.TrimSpace(extractText(node, source))
-
-			// Skip empty headings
 			if headingText == "" {
 				return ast.WalkSkipChildren, nil
 			}
 
+			// Start a new section: flush content accumulated under the previous
+			// heading BEFORE updating the stack, so each section keeps its own
+			// heading context.
+			flushSection()
+
 			level := node.Level
 
-			// Trim heading stack to contain only parent headings
-			// Example: current stack [H1, H2, H3], new heading H2
-			// Keep H1 (level-1=1 elements), trim rest -> [H1], then append H2 -> [H1, H2]
 			if level <= len(headingStack) {
 				headingStack = headingStack[:level-1]
 			}
 
-			// Fill gaps for skipped heading levels
-			// Example: H1 exists, suddenly H4 appears -> need placeholders for H2, H3
 			for len(headingStack) < level-1 {
 				placeholderLevel := len(headingStack) + 1
 				headingStack = append(headingStack, RawChunkHeading{
@@ -108,43 +127,44 @@ func (s *Service) BuildChunks(ctx context.Context, source []byte) ([]RawChunk, e
 				Level: level,
 			})
 
-			// Flush current chunk on heading change to maintain section boundaries
-			if currentLen >= TargetMinChunkSize {
-				flushChunk()
-			}
-
 			return ast.WalkSkipChildren, nil
 
-		case *ast.Paragraph, *ast.FencedCodeBlock, *ast.CodeBlock, *ast.List:
+		case *ast.Paragraph, *ast.FencedCodeBlock, *ast.CodeBlock, *ast.List, *gast.Table:
 			blockText := strings.TrimSpace(extractText(node, source))
 			if len(blockText) == 0 {
 				return ast.WalkSkipChildren, nil
 			}
 
-			blockSize := len(blockText)
-
-			// If adding this block exceeds target length and we met minimum chunk size, flush first
-			if currentLen+blockSize > TargetMaxChunkSize && currentLen >= TargetMinChunkSize {
-				flushChunk()
-			}
-
-			currentTexts = append(currentTexts, blockText)
-			currentLen += blockSize
+			currentBlocks = append(currentBlocks, Block{
+				Text:       blockText,
+				Kind:       blockKind(node),
+				TokenCount: s.tokenizer.CountTokens(blockText),
+			})
+			currentLen += s.tokenizer.CountTokens(blockText)
 
 			return ast.WalkSkipChildren, nil
 		}
 
 		return ast.WalkContinue, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
-	// Flush any remaining accumulated text
-	flushChunk()
+	flushSection()
 
 	return result, nil
+}
+
+func blockKind(n ast.Node) BlockKind {
+	switch n.(type) {
+	case *ast.FencedCodeBlock, *ast.CodeBlock:
+		return BlockKindCode
+	case *gast.Table:
+		return BlockKindTable
+	default:
+		return BlockKindParagraph
+	}
 }
 
 // Helper to extract clean text from AST nodes and their lines
@@ -165,45 +185,6 @@ func extractText(n ast.Node, source []byte) string {
 		for i := 0; i < n.Lines().Len(); i++ {
 			line := n.Lines().At(i)
 			buf.Write(line.Value(source))
-		}
-	}
-
-	return buf.String()
-}
-
-func (rc RawChunk) String() string {
-	var buf bytes.Buffer
-
-	// Write heading hierarchy with proper levels
-	for _, heading := range rc.Headings {
-		if heading.Text != "" {
-			// Create markdown heading with appropriate number of # symbols
-			prefix := strings.Repeat("#", heading.Level)
-			buf.WriteString(prefix)
-			buf.WriteString(" ")
-			buf.WriteString(heading.Text)
-			buf.WriteString("\n")
-		}
-	}
-
-	// Add blank line between headings and content if there are headings
-	hasHeadings := false
-	for _, h := range rc.Headings {
-		if h.Text != "" {
-			hasHeadings = true
-			break
-		}
-	}
-	if hasHeadings {
-		buf.WriteString("\n")
-	}
-
-	// Write text blocks
-	for i, text := range rc.Texts {
-		buf.WriteString(text)
-		// Add spacing between blocks
-		if i < len(rc.Texts)-1 {
-			buf.WriteString("\n\n")
 		}
 	}
 

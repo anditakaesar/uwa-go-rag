@@ -1,0 +1,148 @@
+package postgres
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
+	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
+	"github.com/google/uuid"
+	"github.com/henvic/pgq"
+	"github.com/jackc/pgx/v5"
+)
+
+type ChunkRepository struct {
+	db DBExecutor
+}
+
+func NewChunkRepository(db DBExecutor) *ChunkRepository {
+	return &ChunkRepository{
+		db: db,
+	}
+}
+
+const chunkColumns = "id, file_id, chunk_index, content, raw_text, token_count, heading_path, content_hash, metadata, created_at"
+
+func scanChunkRow(row pgx.Row) (*domain.Chunk, error) {
+	var (
+		chunk      domain.Chunk
+		headingRaw []byte
+		metaRaw    []byte
+	)
+
+	err := row.Scan(
+		&chunk.ID,
+		&chunk.FileID,
+		&chunk.Index,
+		&chunk.Content,
+		&chunk.RawText,
+		&chunk.TokenCount,
+		&headingRaw,
+		&chunk.ContentHash,
+		&metaRaw,
+		&chunk.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, &xerror.ErrorResourceNotFound{Message: "chunks not found"}
+		}
+		return nil, err
+	}
+
+	if len(headingRaw) > 0 {
+		if err := json.Unmarshal(headingRaw, &chunk.HeadingPath); err != nil {
+			return nil, err
+		}
+	}
+
+	if len(metaRaw) > 0 {
+		if err := json.Unmarshal(metaRaw, &chunk.Metadata); err != nil {
+			return nil, err
+		}
+	}
+
+	return &chunk, nil
+}
+
+func (r *ChunkRepository) StoreBatch(ctx context.Context, chunks []domain.Chunk) error {
+	for _, chunk := range chunks {
+		headingPath, err := json.Marshal(chunk.HeadingPath)
+		if err != nil {
+			return err
+		}
+
+		metadata, err := json.Marshal(chunk.Metadata)
+		if err != nil {
+			return err
+		}
+
+		insertQuery := pgq.Insert("chunks").Columns(
+			"id", "file_id", "chunk_index", "content", "raw_text", "token_count", "heading_path", "content_hash", "metadata",
+		).Values(
+			chunk.ID,
+			chunk.FileID,
+			chunk.Index,
+			chunk.Content,
+			chunk.RawText,
+			chunk.TokenCount,
+			headingPath,
+			chunk.ContentHash,
+			metadata,
+		).Returning(chunkColumns)
+
+		sql, args, err := insertQuery.SQL()
+		if err != nil {
+			return err
+		}
+
+		row := Executor(ctx, r.db).QueryRow(ctx, sql, args...)
+		if _, err := scanChunkRow(row); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *ChunkRepository) GetByFileID(ctx context.Context, fileID uuid.UUID) ([]domain.Chunk, error) {
+	selectQuery := pgq.Select(chunkColumns).
+		From("chunks").
+		Where("file_id = ?", fileID).
+		OrderBy("chunk_index ASC")
+
+	sql, args, err := selectQuery.SQL()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := Executor(ctx, r.db).Query(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	chunks := []domain.Chunk{}
+
+	for rows.Next() {
+		c, err := scanChunkRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		chunks = append(chunks, *c)
+	}
+
+	return chunks, rows.Err()
+}
+
+func (r *ChunkRepository) DeleteByFileID(ctx context.Context, fileID uuid.UUID) error {
+	deleteQuery := pgq.Delete("chunks").Where("file_id = ?", fileID)
+
+	sql, args, err := deleteQuery.SQL()
+	if err != nil {
+		return err
+	}
+
+	_, err = Executor(ctx, r.db).Exec(ctx, sql, args...)
+	return err
+}

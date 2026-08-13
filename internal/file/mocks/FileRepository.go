@@ -39,6 +39,142 @@ func (_m *MockFileRepository) EXPECT() *MockFileRepository_Expecter {
 	return &MockFileRepository_Expecter{mock: &_m.Mock}
 }
 
+// Delete provides a mock function for the type MockFileRepository
+func (_mock *MockFileRepository) Delete(ctx context.Context, id uuid.UUID) (*domain.File, error) {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Delete")
+	}
+
+	var r0 *domain.File
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (*domain.File, error)); ok {
+		return returnFunc(ctx, id)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) *domain.File); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.File)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = returnFunc(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockFileRepository_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type MockFileRepository_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *MockFileRepository_Expecter) Delete(ctx any, id any) *MockFileRepository_Delete_Call {
+	return &MockFileRepository_Delete_Call{Call: _e.mock.On("Delete", ctx, id)}
+}
+
+func (_c *MockFileRepository_Delete_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockFileRepository_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFileRepository_Delete_Call) Return(file *domain.File, err error) *MockFileRepository_Delete_Call {
+	_c.Call.Return(file, err)
+	return _c
+}
+
+func (_c *MockFileRepository_Delete_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) (*domain.File, error)) *MockFileRepository_Delete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindAll provides a mock function for the type MockFileRepository
+func (_mock *MockFileRepository) FindAll(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error) {
+	ret := _mock.Called(ctx, param)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindAll")
+	}
+
+	var r0 []domain.File
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllFilesParam) ([]domain.File, error)); ok {
+		return returnFunc(ctx, param)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllFilesParam) []domain.File); ok {
+		r0 = returnFunc(ctx, param)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.File)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.FindAllFilesParam) error); ok {
+		r1 = returnFunc(ctx, param)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockFileRepository_FindAll_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindAll'
+type MockFileRepository_FindAll_Call struct {
+	*mock.Call
+}
+
+// FindAll is a helper method to define mock.On call
+//   - ctx context.Context
+//   - param *domain.FindAllFilesParam
+func (_e *MockFileRepository_Expecter) FindAll(ctx any, param any) *MockFileRepository_FindAll_Call {
+	return &MockFileRepository_FindAll_Call{Call: _e.mock.On("FindAll", ctx, param)}
+}
+
+func (_c *MockFileRepository_FindAll_Call) Run(run func(ctx context.Context, param *domain.FindAllFilesParam)) *MockFileRepository_FindAll_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *domain.FindAllFilesParam
+		if args[1] != nil {
+			arg1 = args[1].(*domain.FindAllFilesParam)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFileRepository_FindAll_Call) Return(files []domain.File, err error) *MockFileRepository_FindAll_Call {
+	_c.Call.Return(files, err)
+	return _c
+}
+
+func (_c *MockFileRepository_FindAll_Call) RunAndReturn(run func(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error)) *MockFileRepository_FindAll_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Get provides a mock function for the type MockFileRepository
 func (_mock *MockFileRepository) Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error) {
 	ret := _mock.Called(ctx, fileID)
@@ -171,6 +307,80 @@ func (_c *MockFileRepository_Insert_Call) Return(file *domain.File, err error) *
 }
 
 func (_c *MockFileRepository_Insert_Call) RunAndReturn(run func(ctx context.Context, newFile domain.File) (*domain.File, error)) *MockFileRepository_Insert_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Update provides a mock function for the type MockFileRepository
+func (_mock *MockFileRepository) Update(ctx context.Context, id uuid.UUID, updateParam domain.UpdateFileParam) (*domain.File, error) {
+	ret := _mock.Called(ctx, id, updateParam)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 *domain.File
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, domain.UpdateFileParam) (*domain.File, error)); ok {
+		return returnFunc(ctx, id, updateParam)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, domain.UpdateFileParam) *domain.File); ok {
+		r0 = returnFunc(ctx, id, updateParam)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.File)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, domain.UpdateFileParam) error); ok {
+		r1 = returnFunc(ctx, id, updateParam)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockFileRepository_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type MockFileRepository_Update_Call struct {
+	*mock.Call
+}
+
+// Update is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - updateParam domain.UpdateFileParam
+func (_e *MockFileRepository_Expecter) Update(ctx any, id any, updateParam any) *MockFileRepository_Update_Call {
+	return &MockFileRepository_Update_Call{Call: _e.mock.On("Update", ctx, id, updateParam)}
+}
+
+func (_c *MockFileRepository_Update_Call) Run(run func(ctx context.Context, id uuid.UUID, updateParam domain.UpdateFileParam)) *MockFileRepository_Update_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 domain.UpdateFileParam
+		if args[2] != nil {
+			arg2 = args[2].(domain.UpdateFileParam)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFileRepository_Update_Call) Return(file *domain.File, err error) *MockFileRepository_Update_Call {
+	_c.Call.Return(file, err)
+	return _c
+}
+
+func (_c *MockFileRepository_Update_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, updateParam domain.UpdateFileParam) (*domain.File, error)) *MockFileRepository_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

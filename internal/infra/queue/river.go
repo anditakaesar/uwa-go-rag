@@ -47,10 +47,16 @@ func (r *RiverQueue) EnqueueChat(ctx context.Context, words []string) error {
 	return err
 }
 
-func (r *RiverQueue) EnqueueRagFile(ctx context.Context, ragFileID int64) error {
+func (r *RiverQueue) EnqueueRagFile(ctx context.Context, fileID uuid.UUID, objectKey string) error {
 	_, err := r.client.Insert(ctx, worker.ProcessDocArgs{
-		RagFileID: ragFileID,
-	}, nil) // add maxattempts here
+		FileID:    fileID.String(),
+		ObjectKey: objectKey,
+	}, nil)
+	return err
+}
+
+func (r *RiverQueue) EnqueueGenerateChunks(ctx context.Context, args worker.GenerateChunksArgs) error {
+	_, err := r.client.Insert(ctx, args, nil)
 	return err
 }
 

@@ -9,6 +9,7 @@ import (
 	"io"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
+	"github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -37,6 +38,197 @@ type MockFileService_Expecter struct {
 
 func (_m *MockFileService) EXPECT() *MockFileService_Expecter {
 	return &MockFileService_Expecter{mock: &_m.Mock}
+}
+
+// Delete provides a mock function for the type MockFileService
+func (_mock *MockFileService) Delete(ctx context.Context, id uuid.UUID) error {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Delete")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockFileService_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type MockFileService_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *MockFileService_Expecter) Delete(ctx any, id any) *MockFileService_Delete_Call {
+	return &MockFileService_Delete_Call{Call: _e.mock.On("Delete", ctx, id)}
+}
+
+func (_c *MockFileService_Delete_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockFileService_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFileService_Delete_Call) Return(err error) *MockFileService_Delete_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockFileService_Delete_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) error) *MockFileService_Delete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FetchAll provides a mock function for the type MockFileService
+func (_mock *MockFileService) FetchAll(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error) {
+	ret := _mock.Called(ctx, param)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FetchAll")
+	}
+
+	var r0 []domain.File
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllFilesParam) ([]domain.File, error)); ok {
+		return returnFunc(ctx, param)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FindAllFilesParam) []domain.File); ok {
+		r0 = returnFunc(ctx, param)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.File)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.FindAllFilesParam) error); ok {
+		r1 = returnFunc(ctx, param)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockFileService_FetchAll_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FetchAll'
+type MockFileService_FetchAll_Call struct {
+	*mock.Call
+}
+
+// FetchAll is a helper method to define mock.On call
+//   - ctx context.Context
+//   - param *domain.FindAllFilesParam
+func (_e *MockFileService_Expecter) FetchAll(ctx any, param any) *MockFileService_FetchAll_Call {
+	return &MockFileService_FetchAll_Call{Call: _e.mock.On("FetchAll", ctx, param)}
+}
+
+func (_c *MockFileService_FetchAll_Call) Run(run func(ctx context.Context, param *domain.FindAllFilesParam)) *MockFileService_FetchAll_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *domain.FindAllFilesParam
+		if args[1] != nil {
+			arg1 = args[1].(*domain.FindAllFilesParam)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFileService_FetchAll_Call) Return(files []domain.File, err error) *MockFileService_FetchAll_Call {
+	_c.Call.Return(files, err)
+	return _c
+}
+
+func (_c *MockFileService_FetchAll_Call) RunAndReturn(run func(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error)) *MockFileService_FetchAll_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GeneratePresignDownloadURL provides a mock function for the type MockFileService
+func (_mock *MockFileService) GeneratePresignDownloadURL(ctx context.Context, fileID uuid.UUID) (string, error) {
+	ret := _mock.Called(ctx, fileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GeneratePresignDownloadURL")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (string, error)); ok {
+		return returnFunc(ctx, fileID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) string); ok {
+		r0 = returnFunc(ctx, fileID)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = returnFunc(ctx, fileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockFileService_GeneratePresignDownloadURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GeneratePresignDownloadURL'
+type MockFileService_GeneratePresignDownloadURL_Call struct {
+	*mock.Call
+}
+
+// GeneratePresignDownloadURL is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fileID uuid.UUID
+func (_e *MockFileService_Expecter) GeneratePresignDownloadURL(ctx any, fileID any) *MockFileService_GeneratePresignDownloadURL_Call {
+	return &MockFileService_GeneratePresignDownloadURL_Call{Call: _e.mock.On("GeneratePresignDownloadURL", ctx, fileID)}
+}
+
+func (_c *MockFileService_GeneratePresignDownloadURL_Call) Run(run func(ctx context.Context, fileID uuid.UUID)) *MockFileService_GeneratePresignDownloadURL_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFileService_GeneratePresignDownloadURL_Call) Return(s string, err error) *MockFileService_GeneratePresignDownloadURL_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *MockFileService_GeneratePresignDownloadURL_Call) RunAndReturn(run func(ctx context.Context, fileID uuid.UUID) (string, error)) *MockFileService_GeneratePresignDownloadURL_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // GeneratePresignURL provides a mock function for the type MockFileService
@@ -107,68 +299,6 @@ func (_c *MockFileService_GeneratePresignURL_Call) RunAndReturn(run func(ctx con
 	return _c
 }
 
-// ListFiles provides a mock function for the type MockFileService
-func (_mock *MockFileService) ListFiles(ctx context.Context) ([]string, error) {
-	ret := _mock.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListFiles")
-	}
-
-	var r0 []string
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]string, error)); ok {
-		return returnFunc(ctx)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) []string); ok {
-		r0 = returnFunc(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = returnFunc(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockFileService_ListFiles_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListFiles'
-type MockFileService_ListFiles_Call struct {
-	*mock.Call
-}
-
-// ListFiles is a helper method to define mock.On call
-//   - ctx context.Context
-func (_e *MockFileService_Expecter) ListFiles(ctx any) *MockFileService_ListFiles_Call {
-	return &MockFileService_ListFiles_Call{Call: _e.mock.On("ListFiles", ctx)}
-}
-
-func (_c *MockFileService_ListFiles_Call) Run(run func(ctx context.Context)) *MockFileService_ListFiles_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		run(
-			arg0,
-		)
-	})
-	return _c
-}
-
-func (_c *MockFileService_ListFiles_Call) Return(strings []string, err error) *MockFileService_ListFiles_Call {
-	_c.Call.Return(strings, err)
-	return _c
-}
-
-func (_c *MockFileService_ListFiles_Call) RunAndReturn(run func(ctx context.Context) ([]string, error)) *MockFileService_ListFiles_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // Save provides a mock function for the type MockFileService
 func (_mock *MockFileService) Save(filename string, content io.Reader) (string, error) {
 	ret := _mock.Called(filename, content)
@@ -231,6 +361,80 @@ func (_c *MockFileService_Save_Call) Return(s string, err error) *MockFileServic
 }
 
 func (_c *MockFileService_Save_Call) RunAndReturn(run func(filename string, content io.Reader) (string, error)) *MockFileService_Save_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Update provides a mock function for the type MockFileService
+func (_mock *MockFileService) Update(ctx context.Context, id uuid.UUID, param domain.UpdateFileParam) (*domain.File, error) {
+	ret := _mock.Called(ctx, id, param)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 *domain.File
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, domain.UpdateFileParam) (*domain.File, error)); ok {
+		return returnFunc(ctx, id, param)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, domain.UpdateFileParam) *domain.File); ok {
+		r0 = returnFunc(ctx, id, param)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.File)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, domain.UpdateFileParam) error); ok {
+		r1 = returnFunc(ctx, id, param)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockFileService_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type MockFileService_Update_Call struct {
+	*mock.Call
+}
+
+// Update is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - param domain.UpdateFileParam
+func (_e *MockFileService_Expecter) Update(ctx any, id any, param any) *MockFileService_Update_Call {
+	return &MockFileService_Update_Call{Call: _e.mock.On("Update", ctx, id, param)}
+}
+
+func (_c *MockFileService_Update_Call) Run(run func(ctx context.Context, id uuid.UUID, param domain.UpdateFileParam)) *MockFileService_Update_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 domain.UpdateFileParam
+		if args[2] != nil {
+			arg2 = args[2].(domain.UpdateFileParam)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFileService_Update_Call) Return(file *domain.File, err error) *MockFileService_Update_Call {
+	_c.Call.Return(file, err)
+	return _c
+}
+
+func (_c *MockFileService_Update_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, param domain.UpdateFileParam) (*domain.File, error)) *MockFileService_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }
