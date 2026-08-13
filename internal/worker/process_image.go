@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"strings"
 
 	_ "image/jpeg"
 	_ "image/png"
@@ -54,6 +55,10 @@ func (w *ThumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailWork
 	file, err := w.fileSvc.Get(ctx, job.Args.ID)
 	if err != nil {
 		return err
+	}
+
+	if !strings.HasPrefix(file.MimeType, "image/") {
+		return nil
 	}
 
 	imgBuff, err := w.storageClient.GetObjectIntoBuffer(ctx, file.S3Key)

@@ -412,6 +412,11 @@ paths:
           schema:
             type: number
           description: page number (default 1)
+        - in: query
+          name: mimeTypes[]
+          schema:
+            type: string
+          description: filter files by mimeType, using axios default query array string
       responses:
         "200":
           description: OK
@@ -778,6 +783,11 @@ components:
           properties:
             pagination:
               $ref: "#/components/schemas/Pagination"
+            mimeTypes:
+              type: array
+              items:
+                type: string
+                example: "images/jpg"
 
   securitySchemes:
     BearerAuth: # Logical name for the scheme

@@ -204,6 +204,20 @@ func PresignURLReturnToResult(res *domain.GeneratePresignURLReturn) GeneratePres
 	}
 }
 
+type FetchFilesRequest struct {
+	MimeTypes []string
+}
+
+func (req *FetchFilesRequest) ParseParams(r *http.Request) {
+	q := r.URL.Query()
+	mTypes := q["mimeTypes[]"]
+	if len(mTypes) > 0 {
+		if strings.TrimSpace(mTypes[0]) != "" {
+			req.MimeTypes = mTypes
+		}
+	}
+}
+
 // handler
 type FileApi struct {
 	FileService FileService
@@ -223,10 +237,14 @@ func NewFileApi(dep FileApiDependency) *FileApi {
 }
 
 func (h *FileApi) FetchFiles(w http.ResponseWriter, r *http.Request) error {
+	var req FetchFilesRequest
+	req.ParseParams(r)
 	pagination := handler.ParsePagination(r)
 	param := &domain.FindAllFilesParam{
 		Pagination: pagination,
+		MimeTypes:  req.MimeTypes,
 	}
+
 	result, err := h.FileService.FetchAll(r.Context(), param)
 	if err != nil {
 		return err

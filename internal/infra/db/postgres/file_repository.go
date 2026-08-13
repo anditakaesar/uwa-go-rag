@@ -90,6 +90,10 @@ func (r *FileRepository) FindAll(ctx context.Context, param *domain.FindAllFiles
 	selectQuery := pgq.Select(fileColumns).
 		From("files").OrderBy("created_at DESC")
 
+	if len(param.MimeTypes) > 0 {
+		selectQuery = selectQuery.Where(pgq.Eq{"mime_type": param.MimeTypes})
+	}
+
 	countQuery, countArgs, err := pgq.Select(COUNT_AS_TOTAL).FromSelect(selectQuery, "u").SQL()
 	if err != nil {
 		return nil, err

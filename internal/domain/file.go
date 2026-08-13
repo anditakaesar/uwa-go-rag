@@ -49,6 +49,7 @@ func (f *File) GeneratePublicThumbnailKey() string {
 
 type FindAllFilesParam struct {
 	Pagination common.Pagination `json:"pagination"`
+	MimeTypes  []string          `json:"mimeTypes"`
 }
 
 func (p *FindAllFilesParam) Normalize() {
