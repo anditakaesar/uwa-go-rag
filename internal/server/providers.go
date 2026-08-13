@@ -66,8 +66,9 @@ func newClientSet(infraStorage *storage.S3Client) *clientSet {
 			BucketPrefix:  env.Get().S3Config.S3Prefix,
 		}),
 		aiClient: ai.NewClient(ai.ClientDependency{
-			BaseURL: env.Get().Values.AIBaseURL,
-			ApiKey:  env.Get().Values.AIAPIKey,
+			BaseURL:        env.Get().Values.AIBaseURL,
+			ApiKey:         env.Get().Values.AIAPIKey,
+			EmbeddingModel: env.Get().Values.AIEmbeddingModel,
 		}),
 		riverQueue: queue.NewRiverQueue(),
 		tokenizer:  tokenization.NewSimpleTokenizer(),

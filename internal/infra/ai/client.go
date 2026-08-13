@@ -10,12 +10,20 @@ import (
 )
 
 type AIClient struct {
-	client openai.Client
+	client         openai.Client
+	embeddingModel string
+	embeddingDims  int64
 }
 
+// EmbeddingDimensions is the fixed vector dimension for this MVP. It must match
+// the configured embedding model's output size and the chunks.embedding
+// VECTOR(n) column size.
+const EmbeddingDimensions int64 = 1536
+
 type ClientDependency struct {
-	BaseURL string
-	ApiKey  string
+	BaseURL        string
+	ApiKey         string
+	EmbeddingModel string
 }
 
 func NewClient(dep ClientDependency) *AIClient {
@@ -24,8 +32,15 @@ func NewClient(dep ClientDependency) *AIClient {
 		option.WithAPIKey(dep.ApiKey),
 	)
 
+	model := dep.EmbeddingModel
+	if model == "" {
+		model = "text-embedding-bge-m3"
+	}
+
 	return &AIClient{
-		client: client,
+		client:         client,
+		embeddingModel: model,
+		embeddingDims:  EmbeddingDimensions,
 	}
 }
 
@@ -60,12 +75,29 @@ func (b *AIClient) SendPrompt(ctx context.Context, prompt string) (string, error
 }
 
 func (b *AIClient) SendTextForEmbedding(ctx context.Context, text string) ([]float64, error) {
+	vec, err := b.Embed(ctx, text)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]float64, len(vec))
+	for i, v := range vec {
+		res[i] = float64(v)
+	}
+	return res, nil
+}
+
+// Embed returns the vector representation of text via the configured
+// OpenAI-compatible embeddings endpoint. The model comes from the client
+// config (AI_EMBEDDING_MODEL); the dimension (1536) is fixed and must match
+// the configured model's output. pgvector stores float32.
+func (b *AIClient) Embed(ctx context.Context, text string) ([]float32, error) {
 	resp, err := b.client.Embeddings.New(ctx, openai.EmbeddingNewParams{
 		Input: openai.EmbeddingNewParamsInputUnion{
 			OfString: openai.String(text),
 		},
-		Model:          "text-embedding-bge-m3",
-		Dimensions:     openai.Int(1536),
+		Model:          b.embeddingModel,
+		Dimensions:     openai.Int(b.embeddingDims),
 		EncodingFormat: openai.EmbeddingNewParamsEncodingFormatFloat,
 	})
 	if err != nil {
@@ -73,7 +105,12 @@ func (b *AIClient) SendTextForEmbedding(ctx context.Context, text string) ([]flo
 	}
 
 	if len(resp.Data) > 0 {
-		return resp.Data[0].Embedding, nil
+		emb := resp.Data[0].Embedding
+		vec := make([]float32, len(emb))
+		for i, v := range emb {
+			vec[i] = float32(v)
+		}
+		return vec, nil
 	}
 
 	return nil, errors.New("no response from embedding endpoint")

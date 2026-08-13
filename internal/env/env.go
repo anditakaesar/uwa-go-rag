@@ -19,18 +19,19 @@ type Config struct {
 var loadOnce = sync.OnceValue(func() Config {
 	return Config{
 		Values: &Object{
-			Env:          os.Getenv("ENV"),
-			DBUrl:        os.Getenv("DB_URL"),
-			CookieSecret: os.Getenv("COOKIE_SECRET"),
-			CSRFSecret:   os.Getenv("CSRF_SECRET"),
-			JWTSecret:    os.Getenv("JWT_SECRET"),
-			JWTExpire:    getJWTExpireSession(),
-			PassSecret:   os.Getenv("PASS_SECRET"),
-			UploadDir:    os.Getenv("UPLOAD_DIR"),
-			HostName:     os.Getenv("HOSTNAME"),
-			AIBaseURL:    os.Getenv("AI_BASE_URL"),
-			AIAPIKey:     os.Getenv("AI_API_KEY"),
-			LogToFile:    getLogToFile(),
+			Env:              os.Getenv("ENV"),
+			DBUrl:            os.Getenv("DB_URL"),
+			CookieSecret:     os.Getenv("COOKIE_SECRET"),
+			CSRFSecret:       os.Getenv("CSRF_SECRET"),
+			JWTSecret:        os.Getenv("JWT_SECRET"),
+			JWTExpire:        getJWTExpireSession(),
+			PassSecret:       os.Getenv("PASS_SECRET"),
+			UploadDir:        os.Getenv("UPLOAD_DIR"),
+			HostName:         os.Getenv("HOSTNAME"),
+			AIBaseURL:        os.Getenv("AI_BASE_URL"),
+			AIAPIKey:         os.Getenv("AI_API_KEY"),
+			AIEmbeddingModel: getAIEmbeddingModel(),
+			LogToFile:        getLogToFile(),
 		},
 
 		CorsOptions: &CorsOptions{
@@ -65,19 +66,20 @@ func Get() Config {
 }
 
 type Object struct {
-	Env          string
-	Port         string
-	DBUrl        string
-	CookieSecret string
-	CSRFSecret   string
-	JWTSecret    string
-	JWTExpire    int
-	PassSecret   string
-	UploadDir    string
-	HostName     string
-	AIBaseURL    string
-	AIAPIKey     string
-	LogToFile    bool
+	Env              string
+	Port             string
+	DBUrl            string
+	CookieSecret     string
+	CSRFSecret       string
+	JWTSecret        string
+	JWTExpire        int
+	PassSecret       string
+	UploadDir        string
+	HostName         string
+	AIBaseURL        string
+	AIAPIKey         string
+	AIEmbeddingModel string
+	LogToFile        bool
 }
 
 type CorsOptions struct {
@@ -129,6 +131,15 @@ func getLogToFile() bool {
 		return true
 	}
 	return false
+}
+
+const DefaultAIEmbeddingModel = "text-embedding-bge-m3"
+
+func getAIEmbeddingModel() string {
+	if model := os.Getenv("AI_EMBEDDING_MODEL"); model != "" {
+		return model
+	}
+	return DefaultAIEmbeddingModel
 }
 
 func GetLogLevel() slog.Level {
