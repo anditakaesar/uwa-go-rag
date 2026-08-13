@@ -107,7 +107,7 @@ func SetupMainRoutes(router chi.Router, h *MainHandler) {
 			},
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
-				middlewares.CSRFMiddleware(),
+				middlewares.CSRFMiddleware([]byte(env.Get().Values.CSRFSecret)),
 			},
 		},
 		{
@@ -119,7 +119,7 @@ func SetupMainRoutes(router chi.Router, h *MainHandler) {
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
 				//middlewares.RequireRole([]domain.Role{domain.RoleAdmin}),
-				middlewares.CSRFMiddleware(),
+				middlewares.CSRFMiddleware([]byte(env.Get().Values.CSRFSecret)),
 			},
 		},
 		{
@@ -130,13 +130,13 @@ func SetupMainRoutes(router chi.Router, h *MainHandler) {
 			},
 			Middlewares: []func(http.Handler) http.Handler{
 				middlewares.RequireAuth(),
-				middlewares.CSRFMiddleware(),
+				middlewares.CSRFMiddleware([]byte(env.Get().Values.CSRFSecret)),
 			},
 		},
 	}
 
 	router.Group(func(r chi.Router) {
-		r.Use(middlewares.CSRFMiddleware())
+		r.Use(middlewares.CSRFMiddleware([]byte(env.Get().Values.CSRFSecret)))
 		for _, endpoint := range endpoints {
 			r.MethodFunc(endpoint.HttpMethod, endpoint.Path, endpoint.Handler)
 		}

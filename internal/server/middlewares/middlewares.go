@@ -36,7 +36,7 @@ type UserService interface {
 
 type Middleware func(http.Handler) http.Handler
 
-func CSRFMiddleware() Middleware {
+func CSRFMiddleware(secret []byte) Middleware {
 	secure := !env.Get().Values.IsDevelopment()
 
 	opts := []csrf.Option{
@@ -52,10 +52,7 @@ func CSRFMiddleware() Middleware {
 		)
 	}
 
-	return csrf.Protect(
-		[]byte(env.Get().Values.CSRFSecret),
-		opts...,
-	)
+	return csrf.Protect(secret, opts...)
 }
 
 func ResolveAuth(

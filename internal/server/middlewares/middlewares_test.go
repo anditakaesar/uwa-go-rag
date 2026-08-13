@@ -42,6 +42,8 @@ func setupMocks() *mockItems {
 func TestCSRFMiddleware(test *testing.T) {
 	test.Parallel()
 
+	const secret = "32-byte-test-secret-key-1234567890"
+
 	test.Run("reject missing token", func(t *testing.T) {
 		// Setup a dummy handler that should only be reached if CSRF passes
 		nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +51,7 @@ func TestCSRFMiddleware(test *testing.T) {
 		})
 
 		// Apply the middleware
-		middleware := middlewares.CSRFMiddleware()
+		middleware := middlewares.CSRFMiddleware([]byte(secret))
 		handlerToTest := middleware(nextHandler)
 
 		// Create a POST request (CSRF usually ignores GET/HEAD by default)
@@ -77,7 +79,7 @@ func TestCSRFMiddleware(test *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		})
 
-		middleware := middlewares.CSRFMiddleware()
+		middleware := middlewares.CSRFMiddleware([]byte(secret))
 		handlerToTest := middleware(nextHandler)
 
 		// GET requests usually generate the token but don't enforce it
