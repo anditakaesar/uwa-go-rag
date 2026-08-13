@@ -10,7 +10,7 @@ The chunking pipeline (`ProcessDocWorker` → `ChunkGeneratorWorker`) currently 
 
 This MVP also introduces a **per-file ingestion flag** — `files.embedding_status` — that durably records whether a file's chunks have been fully ingested (embedded) into the vector store. The existing `files.status` (`upload_status`) only tracks the object-upload lifecycle and says nothing about embedding progress; without a dedicated flag the system cannot distinguish *"uploaded but not yet embedded"* from *"fully embedded and retrievable"*, cannot tell a partially ingested file from a complete one, and cannot discover files that predate this rollout (the backfill backlog).
 
-The embedding client stays swappable by **configuration only**: the `openai-go` SDK already accepts a custom `BaseURL`, so switching between LM Studio, OpenAI, DeepSeek, or any OpenAI-compatible `/v1/embeddings` service is a config change (`AI_BASE_URL` env var), not a code change. The **model name is parameterized** via an `AI_EMBEDDING_MODEL` env var so the operator can point the pipeline at whatever embedding model the active provider exposes (e.g. a model served locally by LM Studio). Only the embedding dimension (`1536`) remains hardcoded for this MVP and must match the provider's output.
+The embedding client stays swappable by **configuration only**: the `openai-go` SDK already accepts a custom `BaseURL`, so switching between LM Studio, OpenAI, DeepSeek, or any OpenAI-compatible `/v1/embeddings` service is a config change (`AI_BASE_URL` env var), not a code change. The **model name is parameterized** via an `AI_EMBEDDING_MODEL` env var so the operator can point the pipeline at whatever embedding model the active provider exposes (e.g. a model served locally by LM Studio). Only the embedding dimension (`1024`) remains hardcoded for this MVP and must match the provider's output.
 
 This document also analyzes the schema impact and concludes that a dedicated `embedding VECTOR` column on the `chunks` table **is required** for the retrieval pipeline that will build on top.
 
@@ -21,8 +21,8 @@ This document also analyzes the schema impact and concludes that a dedicated `em
 ### In-Scope (MVP)
 
 * **Per-chunk embedding generation** inside the existing Job 2 worker (`ChunkGeneratorWorker`) before `StoreBatch`, so each persisted chunk carries a vector from day one.
-* **OpenAI-compatible endpoint abstraction**: the embedder is consumed through a narrow interface; the concrete client is the existing `AIClient` (`internal/infra/ai/client.go`), configured via `AIBaseURL` / `AIAPIKey` / `AIEmbeddingModel` env vars. The model name is configurable; the embedding dimension (`1536`) is a hardcoded constant for this MVP.
-* **pgvector schema change**: `embedding VECTOR(1536) NOT NULL` column on `chunks`, `CREATE EXTENSION vector`, and an ANN (HNSW) cosine index.
+* **OpenAI-compatible endpoint abstraction**: the embedder is consumed through a narrow interface; the concrete client is the existing `AIClient` (`internal/infra/ai/client.go`), configured via `AIBaseURL` / `AIAPIKey` / `AIEmbeddingModel` env vars. The model name is configurable; the embedding dimension (`1024`) is a hardcoded constant for this MVP.
+* **pgvector schema change**: `embedding VECTOR(1024) NOT NULL` column on `chunks`, `CREATE EXTENSION vector`, and an ANN (HNSW) cosine index.
 * **Per-file ingestion flag**: `files.embedding_status` (`pending` → `processing` → `completed` / `failed`) tracking whether a file's chunks have been fully embedded, plus a completion job so the flag only turns `completed` once every chunk of the file carries a non-null vector.
 * **pgx integration**: register the pgvector Go type so `ChunkRepository` can read/write vectors with pgx v5.
 * **Retrieval-ready search contract**: add `SearchSimilar` to `ChunkRepository` (cosine distance, optional threshold + limit) so retrieval can be built without further repo work.
@@ -125,7 +125,7 @@ Defined in the consuming layer (`internal/worker`), implemented by the existing 
 type Embedder interface {
     // Embed returns the vector representation of text via the configured
     // OpenAI-compatible embeddings endpoint. The model comes from the client
-    // config (AI_EMBEDDING_MODEL); dimension (1536) is fixed at the client
+    // config (AI_EMBEDDING_MODEL); dimension (1024) is fixed at the client
     // layer and must match the configured model's output.
     Embed(ctx context.Context, text string) ([]float32, error)
 }
@@ -147,7 +147,7 @@ type ClientDependency struct {
 ```
 
 * **Model (configurable):** `AI_EMBEDDING_MODEL` env var (e.g. `text-embedding-bge-m3`, `text-embedding-3-large`, or a locally served model name in LM Studio), defaulting to `text-embedding-bge-m3` when unset. Threaded through `ClientDependency.EmbeddingModel` → `openai.EmbeddingNewParams.Model`.
-* **Dimension (hardcoded for MVP):** `1536` — must equal the configured model's output dimension and the `VECTOR(n)` column size. If the chosen model outputs a different dimension, the column and client constant must be aligned together.
+* **Dimension (hardcoded for MVP):** `1024` — must equal the configured model's output dimension and the `VECTOR(n)` column size. If the chosen model outputs a different dimension, the column and client constant must be aligned together.
 * **Provider compatibility:** any service exposing `POST /v1/embeddings` with the OpenAI request/response shape (LM Studio: `http://localhost:1234/v1`, OpenAI, DeepSeek, vLLM, Ollama, etc.). Retry/timeout policy on the embeddings call is inherited from River job retry + the SDK's default transport.
 
 ### 3.3 domain.Chunk + ChunkRepository
@@ -164,7 +164,7 @@ type Chunk struct {
     HeadingPath []string
     ContentHash string
     Metadata    map[string]any
-    Embedding   []float32 `json:"embedding,omitempty"` // pgvector, 1536-d, absent until Job 2 embeds
+    Embedding   []float32 `json:"embedding,omitempty"` // pgvector, 1024-d, absent until Job 2 embeds
     CreatedAt   time.Time
 }
 ```
@@ -307,7 +307,7 @@ func (w *MarkFileEmbeddedWorker) Work(ctx context.Context, job *river.Job[MarkFi
 | **1:1 cardinality** | One embedding per chunk. A separate `chunk_embeddings` table adds a join for zero benefit; a column matches `domain.Chunk` 1:1 and the existing repo contract. |
 | **pgvector support** | Assumed available (postgres running the `vector` extension). Column type `VECTOR(n)` with an HNSW index gives ANN search without external infra. |
 | **Consistency with query** | Embedding the context-prepended `chunk.Content` at write time lets the future query path embed the same shape of text and compare apples-to-apples. |
-| **Dimension coupling** | `VECTOR(1536)` must equal the hardcoded `Dimensions: 1536` client constant, which in turn must match the `AI_EMBEDDING_MODEL` model's output. If the model is swapped for one with different dims, the column and the client constant must be recreated + backfilled together — acceptable for MVP, tracked as a deferred re-embedding concern. |
+| **Dimension coupling** | `VECTOR(1024)` must equal the hardcoded `Dimensions: 1024` client constant, which in turn must match the `AI_EMBEDDING_MODEL` model's output. If the model is swapped for one with different dims, the column and the client constant must be recreated + backfilled together — acceptable for MVP, tracked as a deferred re-embedding concern. |
 | **NOT NULL timing** | Column is added `NOT NULL` and populated in the same write (`StoreBatch`) so no null state exists in normal flow. |
 
 ### 4.1 Migration — `db/migrations/000006_add_embedding_ingestion.{up,down}.sql`
@@ -321,7 +321,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TYPE embedding_status AS ENUM ('pending', 'processing', 'completed', 'failed');
 
 ALTER TABLE "public"."chunks"
-    ADD COLUMN embedding VECTOR(1536) NOT NULL;
+    ADD COLUMN embedding VECTOR(1024) NOT NULL;
 
 CREATE INDEX idx_chunks_embedding_hnsw
     ON "public"."chunks"
@@ -381,8 +381,8 @@ Phase 4: File Ingestion Flag ─────────────► embeddin
 Phase 5: Search Contract + Tests ─────────► SearchSimilar + repo/worker unit & integration tests
 ```
 
-* **Week 1:** Add `Embedder` interface; extend `AIClient` with an `Embed` method returning `[]float32`, taking the model from `ClientDependency.EmbeddingModel`; add `AI_EMBEDDING_MODEL` env var (`env.Object.AIEmbeddingModel`, default `text-embedding-bge-m3`); keep dims `1536` constant.
-* **Week 2:** Add `000006_add_embedding_ingestion` migration (`extension vector`, `VECTOR(1536)` column + HNSW index, `files.embedding_status` enum column defaulting to `pending`) and the `down` file; add `github.com/pgvector/pgvector-go` and register it in `postgres.New`; extend `domain.File`/`UpdateFileParam` and `FileRepository` (columns, scan, update).
+* **Week 1:** Add `Embedder` interface; extend `AIClient` with an `Embed` method returning `[]float32`, taking the model from `ClientDependency.EmbeddingModel`; add `AI_EMBEDDING_MODEL` env var (`env.Object.AIEmbeddingModel`, default `text-embedding-bge-m3`); keep dims `1024` constant.
+* **Week 2:** Add `000006_add_embedding_ingestion` migration (`extension vector`, `VECTOR(1024)` column + HNSW index, `files.embedding_status` enum column defaulting to `pending`) and the `down` file; add `github.com/pgvector/pgvector-go` and register it in `postgres.New`; extend `domain.File`/`UpdateFileParam` and `FileRepository` (columns, scan, update).
 * **Week 3:** Extend `domain.Chunk` with `Embedding`; inject `Embedder` into `ChunkGeneratorWorker` and call it before `StoreBatch`; update `StoreBatch`/`scanChunkRow` for the vector column; `ProcessDocWorker` sets `embedding_status='processing'` and enqueues `Mark-File-Embedded{ExpectedChunks}`; add `MarkFileEmbeddedWorker` (flips to `completed` only when all chunks are embedded, retries otherwise); wire `JobQueue.EnqueueMarkFileEmbedded`, `FileService.SetEmbeddingStatus`, `ChunkRepository.CountEmbeddedByFileID` in `worker/setup.go`, `worker/adapter.go` and `providers.go`.
 * **Week 4:** Add `SearchSimilar` to `ChunkRepository` (cosine distance, threshold, limit); update mockery mocks; add tests (worker embeds-then-stores; flag transitions `pending→processing→completed` and never `completed` before all chunks embedded; repo round-trips and orders by similarity; retry on embed failure) matching existing mockery + testify patterns.
 
@@ -390,8 +390,8 @@ Phase 5: Search Contract + Tests ─────────► SearchSimilar + 
 
 ## 7. Success Criteria
 
-1. **Vector persistence:** Every chunk stored by the ingestion pipeline has a non-null `embedding` of dimension 1536 (`SELECT count(*) FROM chunks WHERE embedding IS NULL;` returns 0).
-2. **Swappable endpoint & model:** Pointing `AI_BASE_URL` at LM Studio, OpenAI, or DeepSeek (OpenAI-compatible `/v1/embeddings`) and setting `AI_EMBEDDING_MODEL` to a model available on that provider produces the same pipeline behavior with no code changes; only the model's dimension consistency (vs the `1536` constant) needs to hold.
+1. **Vector persistence:** Every chunk stored by the ingestion pipeline has a non-null `embedding` of dimension 1024 (`SELECT count(*) FROM chunks WHERE embedding IS NULL;` returns 0).
+2. **Swappable endpoint & model:** Pointing `AI_BASE_URL` at LM Studio, OpenAI, or DeepSeek (OpenAI-compatible `/v1/embeddings`) and setting `AI_EMBEDDING_MODEL` to a model available on that provider produces the same pipeline behavior with no code changes; only the model's dimension consistency (vs the `1024` constant) needs to hold.
 3. **Index readiness:** `idx_chunks_embedding_hnsw` exists and is used (`EXPLAIN` on a `SearchSimilar` query shows an index/ANN scan).
 4. **Search contract:** `SearchSimilar` returns chunks ranked by cosine similarity, respects `limit` and `threshold`, and is covered by unit tests.
 5. **Failure recovery:** A transient embeddings API error causes the chunk job to retry (River) and eventually persists the chunk with a valid vector.

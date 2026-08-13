@@ -74,7 +74,7 @@ No new embedding client, model, or storage layer is needed — FAQ answers flow 
 │  embed(Content) → StoreBatch                  │
 └────────────────────┬─────────────────────────┘
                      ▼
-   [chunks table] embedding VECTOR(1536), file_id = FAQ virtual file,
+   [chunks table] embedding VECTOR(1024), file_id = FAQ virtual file,
                   metadata = {"source":"faq","faq_id":<id>}
                      │
                      ▼

@@ -18,7 +18,7 @@ type AIClient struct {
 // EmbeddingDimensions is the fixed vector dimension for this MVP. It must match
 // the configured embedding model's output size and the chunks.embedding
 // VECTOR(n) column size.
-const EmbeddingDimensions int64 = 1536
+const EmbeddingDimensions int64 = 1024
 
 type ClientDependency struct {
 	BaseURL        string
@@ -89,7 +89,7 @@ func (b *AIClient) SendTextForEmbedding(ctx context.Context, text string) ([]flo
 
 // Embed returns the vector representation of text via the configured
 // OpenAI-compatible embeddings endpoint. The model comes from the client
-// config (AI_EMBEDDING_MODEL); the dimension (1536) is fixed and must match
+// config (AI_EMBEDDING_MODEL); the dimension (1024) is fixed and must match
 // the configured model's output. pgvector stores float32.
 func (b *AIClient) Embed(ctx context.Context, text string) ([]float32, error) {
 	resp, err := b.client.Embeddings.New(ctx, openai.EmbeddingNewParams{

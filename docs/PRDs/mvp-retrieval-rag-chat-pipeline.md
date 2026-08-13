@@ -19,7 +19,7 @@ The flow is **synchronous** (request/response from the HTTP handler), reusing th
 ### In-Scope (MVP)
 
 * **Synchronous RAG query flow** triggered from the existing HTTP web handler `ChatApi.SendMessage` (`POST /chat/raw`, `internal/chat/handler.go`).
-* **Query embedding** reusing the ingestion `Embedder` contract and the same `AI_EMBEDDING_MODEL` env var + hardcoded `1536` dimension, guaranteeing query/stored vector compatibility.
+* **Query embedding** reusing the ingestion `Embedder` contract and the same `AI_EMBEDDING_MODEL` env var + hardcoded `1024` dimension, guaranteeing query/stored vector compatibility.
 * **Vector search** via `ChunkRepository.SearchSimilar` (cosine distance, HNSW index, top-k + similarity threshold) — the search method already specified in the ingestion PRD.
 * **Prompt augmentation**: retrieved chunks (context-prepended `Content` + `HeadingPath` + file reference) are injected as ground-truth context into the LLM call with an instruction to answer strictly from the retrieved context and cite sources.
 * **Grounded answer & no-tool enforcement**: the LLM call is made with **zero tools** (no function calling, no web/search tool) and an explicit instruction to answer only from the injected context; on insufficient context the model returns the fixed "I don't know" message.
@@ -92,7 +92,7 @@ type Embedder interface {
 }
 ```
 
-> **Consistency requirement:** retrieval must use the **same** `AI_EMBEDDING_MODEL` and dimension (`1536`) as ingestion, or query vectors will be incomparable to stored vectors. Both paths read from the same `AIClient` instance/config.
+> **Consistency requirement:** retrieval must use the **same** `AI_EMBEDDING_MODEL` and dimension (`1024`) as ingestion, or query vectors will be incomparable to stored vectors. Both paths read from the same `AIClient` instance/config.
 
 ### 3.2 Retrieval Repository (consumer-side, `internal/chat`)
 
