@@ -210,7 +210,7 @@ type FetchFilesRequest struct {
 
 func (req *FetchFilesRequest) ParseParams(r *http.Request) {
 	q := r.URL.Query()
-	mTypes := q["mimeTypes[]"]
+	mTypes := q["mimeTypes"]
 	if len(mTypes) > 0 {
 		if strings.TrimSpace(mTypes[0]) != "" {
 			req.MimeTypes = mTypes
