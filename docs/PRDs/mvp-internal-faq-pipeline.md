@@ -11,12 +11,23 @@ The RAG chat pipeline returns a fixed *"I don't know"* answer when no grounded c
 The pipeline after an internal user saves an answer reuses the existing ingestion machinery end-to-end:
 
 ```
-internal user saves answer  →  enqueue FaqIndexWorker  →  rag.BuildChunks("# {question}\n\n{answer}")
-    →  GenerateChunksArgs (metadata: source=faq, faq_id)  →  ChunkGeneratorWorker embeds & stores
-    →  chunks table (pgvector)  →  SearchSimilar now returns FAQ chunks for future chats
+internal user saves answer  →  enqueue Index-FAQ job  →  FaqIndexWorker:
+    render "# {question}\n\n{answer}" → delete stale chunks → upload markdown to S3
+    → enqueue Process-RAG-File (existing)  →  ProcessDocWorker: rag.BuildChunks
+    → GenerateChunksArgs per chunk  →  ChunkGeneratorWorker embeds & stores
+    → chunks table (pgvector)  →  SearchSimilar now returns FAQ chunks for future chats
 ```
 
-No new embedding client, model, or storage layer is needed — FAQ answers flow through the **same** `rag.BuildChunks` + `ChunkGeneratorWorker` pipeline that ingests uploaded documents, reusing the exact same `AI_EMBEDDING_MODEL`, dimension, and pgvector index.
+No new embedding client, model, or storage layer is needed — FAQ answers flow through the **same** `rag.BuildChunks` + `ProcessDocWorker` + `ChunkGeneratorWorker` pipeline that ingests uploaded documents, reusing the exact same `AI_EMBEDDING_MODEL`, dimension, and pgvector index.
+
+### Key design decision: one `files` row per FAQ (derived state)
+
+FAQ chunks must satisfy `chunks.file_id NOT NULL REFERENCES files(id)` (ingestion contract). Instead of a single shared "virtual file" with a magic constant UUID — which cannot satisfy the `UNIQUE (file_id, chunk_index)` constraint across multiple FAQs and would leak a phantom row into the storage-facing `files` table — **each FAQ owns its own `files` row**:
+
+* `s3_key = 'faq/<faq_id>.md'` is **derived state**: it is reproducible from the `faqs` row at any time, so it can never be orphaned or "lost in the storage" — an audit can always tell which FAQ owns which file row, and re-indexing is idempotent.
+* The `faqs` table remains the curation **source of truth**; the `files` row exists purely as the ingestion-contract artifact (FK target + `embedding_status` lifecycle).
+* `UNIQUE (file_id, chunk_index)` keeps working exactly as designed (chunk position is unique *per FAQ*).
+* `SearchSimilar` needs **zero changes**: FAQ chunks are ordinary `chunks` rows.
 
 ---
 
@@ -26,9 +37,10 @@ No new embedding client, model, or storage layer is needed — FAQ answers flow 
 
 * **Unanswered-question capture** from the chat flow (`UnansweredRecorder` implemented by the FAQ service, wired in the retrieval PRD) with deduplication.
 * **Internal curation API**: internal users list unanswered questions and write answers; answering moves the FAQ to `answered`.
-* **Auto-indexing pipeline**: saving an answer enqueues a River job that synthesizes markdown, chunk sizes it, and reuses `ChunkGeneratorWorker` to embed + store the Q&A as a pgvector chunk.
+* **Auto-indexing pipeline**: saving an answer enqueues a River job that synthesizes markdown, (re)uploads it as the FAQ's file, and reuses the existing `Process-RAG-File` chain to chunk, embed, and store the Q&A as pgvector chunks.
 * **Retrieval integration**: FAQ chunks live in the same `chunks` table, so `SearchSimilar` picks them up automatically; citations surface the question as the heading path.
-* **Re-indexing on answer edits** (delete + regenerate the FAQ's chunks).
+* **Idempotent re-indexing on answer edits** (content-hash skip + delete-and-regenerate).
+* **File-listing isolation**: FAQ file rows are excluded from normal file listings.
 
 ### Out-of-Scope (Deferred)
 
@@ -48,34 +60,53 @@ No new embedding client, model, or storage layer is needed — FAQ answers flow 
        │  UnansweredRecorder.RecordUnanswered(question)
        ▼
 ┌──────────────────────────────────────────────┐
-│ faqs table  (status = 'unanswered')          │
+│ faqs table  (status = 'unanswered')          │  ← files row created here too
+│ files table  (s3_key = 'faq/<faq_id>.md')    │      (same transaction)
 └────────────────────┬─────────────────────────┘
                      │  Internal user lists & answers
                      ▼
 ┌──────────────────────────────────────────────┐
 │ FAQ Service.Answer(id, answer)               │
 │  status → 'answered', answered_by, answered_at│
-│  enqueue IndexFaqArgs{FAQID}                 │
+│  answer_content_hash = sha256(answer)        │
+│  enqueue IndexFaqArgs{FAQID}                 │  (after commit)
 └────────────────────┬─────────────────────────┘
                      ▼
          [River Queue (Postgres-backed)]
                      ▼
 ┌──────────────────────────────────────────────┐
-│ FaqIndexWorker (NEW)                         │
-│ 1. Load FAQ                                   │
-│ 2. markdown = "# {question}\n\n{answer}"      │
-│ 3. rag.BuildChunks(markdown) → FinalChunk(s) │
-│ 4. Emit GenerateChunksArgs (metadata faq_id)  │
+│ FaqIndexWorker (NEW, thin)                   │
+│ 1. Load FAQ; skip if not answered            │
+│ 2. Skip if last_indexed_hash == hash         │  (idempotent)
+│ 3. Delete existing chunks (DeleteByFileID)   │
+│ 4. Upload "# {question}\n\n{answer}" → S3    │
+│ 5. files.status → 'completed'                │
+│ 6. EnqueueRagFile(file_id, s3_key)           │
+│ 7. faqs.last_indexed_hash = hash             │
 └────────────────────┬─────────────────────────┘
-                     │  one GenerateChunksArgs per FinalChunk
+                     ▼
+┌──────────────────────────────────────────────┐
+│ ProcessDocWorker (EXISTING, reused)          │
+│ 1. files.embedding_status → 'processing'     │
+│ 2. GetObjectIntoBuffer(s3_key)               │
+│ 3. rag.BuildChunks(markdown) → FinalChunk(s) │
+│ 4. Emit one GenerateChunksArgs per chunk     │
+│ 5. Enqueue Mark-File-Embedded                │
+└────────────────────┬─────────────────────────┘
+                     │
                      ▼
 ┌──────────────────────────────────────────────┐
 │ ChunkGeneratorWorker (EXISTING, reused)      │
-│  embed(Content) → StoreBatch                  │
+│  embed(Content) → StoreBatch                 │
 └────────────────────┬─────────────────────────┘
                      ▼
-   [chunks table] embedding VECTOR(1024), file_id = FAQ virtual file,
-                  metadata = {"source":"faq","faq_id":<id>}
+┌──────────────────────────────────────────────┐
+│ MarkFileEmbeddedWorker (EXISTING, reused)    │
+│  embedding_status → 'completed' when all     │
+│  ExpectedChunks carry vectors                │
+└────────────────────┬─────────────────────────┘
+                     ▼
+   [chunks table] embedding VECTOR(1024), file_id = the FAQ's file row
                      │
                      ▼
    [Retrieval] SearchSimilar now retrieves FAQ chunks for future chats
@@ -83,18 +114,20 @@ No new embedding client, model, or storage layer is needed — FAQ answers flow 
 
 ### Flow Breakdown
 
-1. **Capture:** during a chat request, when grounding fails (retrieval PRD §4.6), `FAQService.RecordUnanswered` inserts a `faqs` row with `status = 'unanswered'`, deduplicated by `lower(question)`.
+1. **Capture:** during a chat request, when grounding fails (retrieval PRD §4.6), `FAQService.RecordUnanswered` inserts — in one transaction — a `files` row (`s3_key = 'faq/<faq_id>.md'`, `status = 'pending'`, `metadata = {"source":"faq"}`) **and** a `faqs` row with `status = 'unanswered'`, deduplicated by `lower(question)`.
 2. **Curate:** an internal user lists unanswered FAQs and writes the canonical answer.
-3. **Answer:** `FAQService.Answer` validates the answer, flips status to `answered`, records `answered_by`/`answered_at`, then enqueues `IndexFaqArgs{FAQID}`.
-4. **Synthesize & chunk:** `FaqIndexWorker` loads the FAQ, builds `# {question}\n\n{answer}`, and runs the existing deterministic `rag.BuildChunks` (question becomes the heading — the chunker's heading-context prepending is free).
-5. **Embed & store:** the worker emits one `GenerateChunksArgs` per finalized chunk with `FileID` = the FAQ virtual file and `Metadata = {"source":"faq","faq_id":<id>}`; the existing `ChunkGeneratorWorker` embeds `Content` and persists the chunk.
+3. **Answer:** `FAQService.Answer` validates the answer, flips status to `answered`, records `answered_by`/`answered_at`, stores `answer_content_hash = sha256(answer)`, then enqueues `IndexFaqArgs{FAQID}`.
+4. **Synthesize:** `FaqIndexWorker` loads the FAQ, renders `# {question}\n\n{answer}` (question as H1 heading — the chunker's heading-context prepending is free, and the heading path doubles as the citation label), deletes the FAQ's stale chunks, and uploads the markdown to `faq/<faq_id>.md`.
+5. **Chunk, embed, store (reused chain):** the worker enqueues the existing `Process-RAG-File` job; `ProcessDocWorker` runs `rag.BuildChunks`, emits one `GenerateChunksArgs` per finalized chunk, and `ChunkGeneratorWorker` embeds `Content` and persists the chunk. `MarkFileEmbeddedWorker` flips `embedding_status` to `completed` once every expected chunk carries a vector — the free "indexed" signal.
 6. **Retrieve:** future queries embed against the same model and `SearchSimilar` now includes the FAQ chunk; the answer is grounded and cited.
 
 ---
 
 ## 3. Data Model
 
-### 3.1 `faqs` table — migration `db/migrations/000007_add_faqs.up.sql`
+### 3.1 `faqs` table — migration `db/migrations/000008_add_faqs.up.sql`
+
+> Note: `000007` is already taken by `000007_add_audit_logs_created_at_index` — the FAQ migration is `000008`.
 
 ```sql
 CREATE TYPE faq_status AS ENUM ('unanswered', 'answered', 'dismissed');
@@ -106,8 +139,9 @@ CREATE TABLE "public"."faqs" (
     status              faq_status NOT NULL DEFAULT 'unanswered',
     asked_by            BIGINT,                     -- end-user who asked (nullable)
     answered_by         BIGINT,                     -- internal user (nullable)
-    file_id             UUID NOT NULL REFERENCES files(id),  -- FAQ virtual file (shared)
-    answer_content_hash VARCHAR(64),                -- for idempotent re-indexing
+    file_id             UUID NOT NULL REFERENCES files(id),  -- this FAQ's file row
+    answer_content_hash VARCHAR(64),                -- sha256 of the current answer
+    last_indexed_hash   VARCHAR(64),                -- sha256 of the answer actually embedded
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     answered_at         TIMESTAMPTZ,
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -119,35 +153,36 @@ CREATE UNIQUE INDEX uq_faqs_unanswered_question
     ON faqs (lower(question)) WHERE status = 'unanswered';
 ```
 
-`000007_add_faqs.down.sql` drops the table, type, and indexes.
+`000008_add_faqs.down.sql` drops the table, type, and indexes.
 
-### 3.2 FAQ Virtual File
+No changes to `chunks` or `files` — both tables and all their constraints (including `UNIQUE (file_id, chunk_index)`) work as-is.
 
-`chunks.file_id` is `NOT NULL REFERENCES files(id)` (ingestion contract), but FAQ chunks do not originate from an uploaded document. The MVP seeds a single **virtual FAQ file** row so FAQ chunks satisfy the FK without a schema change:
+### 3.2 FAQ File Row (derived state, not a shared virtual file)
+
+`chunks.file_id` is `NOT NULL REFERENCES files(id)` (ingestion contract). Each FAQ gets its **own** `files` row, created inside the same transaction as the `faqs` row at capture time (`RecordUnanswered`), so `faqs.file_id NOT NULL` always holds:
 
 ```sql
--- 000007_add_faqs.up.sql (same migration)
+-- Created by FaqRepository.RecordUnanswered within a UnitOfWork transaction.
+-- FaqID below is the faqs.id generated first.
 INSERT INTO "public"."files" (
     id, user_id, original_name, mime_type, size_bytes,
     s3_bucket, s3_key, status, metadata
 ) VALUES (
-    '00000000-0000-0000-0000-0000000000fa', -- fixed, well-known constant
-    0, 'Internal FAQ', 'text/markdown', 0,
-    '', 'faq/internal-faq', 'completed', '{"source":"faq-virtual"}'
+    uuidv7(), 0, 'Internal FAQ', 'text/markdown', 0,
+    '', 'faq/<faq_id>.md', 'pending', '{"source":"faq"}'
 );
 ```
 
-* The `id` is a **fixed constant** (`faqVirtualFileID`) shared between the migration and Go code, so `FaqIndexWorker` can reference it without lookups.
-* `user_id = 0` marks a system-owned row; normal file listings **must filter out** the virtual file (e.g. `metadata->>'source' != 'faq-virtual'` or `s3_key != 'faq/internal-faq'`).
-* Trade-off note: relaxing `file_id` to nullable would avoid the virtual file but changes the ingestion contract; deferred.
+* `s3_key = 'faq/<faq_id>.md'` is **derived from the FAQ** — reproducible at any time, never a magic constant. An audit, cleanup job, or re-index can always reconstruct it.
+* `user_id = 0` marks a system-owned row.
+* `status` starts `'pending'` and flips to `'completed'` when `FaqIndexWorker` uploads the markdown.
+* `embedding_status` starts `'pending'` (column default) and flows `'processing' → 'completed'` through the existing pipeline, driven by `MarkFileEmbeddedWorker` — the FAQ's "indexed" signal with zero new tracking code.
+* **File listings must exclude FAQ rows**: `FileRepository.FindAll` gains `s3_key NOT LIKE 'faq/%'` so the system-owned rows never surface (this also covers the listing count subquery, which is derived from the same select).
+* No S3 object exists until the first answer is saved — `RecordUnanswered` creates the row only; uploads happen in `FaqIndexWorker`.
 
-### 3.3 `chunks` metadata
+### 3.3 `chunks` rows
 
-FAQ chunks reuse the existing `chunks` table. The `metadata` JSONB tags them as FAQ-owned so re-indexing and future filtering can target them:
-
-```json
-{ "source": "faq", "faq_id": "<faq uuid>", "answered_at": "..." }
-```
+FAQ chunks reuse the existing `chunks` table unchanged: `file_id` = the FAQ's file row, `chunk_index` unique per FAQ, `heading_path` = `["# <question>"]`, plain `metadata = {}`. The `{"source":"faq"}` tag lives on the `files` row, not the chunks. Chunk-level tagging (and therefore FAQ-only source filtering) is deferred; re-indexing targets chunks by `file_id` via the existing `DeleteByFileID`.
 
 ---
 
@@ -174,6 +209,7 @@ type FAQ struct {
     AnsweredBy        *int64
     FileID            uuid.UUID
     AnswerContentHash string
+    LastIndexedHash   string
     CreatedAt         time.Time
     AnsweredAt        *time.Time
     UpdatedAt         time.Time
@@ -189,8 +225,13 @@ type Repository interface {
     ListByStatus(ctx context.Context, status domain.FAQStatus, limit, offset int) ([]domain.FAQ, error)
     Get(ctx context.Context, id uuid.UUID) (*domain.FAQ, error)
     Answer(ctx context.Context, id uuid.UUID, answer string, answeredBy int64, now time.Time) (*domain.FAQ, error)
+    SetLastIndexedHash(ctx context.Context, id uuid.UUID, hash string) error
 }
 ```
+
+Notes:
+* `RecordUnanswered` creates the `files` row and the `faqs` row in **one transaction** (`application.UnitOfWork` — the same pattern `user`/`file` services use).
+* `Answer` sets `answer_content_hash = sha256(answer)` alongside the status flip.
 
 ### 4.3 FAQ Service
 
@@ -201,13 +242,16 @@ type Service struct {
     queue JobQueue
 }
 
-// Implements chat.UnansweredRecorder (retrieval PRD §3.4).
+// Implements chat.UnansweredRecorder (retrieval PRD §3.4); replaces the
+// noopUnansweredRecorder placeholder wired in internal/server/providers.go.
 func (s *Service) RecordUnanswered(ctx context.Context, question string) error
 
 // ListUnanswered returns open questions for internal curation.
 func (s *Service) ListUnanswered(ctx context.Context, limit, offset int) ([]domain.FAQ, error)
 
 // Answer validates + persists the answer, then enqueues IndexFaqArgs.
+// The enqueue happens after the repo call returns, so the worker never sees
+// a half-written answer.
 func (s *Service) Answer(ctx context.Context, id uuid.UUID, answer string, answeredBy int64) (*domain.FAQ, error) {
     faq, err := s.repo.Answer(ctx, id, answer, answeredBy, time.Now().UTC())
     if err != nil {
@@ -220,26 +264,9 @@ func (s *Service) Answer(ctx context.Context, id uuid.UUID, answer string, answe
 }
 ```
 
-### 4.4 GenerateChunksArgs — metadata extension
+### 4.4 FaqIndexWorker (new job — thin adapter into the existing pipeline)
 
-The existing `GenerateChunksArgs` (ingestion PRD §5) gains a backward-compatible `Metadata` field so FAQ chunks are tagged. `ChunkGeneratorWorker` merges it into `domain.Chunk.Metadata`:
-
-```go
-// internal/worker/generate_chunks.go (updated)
-type GenerateChunksArgs struct {
-    FileID      string         `json:"fileID"`
-    Index       int            `json:"index"`
-    HeadingPath []string       `json:"headingPath"`
-    Content     string         `json:"content"`
-    RawText     string         `json:"rawText"`
-    TokenCount  int            `json:"tokenCount"`
-    Metadata    map[string]any `json:"metadata,omitempty"` // NEW: {"source":"faq","faq_id":...}
-}
-```
-
-Existing document workers pass `nil`; behavior is unchanged for them.
-
-### 4.5 FaqIndexWorker (new job)
+`GenerateChunksArgs` and `ChunkGeneratorWorker` are **unchanged** — FAQ chunks never carry chunk-level metadata and are produced by the existing `Process-RAG-File` chain.
 
 ```go
 // internal/worker/index_faq.go
@@ -251,37 +278,44 @@ func (IndexFaqArgs) Kind() string { return "Index-FAQ" }
 
 type FaqIndexWorker struct {
     river.WorkerDefaults[IndexFaqArgs]
-    faqRepo      FaqRepository       // Load(ctx, id)
-    ragService   RagService          // BuildChunks (existing)
-    jobQueue     JobQueue            // EnqueueGenerateChunks (existing)
-    virtualFileID uuid.UUID           // faqVirtualFileID constant
+    faqRepo       FaqRepository   // Get, SetLastIndexedHash
+    storageClient StorageClient   // UploadObject
+    chunkRepo     ChunkRepository // DeleteByFileID (exists on postgres repo; added to worker adapter)
+    jobQueue      JobQueue        // EnqueueRagFile (existing)
+    fileService   FileService     // SetStatus/mark files.status='completed'
 }
 
 func (w *FaqIndexWorker) Work(ctx context.Context, job *river.Job[IndexFaqArgs]) error {
     faq, err := w.faqRepo.Get(ctx, idFrom(job.Args.FAQID))
     if err != nil { return err }
     if faq.Status != domain.FAQStatusAnswered { return nil } // skip stale
+    if faq.LastIndexedHash == faq.AnswerContentHash { return nil } // idempotent skip
 
     source := []byte("# " + faq.Question + "\n\n" + faq.Answer)
-    chunks, err := w.ragService.BuildChunks(ctx, source)
-    if err != nil { return err }
 
-    for i, chunk := range chunks {
-        if err := w.jobQueue.EnqueueGenerateChunks(ctx, GenerateChunksArgs{
-            FileID:      w.virtualFileID.String(),
-            Index:       i,
-            HeadingPath: chunk.HeadingPath,
-            Content:     chunk.Content,
-            RawText:     chunk.RawText,
-            TokenCount:  chunk.TokenCount,
-            Metadata:    map[string]any{"source": "faq", "faq_id": faq.ID.String()},
-        }); err != nil { return err }
-    }
-    return nil
+    // Idempotent re-index: stale chunks must not coexist with new ones.
+    if err := w.chunkRepo.DeleteByFileID(ctx, faq.FileID); err != nil { return err }
+
+    if err := w.storageClient.UploadObject(ctx, faqS3Key(faq.ID), "text/markdown", source); err != nil { return err }
+    if err := w.fileService.SetStatus(ctx, faq.FileID, domain.UPLOAD_STATUS_COMPLETED); err != nil { return err }
+
+    if err := w.jobQueue.EnqueueRagFile(ctx, faq.FileID, faqS3Key(faq.ID)); err != nil { return err }
+
+    return w.faqRepo.SetLastIndexedHash(ctx, faq.ID, faq.AnswerContentHash)
 }
 ```
 
-Registered in `RegisterWorkers` (`internal/worker/setup.go`), which gains `FaqRepository` in `RegisterWorkerDep`.
+* The worker **never writes chunks directly** — it hands off to `Process-RAG-File`; partial FAQ indexing is impossible.
+* Any failure (upload, embed API, store) retries via River's per-job semantics; because stale chunks were deleted up front, a retry simply regenerates them — the flow is idempotent.
+* **Concurrency hardening:** enqueue `Index-FAQ` with River `InsertOpts{UniqueOpts: {ByArgs: true}}` so at most one Index-FAQ job exists per FAQ at a time (concurrent answer edits serialize).
+* Registered in `RegisterWorkers` (`internal/worker/setup.go`), whose `RegisterWorkerDep` gains `FaqRepository` and `FileService` (with a status-update method), and whose `ChunkRepository` interface gains `DeleteByFileID`.
+
+### 4.5 Queue
+
+```go
+// internal/infra/queue/river.go (new method)
+func (r *RiverQueue) EnqueueIndexFaq(ctx context.Context, args worker.IndexFaqArgs) error
+```
 
 ---
 
@@ -289,20 +323,20 @@ Registered in `RegisterWorkers` (`internal/worker/setup.go`), which gains `FaqRe
 
 This section directly answers *"how does the pipeline work after the internal user stores the question and answer?"*
 
-1. **Trigger:** `FAQService.Answer` persists the answer (`status='answered'`) and enqueues `IndexFaqArgs{FAQID}` onto the River queue. The enqueue is **after** the DB commit so the worker never sees a half-written answer.
+1. **Trigger:** `FAQService.Answer` persists the answer (`status='answered'`, `answer_content_hash = sha256(answer)`) and enqueues `IndexFaqArgs{FAQID}` onto the River queue. The enqueue is **after** the DB commit so the worker never sees a half-written answer.
 2. **Synthesize:** `FaqIndexWorker` loads the FAQ and renders a markdown document `# {question}\n\n{answer}`. Using the question as an H1 heading is deliberate — the existing chunker prepends heading context, so the embedded content already carries the question, and the heading path doubles as the citation label.
-3. **Chunk:** `rag.BuildChunks` (the exact same deterministic parser used for uploaded documents) applies the 128–512 token rules. A typical Q&A yields a single chunk; long answers split at paragraph/sentence boundaries with overlap, producing multiple chunks that all share the same `faq_id`.
-4. **Hand off to the existing embedder:** one `GenerateChunksArgs` per finalized chunk is emitted with `Metadata = {"source":"faq","faq_id":<id>}`. The existing `ChunkGeneratorWorker` takes over — it embeds `Content` with `AI_EMBEDDING_MODEL` and writes the row (embedding + all columns) via `StoreBatch`.
-5. **Result:** FAQ chunks are ordinary `chunks` rows referencing the virtual FAQ file. `SearchSimilar` needs **zero changes** to return them; a future identical/similar question retrieves the FAQ chunk at high similarity and is answered from ground truth with the question as its citation heading.
-6. **Failure/retry:** any failure (embed API, store) retries via River's per-job semantics. Because the worker only enqueues `GenerateChunksArgs` and never writes chunks directly, partial FAQ indexing is impossible.
+3. **Idempotency gate:** if `last_indexed_hash == answer_content_hash`, the job returns immediately — repeated enqueues (duplicate clicks, retries) are no-ops. On the first index, and on every edit, the FAQ's stale chunks are deleted (`DeleteByFileID`).
+4. **Upload + hand off to the existing pipeline:** the markdown is uploaded to `faq/<faq_id>.md` (the FAQ's derived `files` row flips to `status='completed'`), then `Process-RAG-File` is enqueued. The **existing** `ProcessDocWorker` pulls the markdown, runs `rag.BuildChunks` (the exact same deterministic parser used for uploaded documents, 128–512 token rules; a typical Q&A yields a single chunk, long answers split at paragraph/sentence boundaries with overlap), emits one `GenerateChunksArgs` per finalized chunk, and `ChunkGeneratorWorker` embeds `Content` with `AI_EMBEDDING_MODEL` and writes the row via `StoreBatch`. `MarkFileEmbeddedWorker` flips `embedding_status` to `'completed'` once every expected chunk carries a vector.
+5. **Result:** FAQ chunks are ordinary `chunks` rows referencing the FAQ's file row. `SearchSimilar` needs **zero changes** to return them; a future identical/similar question retrieves the FAQ chunk at high similarity and is answered from ground truth with the question as its citation heading.
+6. **Failure/retry:** any failure (upload, embed API, store) retries via River's per-job semantics. Chunks are only ever (re)written through the existing chain, so there is no parallel write path to keep consistent; a retry regenerates from the FAQ row, which is the single source of truth.
 
-**Why reuse instead of a new path?** The embedding client, model, dimension, pgvector index, and chunk store are already in production for documents. Channeling FAQ through `rag.BuildChunks` + `ChunkGeneratorWorker` means FAQ retrieval quality, indexing, and search infrastructure are identical to documents, with no parallel embedding pipeline to maintain.
+**Why reuse instead of a new path?** The embedding client, model, dimension, pgvector index, chunk store, and completion tracking are already in production for documents. Channeling FAQ through a per-FAQ `files` row + `Process-RAG-File` means FAQ retrieval quality, indexing, completion signalling, and search infrastructure are **identical** to documents — with no parallel embedding pipeline, no chunk-level metadata plumbing, and no special-case constraints to maintain.
 
 ---
 
 ## 6. HTTP Contract (Internal Users)
 
-Routes registered behind an internal/admin role using the existing `middlewares.RequireRole` pattern. Placeholder request/response shown; final shapes follow `transport.SendJSON` conventions.
+Routes registered behind an authenticated internal role using the existing `middlewares.RequirePermission` / auth patterns. Placeholder request/response shown; final shapes follow `transport.SendJSON` conventions.
 
 **List unanswered questions** — `GET /api/faqs?status=unanswered&page=1&pageSize=20`
 
@@ -342,26 +376,25 @@ Error responses follow the existing `xerror` / `GlobalErrorMiddleware` patterns 
 ## 7. Implementation Phases
 
 ```
-Phase 1: FAQ Domain & Storage ──────────► 000007 migration (faqs + virtual file), postgres repo
-Phase 2: Capture & Curation API ────────► RecordUnanswered + ListUnanswered + Answer endpoints
-Phase 3: Indexing Worker ───────────────► IndexFaqArgs + FaqIndexWorker + GenerateChunksArgs.Metadata
-Phase 4: Re-index & Tests ──────────────► delete-and-regenerate on edit + e2e tests
+Phase 1: FAQ Domain & Storage ────────► 000008 migration (faqs only), postgres repo (+ file row in UoW)
+Phase 2: Capture & Curation API ──────► RecordUnanswered + ListUnanswered + Answer endpoints
+Phase 3: Indexing Worker ─────────────► IndexFaqArgs + FaqIndexWorker + queue method + listing filter
+Phase 4: Re-index & Tests ────────────► idempotent delete-and-regenerate on edit + e2e tests
 ```
 
-* **Week 1:** Add `000007` migration (`faqs` table, `faq_status` enum, partial unique index, virtual FAQ file seed) + `down` file; `domain.FAQ`; postgres `FaqRepository` (mockery mocks).
-* **Week 2:** `FAQService` (`RecordUnanswered` implementing `chat.UnansweredRecorder`, `ListUnanswered`, `Answer`); internal HTTP routes; wire into `service_manager.go`/`providers.go` and the chat `ChatService`.
-* **Week 3:** Extend `GenerateChunksArgs` with `Metadata`; `FaqIndexWorker` + `IndexFaqArgs`; register in `RegisterWorkers`; verify an answered FAQ lands as an embedded chunk with `{"source":"faq"}` metadata.
-* **Week 4:** Re-index on answer edit (delete chunks by `metadata->>'faq_id'` then re-enqueue); tests (dedupe capture, answer → job enqueue, worker chunk + metadata, retrieval round-trip retrieves the FAQ chunk, re-index replaces old chunks) matching existing mockery + testify patterns.
+* **Week 1:** Add `000008` migration (`faqs` table, `faq_status` enum, partial unique index, `answer_content_hash`/`last_indexed_hash`) + `down` file; `domain.FAQ`; postgres `FaqRepository` (mockery mocks).
+* **Week 2:** `FAQService` (`RecordUnanswered` implementing `chat.UnansweredRecorder`, `ListUnanswered`, `Answer`); internal HTTP routes; wire into `internal/server/setup.go`/`providers.go`/`apis.go`/`routes.go`; replace `noopUnansweredRecorder` in `providers.go`.
+* **Week 3:** `FaqIndexWorker` + `IndexFaqArgs` + `RiverQueue.EnqueueIndexFaq`; register in `RegisterWorkers` (add `FaqRepository` + `FileService` status method to `RegisterWorkerDep`, add `DeleteByFileID` to the worker `ChunkRepository` interface); `FileRepository.FindAll` gains the `s3_key NOT LIKE 'faq/%'` filter; verify an answered FAQ lands as an embedded chunk after one pipeline cycle.
+* **Week 4:** Re-index on answer edit (hash gate + `DeleteByFileID` + regenerate); River unique-by-args on `Index-FAQ`; tests (dedupe capture, answer → job enqueue, worker hash-skip/delete/upload/enqueue, pipeline round-trip retrieves the FAQ chunk, re-index replaces old chunks) matching existing mockery + testify patterns.
 
 ---
 
 ## 8. Success Criteria
 
-1. **Capture:** every grounded failure in chat creates a deduplicated `faqs` row with `status='unanswered'`; repeated identical questions do not duplicate open rows.
+1. **Capture:** every grounded failure in chat creates a deduplicated `faqs` row with `status='unanswered'` plus its `files` row; repeated identical questions do not duplicate open rows.
 2. **Curation:** internal users can list unanswered FAQs and answer them; answering sets `answered` and enqueues exactly one `Index-FAQ` job.
-3. **Auto-indexing:** within one job cycle of saving an answer, the FAQ exists as ≥1 `chunks` row with a non-null `embedding`, `metadata.source='faq'`, and the correct `file_id` (virtual FAQ file).
-4. **Retrieval closure:** asking the same question via `POST /chat/raw` after indexing returns the curated answer with a citation whose heading path is the FAQ question, instead of "I don't know".
-5. **Edit correctness:** updating an answered FAQ removes its old chunks and indexes the new answer; no orphaned chunks carry a stale `faq_id`.
-6. **No retrieval regression:** `SearchSimilar` behavior and latency are unchanged for document chunks (FAQ chunks simply add rows to the same index).
-
----
+3. **Auto-indexing:** within one pipeline cycle of saving an answer, the FAQ exists as ≥1 `chunks` row with a non-null `embedding`, referencing the FAQ's own `file_id`; `files.embedding_status` ends at `completed`; `faqs.last_indexed_hash == answer_content_hash`.
+4. **Idempotency:** re-enqueuing `Index-FAQ` for an unchanged answer is a no-op (no chunk churn, no duplicate rows).
+5. **Retrieval closure:** asking the same question via `POST /chat/raw` after indexing returns the curated answer with a citation whose heading path is the FAQ question, instead of "I don't know".
+6. **Edit correctness:** updating an answered FAQ removes its old chunks and indexes the new answer; no orphaned chunks carry stale content; `UNIQUE (file_id, chunk_index)` is never violated across multiple FAQs.
+7. **No retrieval or listing regression:** `SearchSimilar` behavior and latency are unchanged for document chunks (FAQ chunks simply add rows to the same index); FAQ file rows never appear in `GET /api/files` listings or their count.
