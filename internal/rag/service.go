@@ -3,9 +3,15 @@ package rag
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
+	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/tokenization"
+	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
+	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
+	"github.com/google/uuid"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -15,15 +21,21 @@ import (
 
 type ServiceDependency struct {
 	Tokenizer tokenization.Tokenizer
+	JobQueue  JobQueue
+	FileRepo  FileRepository
 }
 
 type Service struct {
 	tokenizer tokenization.Tokenizer
+	queue     JobQueue
+	fileRepo  FileRepository
 }
 
 func NewRagService(dep ServiceDependency) *Service {
 	return &Service{
 		tokenizer: dep.Tokenizer,
+		queue:     dep.JobQueue,
+		fileRepo:  dep.FileRepo,
 	}
 }
 
@@ -189,4 +201,35 @@ func extractText(n ast.Node, source []byte) string {
 	}
 
 	return buf.String()
+}
+
+func (s *Service) ProcessDocForEmbedding(ctx context.Context, fileID uuid.UUID) error {
+	user, ok := domain.UserFromContext(ctx)
+	if !ok {
+		return &xerror.ErrorPermission{Message: "user not found in context"}
+	}
+
+	file, err := s.fileRepo.Get(ctx, fileID)
+	if err != nil {
+		return err
+	}
+
+	err = s.queue.EnqueueRagFile(ctx, file.ID, file.S3Key)
+	if err != nil {
+		return err
+	}
+
+	queueErr := s.queue.EnqueueAuditLog(ctx, domain.AuditLog{
+		ResourceName: "files",
+		ResourceID:   fmt.Sprint(file.ID),
+		Action:       domain.FILE_PROCESS_RAG,
+		ActorName:    user.Username,
+		ActorID:      &user.ID,
+		CreatedAt:    time.Now(),
+	})
+	if queueErr != nil {
+		xlog.Logger.Error("error while enqueue job", "queueErr", queueErr)
+	}
+
+	return nil
 }

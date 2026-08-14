@@ -34,7 +34,6 @@ type ChatService struct {
 type IChatService interface {
 	SendPrompt(ctx context.Context, prompt string) (string, error)
 	SendSortJob(ctx context.Context, words []string) error
-	SendProcessDocJob(ctx context.Context, fileID uuid.UUID, objectKey string) error
 	SendTextIntoEmbedding(ctx context.Context, text string) error
 	DoSort(ctx context.Context, words []string) ([]string, error)
 	//CreateRagFile(ctx context.Context, ragFile domain.RagFile) (*domain.RagFile, error)
@@ -62,10 +61,6 @@ func (s *ChatService) SendPrompt(ctx context.Context, prompt string) (string, er
 
 func (s *ChatService) SendSortJob(ctx context.Context, words []string) error {
 	return s.JobQueue.EnqueueChat(ctx, words)
-}
-
-func (s *ChatService) SendProcessDocJob(ctx context.Context, fileID uuid.UUID, objectKey string) error {
-	return s.JobQueue.EnqueueRagFile(ctx, fileID, objectKey)
 }
 
 func (s *ChatService) SendTextIntoEmbedding(ctx context.Context, text string) error {

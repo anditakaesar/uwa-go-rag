@@ -21,6 +21,7 @@ func TestChunkGeneratorWorker_Work(test *testing.T) {
 	test.Parallel()
 
 	fileID := uuid.Must(uuid.NewV7())
+	vecFixture := []float32{0.1, 0.2, 0.3}
 	args := worker.GenerateChunksArgs{
 		FileID:      fileID.String(),
 		Index:       2,
@@ -38,7 +39,10 @@ func TestChunkGeneratorWorker_Work(test *testing.T) {
 				stored = append(stored, chunks...)
 			}).Return(nil)
 
-		w := worker.NewChunkGeneratorWorker(repo)
+		embedder := mocks.NewMockEmbedder(t)
+		embedder.EXPECT().Embed(mock.Anything, args.Content).Return(vecFixture, nil)
+
+		w := worker.NewChunkGeneratorWorker(repo, embedder)
 		err := w.Work(context.Background(), &river.Job[worker.GenerateChunksArgs]{Args: args})
 
 		assert.NoError(t, err)
@@ -51,17 +55,34 @@ func TestChunkGeneratorWorker_Work(test *testing.T) {
 		assert.Equal(t, args.Content, chunk.Content)
 		assert.Equal(t, args.RawText, chunk.RawText)
 		assert.Equal(t, args.TokenCount, chunk.TokenCount)
+		assert.Equal(t, vecFixture, chunk.Embedding)
 		assert.NotEmpty(t, chunk.ID)
 
 		sum := sha256.Sum256([]byte(args.Content))
 		assert.Equal(t, hex.EncodeToString(sum[:]), chunk.ContentHash)
 	})
 
+	test.Run("error embedding", func(t *testing.T) {
+		repo := mocks.NewMockChunkRepository(t)
+		repo.AssertNotCalled(t, "StoreBatch")
+
+		embedder := mocks.NewMockEmbedder(t)
+		embedder.EXPECT().Embed(mock.Anything, args.Content).Return(nil, errors.New("embed_error"))
+
+		w := worker.NewChunkGeneratorWorker(repo, embedder)
+		err := w.Work(context.Background(), &river.Job[worker.GenerateChunksArgs]{Args: args})
+
+		assert.Error(t, err)
+	})
+
 	test.Run("error storing", func(t *testing.T) {
 		repo := mocks.NewMockChunkRepository(t)
 		repo.EXPECT().StoreBatch(mock.Anything, mock.Anything).Return(errors.New("store_error"))
 
-		w := worker.NewChunkGeneratorWorker(repo)
+		embedder := mocks.NewMockEmbedder(t)
+		embedder.EXPECT().Embed(mock.Anything, args.Content).Return(vecFixture, nil)
+
+		w := worker.NewChunkGeneratorWorker(repo, embedder)
 		err := w.Work(context.Background(), &river.Job[worker.GenerateChunksArgs]{Args: args})
 
 		assert.Error(t, err)
@@ -70,10 +91,12 @@ func TestChunkGeneratorWorker_Work(test *testing.T) {
 	test.Run("invalid file id", func(t *testing.T) {
 		repo := mocks.NewMockChunkRepository(t)
 
+		embedder := mocks.NewMockEmbedder(t)
+
 		badArgs := args
 		badArgs.FileID = "not-a-uuid"
 
-		w := worker.NewChunkGeneratorWorker(repo)
+		w := worker.NewChunkGeneratorWorker(repo, embedder)
 		err := w.Work(context.Background(), &river.Job[worker.GenerateChunksArgs]{Args: badArgs})
 
 		assert.Error(t, err)

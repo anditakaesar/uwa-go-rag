@@ -22,10 +22,12 @@ type Embedder interface {
 
 type ChunkRepository interface {
 	StoreBatch(ctx context.Context, chunks []domain.Chunk) error
+	CountEmbeddedByFileID(ctx context.Context, fileID uuid.UUID) (int, error)
 }
 
 type JobQueue interface {
 	EnqueueGenerateChunks(ctx context.Context, args GenerateChunksArgs) error
+	EnqueueMarkFileEmbedded(ctx context.Context, args MarkFileEmbeddedArgs) error
 }
 
 type Recorder interface {
@@ -46,4 +48,5 @@ type StorageClient interface {
 
 type FileService interface {
 	Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error)
+	SetEmbeddingStatus(ctx context.Context, fileID uuid.UUID, status domain.EmbeddingStatus) error
 }

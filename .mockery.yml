@@ -79,3 +79,5 @@ packages:
       ChunkRepository:
       JobQueue:
       StorageClient:
+      Embedder:
+      FileService:

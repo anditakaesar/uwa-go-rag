@@ -18,18 +18,28 @@ const (
 	UPLOAD_STATUS_FAILED    UploadStatus = "failed"
 )
 
+type EmbeddingStatus string
+
+const (
+	EMBEDDING_STATUS_PENDING    EmbeddingStatus = "pending"
+	EMBEDDING_STATUS_PROCESSING EmbeddingStatus = "processing"
+	EMBEDDING_STATUS_COMPLETED  EmbeddingStatus = "completed"
+	EMBEDDING_STATUS_FAILED     EmbeddingStatus = "failed"
+)
+
 type File struct {
-	ID           uuid.UUID
-	UserID       int64
-	OriginalName string
-	MimeType     string
-	SizeBytes    int64
-	S3Bucket     string
-	S3Key        string
-	Status       UploadStatus
-	Metadata     any // jsonb
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID              uuid.UUID
+	UserID          int64
+	OriginalName    string
+	MimeType        string
+	SizeBytes       int64
+	S3Bucket        string
+	S3Key           string
+	Status          UploadStatus
+	EmbeddingStatus EmbeddingStatus
+	Metadata        any // jsonb
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 func (f *File) SizeHumanize() string {
@@ -68,5 +78,6 @@ type GeneratePresignURLReturn struct {
 }
 
 type UpdateFileParam struct {
-	Status *UploadStatus
+	Status          *UploadStatus
+	EmbeddingStatus *EmbeddingStatus
 }

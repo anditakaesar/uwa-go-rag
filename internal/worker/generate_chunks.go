@@ -24,16 +24,19 @@ type GenerateChunksArgs struct {
 
 func (GenerateChunksArgs) Kind() string { return "Generate-Chunks" }
 
-// ChunkGeneratorWorker consumes GenerateChunksArgs and batch-writes finalized
-// domain.Chunk records to the ChunkRepository.
+// ChunkGeneratorWorker consumes GenerateChunksArgs, embeds the finalized
+// chunk content, and batch-writes domain.Chunk records (including the vector)
+// to the ChunkRepository.
 type ChunkGeneratorWorker struct {
 	river.WorkerDefaults[GenerateChunksArgs]
 	chunkRepository ChunkRepository
+	embedder        Embedder
 }
 
-func NewChunkGeneratorWorker(chunkRepository ChunkRepository) *ChunkGeneratorWorker {
+func NewChunkGeneratorWorker(chunkRepository ChunkRepository, embedder Embedder) *ChunkGeneratorWorker {
 	return &ChunkGeneratorWorker{
 		chunkRepository: chunkRepository,
+		embedder:        embedder,
 	}
 }
 
@@ -42,6 +45,12 @@ func (w *ChunkGeneratorWorker) Work(ctx context.Context, job *river.Job[Generate
 	if err != nil {
 		return err
 	}
+
+	vec, err := w.embedder.Embed(ctx, chunk.Content)
+	if err != nil {
+		return err
+	}
+	chunk.Embedding = vec
 
 	return w.chunkRepository.StoreBatch(ctx, []domain.Chunk{*chunk})
 }

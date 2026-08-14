@@ -10,6 +10,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	pgxvec "github.com/pgvector/pgvector-go/pgx"
 )
 
 const COUNT_AS_TOTAL string = "count(*) as total"
@@ -45,6 +46,10 @@ func New(ctx context.Context, dbURL string) (*connector, error) {
 
 	config.ConnConfig.Tracer = &queryTracer{
 		log: xlog.Logger,
+	}
+
+	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		return pgxvec.RegisterTypes(ctx, conn)
 	}
 
 	config.MaxConnIdleTime = 5 * time.Minute

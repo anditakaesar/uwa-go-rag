@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
+	"github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -36,6 +37,72 @@ type MockChunkRepository_Expecter struct {
 
 func (_m *MockChunkRepository) EXPECT() *MockChunkRepository_Expecter {
 	return &MockChunkRepository_Expecter{mock: &_m.Mock}
+}
+
+// CountEmbeddedByFileID provides a mock function for the type MockChunkRepository
+func (_mock *MockChunkRepository) CountEmbeddedByFileID(ctx context.Context, fileID uuid.UUID) (int, error) {
+	ret := _mock.Called(ctx, fileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CountEmbeddedByFileID")
+	}
+
+	var r0 int
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (int, error)); ok {
+		return returnFunc(ctx, fileID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) int); ok {
+		r0 = returnFunc(ctx, fileID)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = returnFunc(ctx, fileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockChunkRepository_CountEmbeddedByFileID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountEmbeddedByFileID'
+type MockChunkRepository_CountEmbeddedByFileID_Call struct {
+	*mock.Call
+}
+
+// CountEmbeddedByFileID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fileID uuid.UUID
+func (_e *MockChunkRepository_Expecter) CountEmbeddedByFileID(ctx any, fileID any) *MockChunkRepository_CountEmbeddedByFileID_Call {
+	return &MockChunkRepository_CountEmbeddedByFileID_Call{Call: _e.mock.On("CountEmbeddedByFileID", ctx, fileID)}
+}
+
+func (_c *MockChunkRepository_CountEmbeddedByFileID_Call) Run(run func(ctx context.Context, fileID uuid.UUID)) *MockChunkRepository_CountEmbeddedByFileID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockChunkRepository_CountEmbeddedByFileID_Call) Return(n int, err error) *MockChunkRepository_CountEmbeddedByFileID_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *MockChunkRepository_CountEmbeddedByFileID_Call) RunAndReturn(run func(ctx context.Context, fileID uuid.UUID) (int, error)) *MockChunkRepository_CountEmbeddedByFileID_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // StoreBatch provides a mock function for the type MockChunkRepository

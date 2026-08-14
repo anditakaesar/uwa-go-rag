@@ -5,9 +5,11 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/rag"
 	"github.com/anditakaesar/uwa-go-rag/internal/worker"
 	"github.com/anditakaesar/uwa-go-rag/internal/worker/mocks"
+	"github.com/google/uuid"
 	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -16,11 +18,27 @@ import (
 func TestProcessDocWorker_Work(test *testing.T) {
 	test.Parallel()
 
-	args := worker.ProcessDocArgs{FileID: "file-123", ObjectKey: "docs/readme.md"}
+	fileID := uuid.Must(uuid.NewV7())
+	args := worker.ProcessDocArgs{FileID: fileID.String(), ObjectKey: "docs/readme.md"}
 	source := []byte("# Title\n\nsome body")
 	finalChunks := []rag.FinalChunk{
 		{HeadingPath: []string{"# Title"}, Content: "# Title\n\nsome body", RawText: "some body", TokenCount: 5},
 		{HeadingPath: []string{"# Title"}, Content: "# Title\n\nmore body", RawText: "more body", TokenCount: 6},
+	}
+
+	newWorker := func(storage worker.StorageClient, ragSvc worker.RagService, queue worker.JobQueue, fileSvc worker.FileService) *worker.ProcessDocWorker {
+		return worker.NewProcessDocWorker(worker.ProcessDocWorkerDep{
+			RagService:    ragSvc,
+			StorageClient: storage,
+			JobQueue:      queue,
+			FileService:   fileSvc,
+		})
+	}
+
+	expectFlagProcessing := func(t *testing.T) *mocks.MockFileService {
+		fileSvc := mocks.NewMockFileService(t)
+		fileSvc.EXPECT().SetEmbeddingStatus(mock.Anything, fileID, domain.EMBEDDING_STATUS_PROCESSING).Return(nil)
+		return fileSvc
 	}
 
 	test.Run("success", func(t *testing.T) {
@@ -41,16 +59,33 @@ func TestProcessDocWorker_Work(test *testing.T) {
 				TokenCount:  c.TokenCount,
 			}).Return(nil)
 		}
+		queue.EXPECT().EnqueueMarkFileEmbedded(mock.Anything, worker.MarkFileEmbeddedArgs{
+			FileID:         args.FileID,
+			ExpectedChunks: len(finalChunks),
+		}).Return(nil)
 
-		w := worker.NewProcessDocWorker(worker.ProcessDocWorkerDep{
-			RagService:    ragSvc,
-			StorageClient: storage,
-			JobQueue:      queue,
-		})
+		fileSvc := expectFlagProcessing(t)
+
+		w := newWorker(storage, ragSvc, queue, fileSvc)
 
 		err := w.Work(context.Background(), &river.Job[worker.ProcessDocArgs]{Args: args})
 
 		assert.NoError(t, err)
+	})
+
+	test.Run("error arming embedding flag", func(t *testing.T) {
+		storage := mocks.NewMockStorageClient(t)
+		ragSvc := mocks.NewMockRagService(t)
+		queue := mocks.NewMockJobQueue(t)
+
+		fileSvc := mocks.NewMockFileService(t)
+		fileSvc.EXPECT().SetEmbeddingStatus(mock.Anything, fileID, domain.EMBEDDING_STATUS_PROCESSING).Return(errors.New("flag_error"))
+
+		w := newWorker(storage, ragSvc, queue, fileSvc)
+
+		err := w.Work(context.Background(), &river.Job[worker.ProcessDocArgs]{Args: args})
+
+		assert.Error(t, err)
 	})
 
 	test.Run("error fetching from storage", func(t *testing.T) {
@@ -60,11 +95,7 @@ func TestProcessDocWorker_Work(test *testing.T) {
 		ragSvc := mocks.NewMockRagService(t)
 		queue := mocks.NewMockJobQueue(t)
 
-		w := worker.NewProcessDocWorker(worker.ProcessDocWorkerDep{
-			RagService:    ragSvc,
-			StorageClient: storage,
-			JobQueue:      queue,
-		})
+		w := newWorker(storage, ragSvc, queue, expectFlagProcessing(t))
 
 		err := w.Work(context.Background(), &river.Job[worker.ProcessDocArgs]{Args: args})
 
@@ -80,11 +111,7 @@ func TestProcessDocWorker_Work(test *testing.T) {
 
 		queue := mocks.NewMockJobQueue(t)
 
-		w := worker.NewProcessDocWorker(worker.ProcessDocWorkerDep{
-			RagService:    ragSvc,
-			StorageClient: storage,
-			JobQueue:      queue,
-		})
+		w := newWorker(storage, ragSvc, queue, expectFlagProcessing(t))
 
 		err := w.Work(context.Background(), &river.Job[worker.ProcessDocArgs]{Args: args})
 
@@ -101,11 +128,7 @@ func TestProcessDocWorker_Work(test *testing.T) {
 		queue := mocks.NewMockJobQueue(t)
 		queue.EXPECT().EnqueueGenerateChunks(mock.Anything, mock.Anything).Return(errors.New("enqueue_error"))
 
-		w := worker.NewProcessDocWorker(worker.ProcessDocWorkerDep{
-			RagService:    ragSvc,
-			StorageClient: storage,
-			JobQueue:      queue,
-		})
+		w := newWorker(storage, ragSvc, queue, expectFlagProcessing(t))
 
 		err := w.Work(context.Background(), &river.Job[worker.ProcessDocArgs]{Args: args})
 

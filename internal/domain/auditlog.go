@@ -13,7 +13,8 @@ type AuditAction string
 
 // User.Create, User.Login, etc
 const (
-	USER_LOGIN AuditAction = "user.login"
+	USER_LOGIN       AuditAction = "user.login"
+	FILE_PROCESS_RAG AuditAction = "file.process_rag"
 )
 
 type AuditLog struct {

@@ -94,3 +94,60 @@ func (_c *MockJobQueue_EnqueueGenerateChunks_Call) RunAndReturn(run func(ctx con
 	_c.Call.Return(run)
 	return _c
 }
+
+// EnqueueMarkFileEmbedded provides a mock function for the type MockJobQueue
+func (_mock *MockJobQueue) EnqueueMarkFileEmbedded(ctx context.Context, args worker.MarkFileEmbeddedArgs) error {
+	ret := _mock.Called(ctx, args)
+
+	if len(ret) == 0 {
+		panic("no return value specified for EnqueueMarkFileEmbedded")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, worker.MarkFileEmbeddedArgs) error); ok {
+		r0 = returnFunc(ctx, args)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockJobQueue_EnqueueMarkFileEmbedded_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnqueueMarkFileEmbedded'
+type MockJobQueue_EnqueueMarkFileEmbedded_Call struct {
+	*mock.Call
+}
+
+// EnqueueMarkFileEmbedded is a helper method to define mock.On call
+//   - ctx context.Context
+//   - args worker.MarkFileEmbeddedArgs
+func (_e *MockJobQueue_Expecter) EnqueueMarkFileEmbedded(ctx any, args any) *MockJobQueue_EnqueueMarkFileEmbedded_Call {
+	return &MockJobQueue_EnqueueMarkFileEmbedded_Call{Call: _e.mock.On("EnqueueMarkFileEmbedded", ctx, args)}
+}
+
+func (_c *MockJobQueue_EnqueueMarkFileEmbedded_Call) Run(run func(ctx context.Context, args worker.MarkFileEmbeddedArgs)) *MockJobQueue_EnqueueMarkFileEmbedded_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 worker.MarkFileEmbeddedArgs
+		if args[1] != nil {
+			arg1 = args[1].(worker.MarkFileEmbeddedArgs)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockJobQueue_EnqueueMarkFileEmbedded_Call) Return(err error) *MockJobQueue_EnqueueMarkFileEmbedded_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockJobQueue_EnqueueMarkFileEmbedded_Call) RunAndReturn(run func(ctx context.Context, args worker.MarkFileEmbeddedArgs) error) *MockJobQueue_EnqueueMarkFileEmbedded_Call {
+	_c.Call.Return(run)
+	return _c
+}

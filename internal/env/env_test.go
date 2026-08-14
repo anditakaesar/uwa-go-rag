@@ -1,6 +1,28 @@
 package env
 
-import "testing"
+import (
+	"testing"
+)
+
+func Test_getAIEmbeddingModel(test *testing.T) {
+	tests := []struct {
+		name     string
+		envValue string
+		expected string
+	}{
+		{"Custom model from env", "text-embedding-3-large", "text-embedding-3-large"},
+		{"Empty env falls back to default", "", DefaultAIEmbeddingModel},
+	}
+
+	for _, tt := range tests {
+		test.Run(tt.name, func(t *testing.T) {
+			t.Setenv("AI_EMBEDDING_MODEL", tt.envValue)
+			if got := getAIEmbeddingModel(); got != tt.expected {
+				t.Errorf("getAIEmbeddingModel() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
 
 func Test_values_IsDevelopment(test *testing.T) {
 	test.Parallel()

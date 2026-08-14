@@ -42,17 +42,26 @@ func TestPipeline_EndToEnd(test *testing.T) {
 	storage := mocks.NewMockStorageClient(test)
 	storage.EXPECT().GetObjectIntoBuffer(mock.Anything, objectKey).Return([]byte(md), nil)
 
+	fileSvc := mocks.NewMockFileService(test)
+	fileSvc.EXPECT().SetEmbeddingStatus(mock.Anything, fileID, domain.EMBEDDING_STATUS_PROCESSING).Return(nil)
+
 	var tasks []worker.GenerateChunksArgs
 	queue := mocks.NewMockJobQueue(test)
 	queue.EXPECT().EnqueueGenerateChunks(mock.Anything, mock.Anything).
 		Run(func(_ context.Context, args worker.GenerateChunksArgs) {
 			tasks = append(tasks, args)
 		}).Return(nil)
+	queue.EXPECT().EnqueueMarkFileEmbedded(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, args worker.MarkFileEmbeddedArgs) {
+			require.Equal(test, len(expected), args.ExpectedChunks)
+			require.Equal(test, fileID.String(), args.FileID)
+		}).Return(nil)
 
 	processWorker := worker.NewProcessDocWorker(worker.ProcessDocWorkerDep{
 		RagService:    ragSvc,
 		StorageClient: storage,
 		JobQueue:      queue,
+		FileService:   fileSvc,
 	})
 
 	err = processWorker.Work(ctx, &river.Job[worker.ProcessDocArgs]{Args: worker.ProcessDocArgs{
@@ -70,7 +79,10 @@ func TestPipeline_EndToEnd(test *testing.T) {
 			stored = append(stored, chunks...)
 		}).Return(nil)
 
-	genWorker := worker.NewChunkGeneratorWorker(repo)
+	embedder := mocks.NewMockEmbedder(test)
+	embedder.EXPECT().Embed(mock.Anything, mock.Anything).Return([]float32{0.1, 0.2, 0.3}, nil)
+
+	genWorker := worker.NewChunkGeneratorWorker(repo, embedder)
 	for _, task := range tasks {
 		err = genWorker.Work(ctx, &river.Job[worker.GenerateChunksArgs]{Args: task})
 		require.NoError(test, err)
@@ -85,6 +97,7 @@ func TestPipeline_EndToEnd(test *testing.T) {
 		assert.Equal(test, expected[i].HeadingPath, chunk.HeadingPath)
 		assert.Equal(test, i, chunk.Index)
 		assert.Equal(test, fileID, chunk.FileID)
+		assert.Equal(test, []float32{0.1, 0.2, 0.3}, chunk.Embedding)
 
 		sum := sha256.Sum256([]byte(chunk.Content))
 		assert.Equal(test, hex.EncodeToString(sum[:]), chunk.ContentHash)

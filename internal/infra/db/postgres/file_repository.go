@@ -21,7 +21,7 @@ func NewFileRepository(db DBExecutor) *FileRepository {
 	}
 }
 
-const fileColumns = "id, user_id, original_name, mime_type, size_bytes, s3_bucket, s3_key, status, metadata, created_at, updated_at"
+const fileColumns = "id, user_id, original_name, mime_type, size_bytes, s3_bucket, s3_key, status, embedding_status, metadata, created_at, updated_at"
 
 func scanFileRow(row pgx.Row) (*domain.File, error) {
 	var f domain.File
@@ -34,6 +34,7 @@ func scanFileRow(row pgx.Row) (*domain.File, error) {
 		&f.S3Bucket,
 		&f.S3Key,
 		&f.Status,
+		&f.EmbeddingStatus,
 		&f.Metadata,
 		&f.CreatedAt,
 		&f.UpdatedAt,
@@ -49,10 +50,14 @@ func scanFileRow(row pgx.Row) (*domain.File, error) {
 }
 
 var insertColumns = []string{
-	"id", "user_id", "original_name", "mime_type", "size_bytes", "s3_bucket", "s3_key", "status", "metadata",
+	"id", "user_id", "original_name", "mime_type", "size_bytes", "s3_bucket", "s3_key", "status", "embedding_status", "metadata",
 }
 
 func (r *FileRepository) Insert(ctx context.Context, newFile domain.File) (*domain.File, error) {
+	if newFile.EmbeddingStatus == "" {
+		newFile.EmbeddingStatus = domain.EMBEDDING_STATUS_PENDING
+	}
+
 	insertQuery := pgq.Insert("files").Columns(insertColumns...).
 		Values(
 			newFile.ID,
@@ -63,6 +68,7 @@ func (r *FileRepository) Insert(ctx context.Context, newFile domain.File) (*doma
 			newFile.S3Bucket,
 			newFile.S3Key,
 			newFile.Status,
+			newFile.EmbeddingStatus,
 			newFile.Metadata).
 		Returning(fileColumns)
 	sql, args, err := insertQuery.SQL()
@@ -136,6 +142,11 @@ func (r *FileRepository) Update(ctx context.Context, id uuid.UUID, updateParam d
 
 	if updateParam.Status != nil {
 		updateQuery = updateQuery.Set("status", *updateParam.Status)
+		argCount++
+	}
+
+	if updateParam.EmbeddingStatus != nil {
+		updateQuery = updateQuery.Set("embedding_status", *updateParam.EmbeddingStatus)
 		argCount++
 	}
 

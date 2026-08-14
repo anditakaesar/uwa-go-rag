@@ -60,6 +60,11 @@ func (r *RiverQueue) EnqueueGenerateChunks(ctx context.Context, args worker.Gene
 	return err
 }
 
+func (r *RiverQueue) EnqueueMarkFileEmbedded(ctx context.Context, args worker.MarkFileEmbeddedArgs) error {
+	_, err := r.client.Insert(ctx, args, nil)
+	return err
+}
+
 func (r *RiverQueue) EnqueueAuditLog(ctx context.Context, auditLog domain.AuditLog) error {
 	_, err := r.client.Insert(ctx, worker.InsertAuditLogArgs{
 		AuditLog: auditLog,

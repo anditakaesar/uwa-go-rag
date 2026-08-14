@@ -3,6 +3,8 @@ package worker
 import (
 	"context"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
+	"github.com/google/uuid"
 	"github.com/riverqueue/river"
 )
 
@@ -17,18 +19,23 @@ func (ProcessDocArgs) Kind() string { return "Process-RAG-File" }
 
 // ProcessDocWorker pulls the markdown payload from object storage, parses and
 // sizes it into finalized chunks, then emits one GenerateChunksArgs event per
-// chunk so storage is decoupled and can run in parallel.
+// chunk so storage is decoupled and can run in parallel. It arms the file's
+// embedding_status to 'processing' up front and enqueues a MarkFileEmbedded
+// completion job afterwards so the flag only turns 'completed' once every
+// chunk carries a vector.
 type ProcessDocWorker struct {
 	river.WorkerDefaults[ProcessDocArgs]
 	ragService    RagService
 	storageClient StorageClient
 	jobQueue      JobQueue
+	fileService   FileService
 }
 
 type ProcessDocWorkerDep struct {
 	RagService    RagService
 	StorageClient StorageClient
 	JobQueue      JobQueue
+	FileService   FileService
 }
 
 func NewProcessDocWorker(dep ProcessDocWorkerDep) *ProcessDocWorker {
@@ -36,10 +43,20 @@ func NewProcessDocWorker(dep ProcessDocWorkerDep) *ProcessDocWorker {
 		ragService:    dep.RagService,
 		storageClient: dep.StorageClient,
 		jobQueue:      dep.JobQueue,
+		fileService:   dep.FileService,
 	}
 }
 
 func (w *ProcessDocWorker) Work(ctx context.Context, job *river.Job[ProcessDocArgs]) error {
+	fileID, err := uuid.Parse(job.Args.FileID)
+	if err != nil {
+		return err
+	}
+
+	if err := w.fileService.SetEmbeddingStatus(ctx, fileID, domain.EMBEDDING_STATUS_PROCESSING); err != nil {
+		return err
+	}
+
 	source, err := w.storageClient.GetObjectIntoBuffer(ctx, job.Args.ObjectKey)
 	if err != nil {
 		return err
@@ -64,5 +81,8 @@ func (w *ProcessDocWorker) Work(ctx context.Context, job *river.Job[ProcessDocAr
 		}
 	}
 
-	return nil
+	return w.jobQueue.EnqueueMarkFileEmbedded(ctx, MarkFileEmbeddedArgs{
+		FileID:         job.Args.FileID,
+		ExpectedChunks: len(chunks),
+	})
 }

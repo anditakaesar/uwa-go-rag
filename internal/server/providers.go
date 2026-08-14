@@ -115,6 +115,8 @@ func newServiceSet(repos *repositorySet, clients *clientSet) *serviceSet {
 		}),
 		ragSvc: rag.NewRagService(rag.ServiceDependency{
 			Tokenizer: clients.tokenizer,
+			JobQueue:  clients.riverQueue,
+			FileRepo:  repos.fileRepo,
 		}),
 		auditSvc: audit.NewAuditLogRecorder(repos.auditRepo),
 		roleSvc: role.NewRoleService(role.RoleServiceDep{
@@ -128,6 +130,7 @@ func registerRiver(pool *pgxpool.Pool, repos *repositorySet, svcs *serviceSet, c
 		ChatService:     svcs.chatSvc,
 		RagService:      svcs.ragSvc,
 		ChunkRepository: repos.chunkRepo,
+		Embedder:        clients.aiClient,
 		Recorder:        svcs.auditSvc,
 		FileService:     svcs.fileSvc,
 		StorageClient:   clients.storageClient,

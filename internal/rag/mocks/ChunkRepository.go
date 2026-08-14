@@ -164,6 +164,86 @@ func (_c *MockChunkRepository_GetByFileID_Call) RunAndReturn(run func(ctx contex
 	return _c
 }
 
+// SearchSimilar provides a mock function for the type MockChunkRepository
+func (_mock *MockChunkRepository) SearchSimilar(ctx context.Context, embedding []float32, limit int, threshold float64) ([]domain.Chunk, error) {
+	ret := _mock.Called(ctx, embedding, limit, threshold)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SearchSimilar")
+	}
+
+	var r0 []domain.Chunk
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []float32, int, float64) ([]domain.Chunk, error)); ok {
+		return returnFunc(ctx, embedding, limit, threshold)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []float32, int, float64) []domain.Chunk); ok {
+		r0 = returnFunc(ctx, embedding, limit, threshold)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.Chunk)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []float32, int, float64) error); ok {
+		r1 = returnFunc(ctx, embedding, limit, threshold)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockChunkRepository_SearchSimilar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SearchSimilar'
+type MockChunkRepository_SearchSimilar_Call struct {
+	*mock.Call
+}
+
+// SearchSimilar is a helper method to define mock.On call
+//   - ctx context.Context
+//   - embedding []float32
+//   - limit int
+//   - threshold float64
+func (_e *MockChunkRepository_Expecter) SearchSimilar(ctx any, embedding any, limit any, threshold any) *MockChunkRepository_SearchSimilar_Call {
+	return &MockChunkRepository_SearchSimilar_Call{Call: _e.mock.On("SearchSimilar", ctx, embedding, limit, threshold)}
+}
+
+func (_c *MockChunkRepository_SearchSimilar_Call) Run(run func(ctx context.Context, embedding []float32, limit int, threshold float64)) *MockChunkRepository_SearchSimilar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []float32
+		if args[1] != nil {
+			arg1 = args[1].([]float32)
+		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
+		var arg3 float64
+		if args[3] != nil {
+			arg3 = args[3].(float64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockChunkRepository_SearchSimilar_Call) Return(chunks []domain.Chunk, err error) *MockChunkRepository_SearchSimilar_Call {
+	_c.Call.Return(chunks, err)
+	return _c
+}
+
+func (_c *MockChunkRepository_SearchSimilar_Call) RunAndReturn(run func(ctx context.Context, embedding []float32, limit int, threshold float64) ([]domain.Chunk, error)) *MockChunkRepository_SearchSimilar_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // StoreBatch provides a mock function for the type MockChunkRepository
 func (_mock *MockChunkRepository) StoreBatch(ctx context.Context, chunks []domain.Chunk) error {
 	ret := _mock.Called(ctx, chunks)

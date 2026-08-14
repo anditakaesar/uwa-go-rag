@@ -2,14 +2,20 @@ package file_test
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/file"
+	"github.com/anditakaesar/uwa-go-rag/internal/file/mocks"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var allowedTypesTest = map[string]bool{
@@ -131,4 +137,44 @@ func TestFileService_Save(test *testing.T) {
 		}
 	})
 
+}
+
+func TestFileService_SetEmbeddingStatus(test *testing.T) {
+	fileID := uuid.Must(uuid.NewV7())
+
+	status := domain.EMBEDDING_STATUS_COMPLETED
+
+	test.Run("success", func(t *testing.T) {
+		fileRepo := mocks.NewMockFileRepository(t)
+		fileRepo.EXPECT().Update(mock.Anything, fileID, domain.UpdateFileParam{
+			EmbeddingStatus: &status,
+		}).Return(&domain.File{}, nil)
+
+		svc := file.NewService(file.ServiceDependency{
+			DirName:      "uploadDir",
+			AllowedTypes: allowedTypesTest,
+			FileRepo:     fileRepo,
+		})
+
+		err := svc.SetEmbeddingStatus(context.Background(), fileID, status)
+
+		assert.NoError(t, err)
+	})
+
+	test.Run("error", func(t *testing.T) {
+		fileRepo := mocks.NewMockFileRepository(t)
+		fileRepo.EXPECT().Update(mock.Anything, fileID, domain.UpdateFileParam{
+			EmbeddingStatus: &status,
+		}).Return(nil, errors.New("update_error"))
+
+		svc := file.NewService(file.ServiceDependency{
+			DirName:      "uploadDir",
+			AllowedTypes: allowedTypesTest,
+			FileRepo:     fileRepo,
+		})
+
+		err := svc.SetEmbeddingStatus(context.Background(), fileID, status)
+
+		assert.Error(t, err)
+	})
 }

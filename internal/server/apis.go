@@ -53,6 +53,7 @@ func newApis(infraSvc *Services) *Apis {
 		FileApi: file.NewFileApi(file.FileApiDependency{
 			FileService: infraSvc.FileService,
 			JobQueue:    infraSvc.JobQueue,
+			RagService:  infraSvc.RagService,
 		}),
 	}
 }

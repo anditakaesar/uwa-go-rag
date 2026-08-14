@@ -8,6 +8,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/jwt"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/queue"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/storage"
+	"github.com/anditakaesar/uwa-go-rag/internal/rag"
 	"github.com/anditakaesar/uwa-go-rag/internal/role"
 	"github.com/anditakaesar/uwa-go-rag/internal/user"
 	"github.com/anditakaesar/uwa-go-rag/internal/web"
@@ -26,6 +27,7 @@ type Services struct {
 	RoleService   *role.RoleService
 	RiverClient   *river.Client[pgx.Tx]
 	AuditService  *audit.AuditRecorder
+	RagService    *rag.Service
 	StorageClient *storage.RustFS
 	JobQueue      *queue.RiverQueue
 }
@@ -46,6 +48,7 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 		RoleService:   svcs.roleSvc,
 		RiverClient:   riverClient,
 		AuditService:  svcs.auditSvc,
+		RagService:    svcs.ragSvc,
 		StorageClient: clients.storageClient,
 		JobQueue:      clients.riverQueue,
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/henvic/pgq"
 	"github.com/jackc/pgx/v5"
+	"github.com/pgvector/pgvector-go"
 )
 
 type ChunkRepository struct {
@@ -22,13 +23,14 @@ func NewChunkRepository(db DBExecutor) *ChunkRepository {
 	}
 }
 
-const chunkColumns = "id, file_id, chunk_index, content, raw_text, token_count, heading_path, content_hash, metadata, created_at"
+const chunkColumns = "id, file_id, chunk_index, content, raw_text, token_count, heading_path, content_hash, metadata, embedding, created_at"
 
 func scanChunkRow(row pgx.Row) (*domain.Chunk, error) {
 	var (
 		chunk      domain.Chunk
 		headingRaw []byte
 		metaRaw    []byte
+		embedding  pgvector.Vector
 	)
 
 	err := row.Scan(
@@ -41,6 +43,7 @@ func scanChunkRow(row pgx.Row) (*domain.Chunk, error) {
 		&headingRaw,
 		&chunk.ContentHash,
 		&metaRaw,
+		&embedding,
 		&chunk.CreatedAt,
 	)
 	if err != nil {
@@ -62,6 +65,8 @@ func scanChunkRow(row pgx.Row) (*domain.Chunk, error) {
 		}
 	}
 
+	chunk.Embedding = embedding.Slice()
+
 	return &chunk, nil
 }
 
@@ -78,7 +83,7 @@ func (r *ChunkRepository) StoreBatch(ctx context.Context, chunks []domain.Chunk)
 		}
 
 		insertQuery := pgq.Insert("chunks").Columns(
-			"id", "file_id", "chunk_index", "content", "raw_text", "token_count", "heading_path", "content_hash", "metadata",
+			"id", "file_id", "chunk_index", "content", "raw_text", "token_count", "heading_path", "content_hash", "metadata", "embedding",
 		).Values(
 			chunk.ID,
 			chunk.FileID,
@@ -89,6 +94,7 @@ func (r *ChunkRepository) StoreBatch(ctx context.Context, chunks []domain.Chunk)
 			headingPath,
 			chunk.ContentHash,
 			metadata,
+			pgvector.NewVector(chunk.Embedding),
 		).Returning(chunkColumns)
 
 		sql, args, err := insertQuery.SQL()
@@ -145,4 +151,58 @@ func (r *ChunkRepository) DeleteByFileID(ctx context.Context, fileID uuid.UUID) 
 
 	_, err = Executor(ctx, r.db).Exec(ctx, sql, args...)
 	return err
+}
+
+func (r *ChunkRepository) CountEmbeddedByFileID(ctx context.Context, fileID uuid.UUID) (int, error) {
+	selectQuery := pgq.Select(COUNT_AS_TOTAL).
+		From("chunks").
+		Where("file_id = ? AND embedding IS NOT NULL", fileID)
+
+	sql, args, err := selectQuery.SQL()
+	if err != nil {
+		return 0, err
+	}
+
+	var count int
+	err = Executor(ctx, r.db).QueryRow(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// SearchSimilar returns top-k chunks ordered by cosine similarity against
+// embedding, optionally filtered by a minimum similarity threshold.
+func (r *ChunkRepository) SearchSimilar(ctx context.Context, embedding []float32, limit int, threshold float64) ([]domain.Chunk, error) {
+	queryVec := pgvector.NewVector(embedding)
+
+	selectQuery := pgq.Select(chunkColumns).
+		From("chunks").
+		Where("embedding <=> ? < 1 - ?", queryVec, threshold).
+		OrderByClause("embedding <=> ?", queryVec).
+		Limit(uint64(limit))
+
+	sql, args, err := selectQuery.SQL()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := Executor(ctx, r.db).Query(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	chunks := []domain.Chunk{}
+
+	for rows.Next() {
+		c, err := scanChunkRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		chunks = append(chunks, *c)
+	}
+
+	return chunks, rows.Err()
 }

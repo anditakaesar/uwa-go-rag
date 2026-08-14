@@ -29,3 +29,7 @@ type JobQueue interface {
 	EnqueueThumbnailGen(ctx context.Context, id uuid.UUID) error
 	EnqueueDeleteFile(ctx context.Context, key string) error
 }
+
+type RagService interface {
+	ProcessDocForEmbedding(ctx context.Context, fileID uuid.UUID) error
+}

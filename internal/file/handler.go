@@ -31,28 +31,30 @@ type FileService interface {
 
 // dto
 type SingleFileResponse struct {
-	ID           uuid.UUID `json:"id"`
-	UserID       int64     `json:"userID"`
-	OriginalName string    `json:"originalName"`
-	MimeType     string    `json:"mimeType"`
-	SizeBytes    int64     `json:"sizeBytes"`
-	SizeHumanize string    `json:"sizeHumanize"`
-	Status       string    `json:"status"`
-	ThumbnailURL string    `json:"thumbnailURL"`
-	CreatedAt    time.Time `json:"createdAt"`
+	ID              uuid.UUID `json:"id"`
+	UserID          int64     `json:"userID"`
+	OriginalName    string    `json:"originalName"`
+	MimeType        string    `json:"mimeType"`
+	SizeBytes       int64     `json:"sizeBytes"`
+	SizeHumanize    string    `json:"sizeHumanize"`
+	Status          string    `json:"status"`
+	EmbeddingStatus string    `json:"embeddingStatus"`
+	ThumbnailURL    string    `json:"thumbnailURL"`
+	CreatedAt       time.Time `json:"createdAt"`
 }
 
 func FileDomainToResponse(data *domain.File) SingleFileResponse {
 	return SingleFileResponse{
-		ID:           data.ID,
-		UserID:       data.UserID,
-		OriginalName: data.OriginalName,
-		MimeType:     data.MimeType,
-		SizeBytes:    data.SizeBytes,
-		SizeHumanize: data.SizeHumanize(),
-		ThumbnailURL: fmt.Sprintf("%s/%s/%s", env.Get().S3Config.S3Endpoint, env.Get().S3Config.S3Bucket, data.GeneratePublicThumbnailKey()),
-		Status:       string(data.Status),
-		CreatedAt:    data.CreatedAt,
+		ID:              data.ID,
+		UserID:          data.UserID,
+		OriginalName:    data.OriginalName,
+		MimeType:        data.MimeType,
+		SizeBytes:       data.SizeBytes,
+		SizeHumanize:    data.SizeHumanize(),
+		ThumbnailURL:    fmt.Sprintf("%s/%s/%s", env.Get().S3Config.S3Endpoint, env.Get().S3Config.S3Bucket, data.GeneratePublicThumbnailKey()),
+		Status:          string(data.Status),
+		EmbeddingStatus: string(data.EmbeddingStatus),
+		CreatedAt:       data.CreatedAt,
 	}
 }
 
@@ -152,6 +154,16 @@ func SetupFileApiRoutes(router chi.Router, h *FileApi) {
 				middlewares.RequireAuth(),
 			},
 		},
+		{
+			Endpoint: handler.Endpoint{
+				HttpMethod: http.MethodPost,
+				Path:       "/files/{uuid}/enqueue-rag-ingestion",
+				Handler:    handler.MakeHandler(h.RegisterRagIngestion),
+			},
+			Middlewares: []func(http.Handler) http.Handler{
+				middlewares.RequireAuth(),
+			},
+		},
 	}
 
 	for _, e := range endpoints {
@@ -222,17 +234,20 @@ func (req *FetchFilesRequest) ParseParams(r *http.Request) {
 type FileApi struct {
 	FileService FileService
 	JobQueue    JobQueue
+	RagService  RagService
 }
 
 type FileApiDependency struct {
 	FileService FileService
 	JobQueue    JobQueue
+	RagService  RagService
 }
 
 func NewFileApi(dep FileApiDependency) *FileApi {
 	return &FileApi{
 		FileService: dep.FileService,
 		JobQueue:    dep.JobQueue,
+		RagService:  dep.RagService,
 	}
 }
 
@@ -338,6 +353,21 @@ func (h *FileApi) DeleteFile(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	err = h.FileService.Delete(r.Context(), id)
+	if err != nil {
+		return err
+	}
+
+	transport.SendJSON(w, http.StatusOK, handler.DefaultSuccessResponse)
+	return nil
+}
+
+func (h *FileApi) RegisterRagIngestion(w http.ResponseWriter, r *http.Request) error {
+	id, err := handler.ParsePathParam[uuid.UUID](r, "uuid")
+	if err != nil {
+		return err
+	}
+
+	err = h.RagService.ProcessDocForEmbedding(r.Context(), id)
 	if err != nil {
 		return err
 	}

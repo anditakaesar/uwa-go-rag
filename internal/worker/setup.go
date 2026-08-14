@@ -8,6 +8,7 @@ type RegisterWorkerDep struct {
 	ChatService     ChatService
 	RagService      RagService
 	ChunkRepository ChunkRepository
+	Embedder        Embedder
 	Recorder        Recorder
 	FileService     FileService
 	StorageClient   StorageClient
@@ -24,9 +25,13 @@ func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
 				RagService:    dep.RagService,
 				StorageClient: dep.StorageClient,
 				JobQueue:      dep.JobQueue,
+				FileService:   dep.FileService,
 			}))
 		},
-		func() error { return river.AddWorkerSafely(workers, NewChunkGeneratorWorker(dep.ChunkRepository)) },
+		func() error { return river.AddWorkerSafely(workers, NewChunkGeneratorWorker(dep.ChunkRepository, dep.Embedder)) },
+		func() error {
+			return river.AddWorkerSafely(workers, NewMarkFileEmbeddedWorker(dep.FileService, dep.ChunkRepository))
+		},
 		func() error { return river.AddWorkerSafely(workers, NewInsertAuditLogWorker(dep.Recorder)) },
 		func() error {
 			return river.AddWorkerSafely(workers, NewThumbnailWorker(ThumbnailWorkerDep{
