@@ -25,7 +25,19 @@ func NewChunkRepository(db DBExecutor) *ChunkRepository {
 
 const chunkColumns = "id, file_id, chunk_index, content, raw_text, token_count, heading_path, content_hash, metadata, embedding, created_at"
 
+type rowScanner interface {
+	Scan(dest ...any) error
+}
+
 func scanChunkRow(row pgx.Row) (*domain.Chunk, error) {
+	return scanChunkColumns(row, false)
+}
+
+func scanSimilarChunkRow(row pgx.Row) (*domain.Chunk, error) {
+	return scanChunkColumns(row, true)
+}
+
+func scanChunkColumns(row rowScanner, withSimilarity bool) (*domain.Chunk, error) {
 	var (
 		chunk      domain.Chunk
 		headingRaw []byte
@@ -33,7 +45,7 @@ func scanChunkRow(row pgx.Row) (*domain.Chunk, error) {
 		embedding  pgvector.Vector
 	)
 
-	err := row.Scan(
+	dests := []any{
 		&chunk.ID,
 		&chunk.FileID,
 		&chunk.Index,
@@ -45,7 +57,12 @@ func scanChunkRow(row pgx.Row) (*domain.Chunk, error) {
 		&metaRaw,
 		&embedding,
 		&chunk.CreatedAt,
-	)
+	}
+	if withSimilarity {
+		dests = append(dests, &chunk.Similarity)
+	}
+
+	err := row.Scan(dests...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, &xerror.ErrorResourceNotFound{Message: "chunks not found"}
@@ -178,6 +195,7 @@ func (r *ChunkRepository) SearchSimilar(ctx context.Context, embedding []float32
 	queryVec := pgvector.NewVector(embedding)
 
 	selectQuery := pgq.Select(chunkColumns).
+		Column("1 - (embedding <=> ?) AS similarity", queryVec).
 		From("chunks").
 		Where("embedding <=> ? < 1 - ?", queryVec, threshold).
 		OrderByClause("embedding <=> ?", queryVec).
@@ -197,7 +215,7 @@ func (r *ChunkRepository) SearchSimilar(ctx context.Context, embedding []float32
 	chunks := []domain.Chunk{}
 
 	for rows.Next() {
-		c, err := scanChunkRow(rows)
+		c, err := scanSimilarChunkRow(rows)
 		if err != nil {
 			return nil, err
 		}

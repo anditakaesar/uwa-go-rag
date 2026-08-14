@@ -25,7 +25,7 @@ The flow is **synchronous** (request/response from the HTTP handler), reusing th
 * **Grounded answer & no-tool enforcement**: the LLM call is made with **zero tools** (no function calling, no web/search tool) and an explicit instruction to answer only from the injected context; on insufficient context the model returns the fixed "I don't know" message.
 * **Unanswered-question capture**: when grounding fails (no chunk above threshold, or a "I don't know" answer), the service records the user's question as an **unanswered FAQ** for internal curation (§4.6).
 * **Citations**: the HTTP response includes the answer plus source metadata (file ID, heading path, similarity, content snippet) per cited chunk.
-* **Retrieval contract wiring**: replace the empty `IRagRepository` in `internal/chat/service.go` and the stub `RagRepository` in `internal/infra/db/postgres/rag_repo.go` with the real search-backed implementation.
+* **Retrieval contract wiring**: replace the empty `IRagRepository` in `internal/chat/service.go` with the consumer-side `RetrievalRepository` (field renamed `ChunkRepo`) backed directly by the existing `postgres.ChunkRepository`. There is no RAG table/resource, so the redundant `RagRepository` pass-through (`internal/infra/db/postgres/rag_repo.go`) is **removed** and `ChatService` uses `ChunkRepository` directly.
 
 ### Out-of-Scope (Deferred)
 
@@ -106,7 +106,9 @@ type RetrievalRepository interface {
 }
 ```
 
-Implemented by the postgres layer. For the MVP this is the same `SearchSimilar` defined on `ChunkRepository` in the ingestion PRD (`internal/rag/adapters.go`); `internal/infra/db/postgres/rag_repo.go` is un-stubbed to expose it to the chat package (or `ChatRepository` is backed by the same postgres implementation).
+Implemented directly by `postgres.ChunkRepository` (`internal/infra/db/postgres/chunk_repository.go`), which already exposes the `SearchSimilar` from the ingestion PRD (`internal/rag/adapters.go`). Since there is no separate RAG table/resource, the former `RagRepository` pass-through (`internal/infra/db/postgres/rag_repo.go`) is **removed** and `ChatService` is wired to `ChunkRepository` directly via the `ChunkRepo` field.
+
+`SearchSimilar` also surfaces the cosine similarity per chunk so citations can report it: the query selects `1 - (embedding <=> ?) AS similarity` and populates a new `domain.Chunk.Similarity float64` field (search-only; zero elsewhere). `toCitations` copies it into `Citation.Similarity` (§4.5).
 
 ### 3.3 LLM Client — Context-Aware Prompt
 
@@ -133,7 +135,7 @@ const (
 )
 
 type ChatService struct {
-    RagRepo    RetrievalRepository
+    ChunkRepo  RetrievalRepository
     AIClient   LLMClient
     Embedder   Embedder
     Recorder   UnansweredRecorder // captures "I don't know" questions (see §4.6)
@@ -148,7 +150,7 @@ func (s *ChatService) Chat(ctx context.Context, prompt string) (*ChatResponse, e
         return nil, err
     }
 
-    chunks, err := s.RagRepo.SearchSimilar(ctx, queryVec, topK, simThreshold)
+    chunks, err := s.ChunkRepo.SearchSimilar(ctx, queryVec, topK, simThreshold)
     if err != nil {
         return nil, err
     }
@@ -284,18 +286,23 @@ When grounding fails, the question is persisted as an **unanswered FAQ** so inte
 
 **Success Response** — `200 OK`:
 
+> Responses follow the existing `transport.SendJSON` convention and are wrapped in the standard `{ "data": …, "meta": … }` envelope (`data` carries the `ChatResponse`, `meta` echoes the request).
+
 ```json
 {
-  "message": "Autentikasi dijelaskan di bagian Authentication…",
-  "citations": [
-    {
-      "chunkId": "…",
-      "fileId": "…",
-      "headingPath": ["# System Architecture", "## Authentication"],
-      "similarity": 0.92,
-      "snippet": "All API requests require a Bearer token…"
-    }
-  ]
+  "data": {
+    "message": "Autentikasi dijelaskan di bagian Authentication…",
+    "citations": [
+      {
+        "chunkId": "…",
+        "fileId": "…",
+        "headingPath": ["# System Architecture", "## Authentication"],
+        "similarity": 0.92,
+        "snippet": "All API requests require a Bearer token…"
+      }
+    ]
+  },
+  "meta": { "prompt": "Bagaimana cara setup autentikasi?" }
 }
 ```
 
@@ -303,8 +310,11 @@ When grounding fails, the question is persisted as an **unanswered FAQ** so inte
 
 ```json
 {
-  "message": "Maaf, saya tidak tahu. Silakan coba lagi dengan pertanyaan yang lebih spesifik.",
-  "citations": []
+  "data": {
+    "message": "Maaf, saya tidak tahu. Silakan coba lagi dengan pertanyaan yang lebih spesifik.",
+    "citations": []
+  },
+  "meta": { "prompt": "…" }
 }
 ```
 
@@ -323,7 +333,7 @@ Phase 3: Retrieval Service ───────────────► Chat
 Phase 4: HTTP Wiring + Tests ─────────────► SendMessage → Chat, response shape, unit/integration tests
 ```
 
-* **Week 1:** Implement `ChunkRepository.SearchSimilar` (cosine distance, threshold, limit, HNSW index scan — reuses the ingestion PRD's contract); replace the stub `RagRepository` with a search-backed implementation; update mockery mocks.
+* **Week 1:** `ChunkRepository.SearchSimilar` (cosine distance, threshold, limit, HNSW index scan — reuses the ingestion PRD's contract) already exists; remove the redundant `RagRepository` pass-through and wire `ChatService` to `ChunkRepository` via the consumer-side `RetrievalRepository` (`ChunkRepo`); update mockery mocks.
 * **Week 2:** Add `SendContextPrompt(ctx, context, question)` to `AIClient` (system instructions + injected context, **zero tools**); keep `SendPrompt` for the legacy path.
 * **Week 3:** Add `Chat` to `ChatService` with `ChatResponse`/`Citation` types, grounding constants (`noContextMsg`, `fallbackWords`, `isFallbackAnswer`), and `UnansweredRecorder` capture; wire `RetrievalRepository` + `Embedder` + `LLMClient` into `ChatServiceDep` and `service_manager.go`/`providers.go`.
 * **Week 4:** Point `ChatApi.SendMessage` at `ChatService.Chat`; add tests (no-context short-circuit + capture, fallback-answer detection + capture, citation mapping, prompt template with no-tool instruction, embed/search/LLM error propagation) matching existing mockery + testify patterns.

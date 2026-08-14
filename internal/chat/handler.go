@@ -64,35 +64,11 @@ func (h *ChatApi) SendMessage(w http.ResponseWriter, r *http.Request) error {
 		return &xerror.ErrorBadRequest{Message: "prompt required"}
 	}
 
-	// test prompt
-	// resp, err := h.ChatService.SendPrompt(r.Context(), req.Prompt)
-	// if err != nil {
-	// 	return err
-	// }
-	// data := map[string]string{
-	// 	"message": resp,
-	// }
-
-	// test job queue
-	// err = h.ChatService.SendSortJob(r.Context(), []string{"Cobra", "Bear", "Anchovie"})
-	// if err != nil {
-	// 	return err
-	// }
-
-	// data := map[string]string{
-	// 	"message": "sending job",
-	// }
-
-	// test generate embedding
-	// err = h.ChatService.SendTextIntoEmbedding(r.Context(), req.Prompt)
-
-	// simulate long running
-	// time.Sleep(10 * time.Second)
-
-	data := map[string]string{
-		"message": "sending embed request",
+	resp, err := h.ChatService.Chat(r.Context(), req.Prompt)
+	if err != nil {
+		return err
 	}
 
-	transport.SendJSON(w, http.StatusOK, data, transport.WithMeta(req))
+	transport.SendJSON(w, http.StatusOK, resp, transport.WithMeta(req))
 	return nil
 }

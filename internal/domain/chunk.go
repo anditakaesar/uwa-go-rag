@@ -16,6 +16,7 @@ type Chunk struct {
 	HeadingPath []string
 	ContentHash string
 	Metadata    map[string]any
-	Embedding   []float32 `json:"embedding,omitempty"` // pgvector, 1024-d, absent until Job 2 embeds
+	Embedding   []float32 `json:"embedding,omitempty"`  // pgvector, 1024-d, absent until Job 2 embeds
+	Similarity  float64   `json:"similarity,omitempty"` // cosine similarity, populated only by SearchSimilar
 	CreatedAt   time.Time
 }

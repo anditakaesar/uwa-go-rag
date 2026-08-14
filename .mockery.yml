@@ -18,6 +18,15 @@ packages:
     interfaces:
       Recorder:
       Repository:
+  github.com/anditakaesar/uwa-go-rag/internal/chat:
+    config:
+      dir: "internal/chat/mocks"
+    interfaces:
+      RetrievalRepository:
+      Embedder:
+      LLMClient:
+      UnansweredRecorder:
+      IChatService:
   github.com/anditakaesar/uwa-go-rag/internal/file:
     config:
       dir: "internal/file/mocks"

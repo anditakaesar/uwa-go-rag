@@ -29,7 +29,6 @@ import (
 
 type repositorySet struct {
 	userRepo           *postgres.UserRepository
-	ragRepo            *postgres.RagRepository
 	chunkRepo          *postgres.ChunkRepository
 	auditRepo          *postgres.AuditRepository
 	roleRepo           *postgres.RoleRepository
@@ -41,7 +40,6 @@ type repositorySet struct {
 func newRepositorySet(pool *pgxpool.Pool) *repositorySet {
 	return &repositorySet{
 		userRepo:           postgres.NewUserRepository(pool),
-		ragRepo:            postgres.NewRagRepository(pool),
 		chunkRepo:          postgres.NewChunkRepository(pool),
 		auditRepo:          postgres.NewAuditRepository(pool),
 		roleRepo:           postgres.NewRoleRepository(pool),
@@ -108,8 +106,10 @@ func newServiceSet(repos *repositorySet, clients *clientSet) *serviceSet {
 			JobQueue:      clients.riverQueue,
 		}),
 		chatSvc: chat.NewChatService(chat.ChatServiceDep{
-			RagRepo:   repos.ragRepo,
+			ChunkRepo: repos.chunkRepo,
 			AIClient:  clients.aiClient,
+			Embedder:  clients.aiClient,
+			Recorder:  noopUnansweredRecorder{},
 			JobQueue:  clients.riverQueue,
 			UploadDir: env.Get().Values.UploadDir,
 		}),

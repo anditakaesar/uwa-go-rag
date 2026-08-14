@@ -20,6 +20,31 @@ type AIClient struct {
 // VECTOR(n) column size.
 const EmbeddingDimensions int64 = 1024
 
+// Chat generation settings shared by SendPrompt and SendContextPrompt.
+const (
+	chatModel       = "qwen/qwen3-8b"
+	chatMaxTokens   = 1024
+	chatTemperature = 0.5
+)
+
+// baseInstructions is the shared system prompt for every chat call: plain
+// text, no markdown, always Bahasa Indonesia.
+const baseInstructions = `response in plain text;
+do not response in markdown;
+emojis are ok;
+always answer in Bahasa Indonesia`
+
+// groundedInstructions enforces the RAG grounding rules: no tools/internet and
+// answer strictly from the injected context, otherwise reply with the canonical
+// "I don't know" message.
+const groundedInstructions = `Anda TIDAK memiliki akses internet, mesin pencari, atau alat apa pun selain
+konteks di bawah ini. DILARANG menjawab dari pengetahuan umum atau menebak.
+
+Gunakan hanya konteks di bawah ini untuk menjawab pertanyaan pengguna.
+Jika jawaban tidak ada dalam konteks, balas PERSIS dengan kalimat:
+"Maaf, saya tidak tahu. Silakan coba lagi dengan pertanyaan yang lebih spesifik."
+Rujuk sumber sesuai heading yang tersedia.`
+
 type ClientDependency struct {
 	BaseURL        string
 	ApiKey         string
@@ -49,22 +74,35 @@ func (b *AIClient) SendPrompt(ctx context.Context, prompt string) (string, error
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String(prompt),
 		},
-		// Model: "deepseek/deepseek-r1-0528-qwen3-8b",
-		// Model: "google/gemma-3-12b",
-		// Model: "openrouter/free",
-		Model: "openai/gpt-oss-20b:free",
+		Model:           chatModel,
+		Instructions:    openai.String(baseInstructions),
+		MaxOutputTokens: openai.Int(chatMaxTokens),
+		Temperature:     openai.Float(chatTemperature),
+	})
 
-		// Reasoning: shared.ReasoningParam{ // not compatible with local llm
-		// 	Effort: openai.ReasoningEffortLow,
-		// },
-		Instructions: openai.String(`
-			response in plain text;
-			do not response in markdown;
-			emojis are ok;
-			always answer in Bahasa Indonesia
-		`),
-		MaxOutputTokens: openai.Int(1024),  // set this to limit the generation response
-		Temperature:     openai.Float(0.5), // 0 - 0.1: focused, predictable, literal; 1.0+: diverse, creative
+	if err != nil {
+		return "", err
+	}
+
+	return resp.OutputText(), nil
+}
+
+// SendContextPrompt answers `question` grounded in the provided context. The
+// retrieved context is appended to the system instructions and the question is
+// passed as the user input. No tool or function definitions are registered on
+// this call, so the model cannot invoke external tools.
+func (b *AIClient) SendContextPrompt(ctx context.Context, contextText string, question string) (string, error) {
+	instructions := baseInstructions + "\n\n" + groundedInstructions + "\n\n" +
+		"===== KONTEKS =====\n" + contextText + "\n===== AKHIR KONTEKS ====="
+
+	resp, err := b.client.Responses.New(ctx, responses.ResponseNewParams{
+		Input: responses.ResponseNewParamsInputUnion{
+			OfString: openai.String(question),
+		},
+		Model:           chatModel,
+		Instructions:    openai.String(instructions),
+		MaxOutputTokens: openai.Int(chatMaxTokens),
+		Temperature:     openai.Float(chatTemperature),
 	})
 
 	if err != nil {

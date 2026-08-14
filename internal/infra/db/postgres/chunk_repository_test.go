@@ -212,7 +212,7 @@ func TestChunkRepository_SearchSimilar(test *testing.T) {
 	chunk, now := newChunkFixture()
 	queryVec := []float32{0.1, 0.2, 0.3}
 
-	const query = "SELECT id, file_id, chunk_index, content, raw_text, token_count, heading_path, content_hash, metadata, embedding, created_at FROM chunks WHERE embedding <=> $1 < 1 - $2 ORDER BY embedding <=> $3 LIMIT 5"
+	const query = "SELECT id, file_id, chunk_index, content, raw_text, token_count, heading_path, content_hash, metadata, embedding, created_at, 1 - (embedding <=> $1) AS similarity FROM chunks WHERE embedding <=> $2 < 1 - $3 ORDER BY embedding <=> $4 LIMIT 5"
 
 	test.Run("returns chunks ordered by similarity", func(t *testing.T) {
 		mockDB, err := pgxmock.NewPool()
@@ -223,11 +223,11 @@ func TestChunkRepository_SearchSimilar(test *testing.T) {
 		metaRaw := []byte(`{"source":"md"}`)
 
 		rows := mockDB.NewRows([]string{
-			"id", "file_id", "chunk_index", "content", "raw_text", "token_count", "heading_path", "content_hash", "metadata", "embedding", "created_at",
-		}).AddRow(chunk.ID, chunk.FileID, chunk.Index, chunk.Content, chunk.RawText, chunk.TokenCount, headingRaw, chunk.ContentHash, metaRaw, "[0.1,0.2,0.3]", now)
+			"id", "file_id", "chunk_index", "content", "raw_text", "token_count", "heading_path", "content_hash", "metadata", "embedding", "created_at", "similarity",
+		}).AddRow(chunk.ID, chunk.FileID, chunk.Index, chunk.Content, chunk.RawText, chunk.TokenCount, headingRaw, chunk.ContentHash, metaRaw, "[0.1,0.2,0.3]", now, 0.9)
 
 		mockDB.ExpectQuery(regexp.QuoteMeta(query)).
-			WithArgs(pgvector.NewVector(queryVec), 0.7, pgvector.NewVector(queryVec)).
+			WithArgs(pgvector.NewVector(queryVec), pgvector.NewVector(queryVec), 0.7, pgvector.NewVector(queryVec)).
 			WillReturnRows(rows)
 
 		r := postgres.NewChunkRepository(mockDB)
@@ -237,6 +237,7 @@ func TestChunkRepository_SearchSimilar(test *testing.T) {
 		require.Len(t, got, 1)
 		assert.Equal(t, chunk.ID, got[0].ID)
 		assert.Equal(t, chunk.Embedding, got[0].Embedding)
+		assert.InDelta(t, 0.9, got[0].Similarity, 0.0001)
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 
@@ -246,11 +247,11 @@ func TestChunkRepository_SearchSimilar(test *testing.T) {
 		defer mockDB.Close()
 
 		rows := mockDB.NewRows([]string{
-			"id", "file_id", "chunk_index", "content", "raw_text", "token_count", "heading_path", "content_hash", "metadata", "embedding", "created_at",
+			"id", "file_id", "chunk_index", "content", "raw_text", "token_count", "heading_path", "content_hash", "metadata", "embedding", "created_at", "similarity",
 		})
 
 		mockDB.ExpectQuery(regexp.QuoteMeta(query)).
-			WithArgs(pgvector.NewVector(queryVec), 0.9, pgvector.NewVector(queryVec)).
+			WithArgs(pgvector.NewVector(queryVec), pgvector.NewVector(queryVec), 0.9, pgvector.NewVector(queryVec)).
 			WillReturnRows(rows)
 
 		r := postgres.NewChunkRepository(mockDB)
@@ -267,7 +268,7 @@ func TestChunkRepository_SearchSimilar(test *testing.T) {
 		defer mockDB.Close()
 
 		mockDB.ExpectQuery(regexp.QuoteMeta(query)).
-			WithArgs(pgvector.NewVector(queryVec), 0.7, pgvector.NewVector(queryVec)).
+			WithArgs(pgvector.NewVector(queryVec), pgvector.NewVector(queryVec), 0.7, pgvector.NewVector(queryVec)).
 			WillReturnError(errors.New("query_error"))
 
 		r := postgres.NewChunkRepository(mockDB)
