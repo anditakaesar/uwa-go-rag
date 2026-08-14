@@ -80,6 +80,8 @@ func (auditlog *AuditLog) Validate() error {
 
 type AuditLogFetchParam struct {
 	ResourceNameLike *string           `json:"resourceNameLike"`
+	StartDate        *time.Time        `json:"startDate"`
+	EndDate          *time.Time        `json:"endDate"`
 	Pagination       common.Pagination `json:"pagination"`
 }
 

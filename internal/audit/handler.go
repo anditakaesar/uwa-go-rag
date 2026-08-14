@@ -10,6 +10,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/server/handler"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/transport"
+	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -21,7 +22,9 @@ type Recorder interface {
 
 // dto
 type FetchAuditLogRequest struct {
-	ResourceNameLike *string `json:"resourceName"`
+	ResourceNameLike *string    `json:"resourceName"`
+	StartDate        *time.Time `json:"startDate"`
+	EndDate          *time.Time `json:"endDate"`
 }
 
 func (req *FetchAuditLogRequest) parseParam(r *http.Request) {
@@ -30,6 +33,39 @@ func (req *FetchAuditLogRequest) parseParam(r *http.Request) {
 	if strings.TrimSpace(resourceName) != "" {
 		req.ResourceNameLike = &resourceName
 	}
+
+	startStr := q.Get("startDate")
+	if strings.TrimSpace(startStr) != "" {
+		startDate, err := time.Parse(time.RFC3339, startStr)
+		if err == nil {
+			req.StartDate = &startDate
+		}
+	}
+
+	endStr := q.Get("endDate")
+	if strings.TrimSpace(endStr) != "" {
+		endDate, err := time.Parse(time.RFC3339, endStr)
+		if err == nil {
+			req.EndDate = &endDate
+		}
+	}
+}
+
+func (req *FetchAuditLogRequest) Validate() error {
+	startDateExist := req.StartDate != nil
+	endDateExist := req.EndDate != nil
+
+	if startDateExist != endDateExist {
+		return &xerror.ErrorValidation{Message: "parameters startDate and endDate both must exist"}
+	}
+
+	if startDateExist && endDateExist {
+		if req.EndDate.Before(*req.StartDate) {
+			return &xerror.ErrorValidation{Message: "startDate must be before endDate"}
+		}
+	}
+
+	return nil
 }
 
 type AuditLogResponse struct {
@@ -117,8 +153,15 @@ func (h *Api) FindAll(w http.ResponseWriter, r *http.Request) error {
 	var req FetchAuditLogRequest
 	req.parseParam(r)
 
+	err := req.Validate()
+	if err != nil {
+		return err
+	}
+
 	auditlogs, param, err := h.AuditLogService.FindAll(r.Context(), domain.AuditLogFetchParam{
 		ResourceNameLike: req.ResourceNameLike,
+		StartDate:        req.StartDate,
+		EndDate:          req.EndDate,
 		Pagination:       pagination,
 	})
 	if err != nil {

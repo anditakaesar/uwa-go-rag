@@ -69,7 +69,19 @@ func (r *AuditRepository) FindAll(ctx context.Context, param *domain.AuditLogFet
 	selectQuery := pgq.Select(auditLogColumns).From("audit_logs").OrderBy("audit_logs.id DESC")
 
 	if param.ResourceNameLike != nil {
-		selectQuery = selectQuery.Where("audit_log.resource_name like ?", fmt.Sprint("%", *param.ResourceNameLike, "%"))
+		selectQuery = selectQuery.Where("audit_logs.resource_name like ?", fmt.Sprint("%", *param.ResourceNameLike, "%"))
+	}
+
+	if param.StartDate != nil {
+		selectQuery = selectQuery.Where(pgq.GtOrEq{
+			"audit_logs.created_at": param.StartDate,
+		})
+	}
+
+	if param.EndDate != nil {
+		selectQuery = selectQuery.Where(pgq.LtOrEq{
+			"audit_logs.created_at": param.EndDate,
+		})
 	}
 
 	countQuery, countArgs, err := pgq.Select(COUNT_AS_TOTAL).FromSelect(selectQuery, "al").SQL()

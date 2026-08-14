@@ -364,6 +364,16 @@ paths:
             type: string
           description: find resource name like
         - in: query
+          name: startDate
+          schema:
+            type: string
+          description: date in RFC3339 format
+        - in: query
+          name: endDate
+          schema:
+            type: string
+          description: date in RFC3339 format
+        - in: query
           name: size
           schema:
             type: integer
@@ -702,6 +712,12 @@ components:
           type: "object"
           properties:
             resourceNameLike:
+              type: "string"
+              nullable: true
+            startDate:
+              type: "string"
+              nullable: true
+            endDate:
               type: "string"
               nullable: true
             pagination:
