@@ -40,13 +40,6 @@ func (r *RiverQueue) SetClient(client *river.Client[pgx.Tx]) {
 	r.client = client
 }
 
-func (r *RiverQueue) EnqueueChat(ctx context.Context, words []string) error {
-	_, err := r.client.Insert(ctx, worker.SortArgs{
-		Strings: words,
-	}, nil)
-	return err
-}
-
 func (r *RiverQueue) EnqueueRagFile(ctx context.Context, fileID uuid.UUID, objectKey string) error {
 	_, err := r.client.Insert(ctx, worker.ProcessDocArgs{
 		FileID:    fileID.String(),

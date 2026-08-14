@@ -7,7 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/xlog"
+	"github.com/henvic/pgq"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	pgxvec "github.com/pgvector/pgvector-go/pgx"
@@ -80,4 +82,14 @@ func (d *connector) Close() {
 
 func (d *connector) Ping(ctx context.Context) error {
 	return d.db.Ping(ctx)
+}
+
+func wrapPaging(p common.Pagination, sb *pgq.SelectBuilder) {
+	if p.Size > 0 {
+		*sb = sb.Limit(uint64(p.Size))
+	}
+
+	if p.Page > 0 {
+		*sb = sb.Offset(uint64(p.GetOffset()))
+	}
 }

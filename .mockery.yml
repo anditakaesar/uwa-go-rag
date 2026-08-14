@@ -26,7 +26,7 @@ packages:
       Embedder:
       LLMClient:
       UnansweredRecorder:
-      IChatService:
+      ChatService:
   github.com/anditakaesar/uwa-go-rag/internal/file:
     config:
       dir: "internal/file/mocks"

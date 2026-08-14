@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -65,7 +66,7 @@ func (ph *argonClient) HashPassword(password string) (string, error) {
 func (ph *argonClient) CheckPassword(password string, encodedHash string) (bool, error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 6 {
-		return false, fmt.Errorf("invalid hash format")
+		return false, errors.New("invalid hash format")
 	}
 
 	var memory, iterations uint32

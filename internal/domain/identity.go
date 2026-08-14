@@ -3,7 +3,6 @@ package domain
 import (
 	"context"
 
-	"github.com/anditakaesar/uwa-go-rag/internal/env"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -20,7 +19,7 @@ type UserClaims struct {
 
 type ctxKey string
 
-const IdentityKey ctxKey = env.IDENTITY_KEY
+const IdentityKey ctxKey = IDENTITY_KEY
 
 func IdentityFromContext(ctx context.Context) (Identity, bool) {
 	id, ok := ctx.Value(IdentityKey).(Identity)

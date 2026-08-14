@@ -3,7 +3,6 @@ package chat
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
@@ -37,8 +36,7 @@ type UnansweredRecorder interface {
 	RecordUnanswered(ctx context.Context, question string) error
 }
 
-type IJobQueue interface {
-	EnqueueChat(ctx context.Context, words []string) error
+type JobQueue interface {
 	EnqueueRagFile(ctx context.Context, fileID uuid.UUID, objectKey string) error
 }
 
@@ -51,39 +49,36 @@ const (
 
 var fallbackWords = []string{"tidak tahu", "tidak mengetahui", "tidak ada informasi", "i don't know"}
 
-type ChatService struct {
+type Service struct {
 	ChunkRepo RetrievalRepository
 	AIClient  LLMClient
 	Embedder  Embedder
 	Recorder  UnansweredRecorder
-	JobQueue  IJobQueue
+	Queue     JobQueue
 	UploadDir string
 }
 
-type IChatService interface {
+type ChatService interface {
 	Chat(ctx context.Context, prompt string) (*ChatResponse, error)
-	SendPrompt(ctx context.Context, prompt string) (string, error)
-	SendSortJob(ctx context.Context, words []string) error
 	SendTextIntoEmbedding(ctx context.Context, text string) error
-	DoSort(ctx context.Context, words []string) ([]string, error)
 }
 
-type ChatServiceDep struct {
+type ServiceDependency struct {
 	ChunkRepo RetrievalRepository
 	AIClient  LLMClient
 	Embedder  Embedder
 	Recorder  UnansweredRecorder
-	JobQueue  IJobQueue
+	Queue     JobQueue
 	UploadDir string
 }
 
-func NewChatService(dep ChatServiceDep) *ChatService {
-	return &ChatService{
+func NewService(dep ServiceDependency) *Service {
+	return &Service{
 		ChunkRepo: dep.ChunkRepo,
 		AIClient:  dep.AIClient,
 		Embedder:  dep.Embedder,
 		Recorder:  dep.Recorder,
-		JobQueue:  dep.JobQueue,
+		Queue:     dep.Queue,
 		UploadDir: dep.UploadDir,
 	}
 }
@@ -103,7 +98,7 @@ type Citation struct {
 
 // Chat runs the full RAG flow: embed the query, search similar chunks, augment
 // the prompt, and return a grounded answer with citations.
-func (s *ChatService) Chat(ctx context.Context, prompt string) (*ChatResponse, error) {
+func (s *Service) Chat(ctx context.Context, prompt string) (*ChatResponse, error) {
 	queryVec, err := s.Embedder.Embed(ctx, prompt)
 	if err != nil {
 		return nil, err
@@ -137,7 +132,7 @@ func (s *ChatService) Chat(ctx context.Context, prompt string) (*ChatResponse, e
 
 // recordUnanswered captures a grounded failure without failing the chat
 // response; a recording error is only logged.
-func (s *ChatService) recordUnanswered(ctx context.Context, question string) {
+func (s *Service) recordUnanswered(ctx context.Context, question string) {
 	if s.Recorder == nil {
 		return
 	}
@@ -146,15 +141,7 @@ func (s *ChatService) recordUnanswered(ctx context.Context, question string) {
 	}
 }
 
-func (s *ChatService) SendPrompt(ctx context.Context, prompt string) (string, error) {
-	return s.AIClient.SendPrompt(ctx, prompt)
-}
-
-func (s *ChatService) SendSortJob(ctx context.Context, words []string) error {
-	return s.JobQueue.EnqueueChat(ctx, words)
-}
-
-func (s *ChatService) SendTextIntoEmbedding(ctx context.Context, text string) error {
+func (s *Service) SendTextIntoEmbedding(ctx context.Context, text string) error {
 	if text == "" {
 		return nil
 	}
@@ -165,12 +152,6 @@ func (s *ChatService) SendTextIntoEmbedding(ctx context.Context, text string) er
 	_, err := s.Embedder.Embed(newCtx, text)
 
 	return err
-}
-
-func (s *ChatService) DoSort(ctx context.Context, words []string) ([]string, error) {
-	sort.Strings(words)
-	xlog.Logger.Info(fmt.Sprintf("chat service sort method called: %v", words))
-	return words, nil
 }
 
 func buildContext(chunks []domain.Chunk) string {

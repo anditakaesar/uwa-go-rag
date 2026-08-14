@@ -25,7 +25,7 @@ type unitOfWork struct {
 func (u *unitOfWork) Do(ctx context.Context, fn func(ctx context.Context) error) error {
 	tx, err := u.db.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %v", err)
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
 		rollbackCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -45,7 +45,7 @@ func (u *unitOfWork) Do(ctx context.Context, fn func(ctx context.Context) error)
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %v", err)
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil

@@ -34,10 +34,6 @@ type Recorder interface {
 	Record(ctx context.Context, auditlog domain.AuditLog) error
 }
 
-type ChatService interface {
-	DoSort(ctx context.Context, words []string) ([]string, error)
-}
-
 type StorageClient interface {
 	GetPresignPutURL(ctx context.Context, key string) (string, error)
 	GetPresignGetURL(ctx context.Context, key string) (string, error)

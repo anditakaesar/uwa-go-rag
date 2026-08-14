@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 )
 
 // ErrorSession represents authentication or session-related issues
@@ -56,14 +58,6 @@ type ErrorDecodingRequest struct {
 
 func (e *ErrorDecodingRequest) Error() string {
 	return fmt.Sprintf("error while decoding request: %v", e.Err)
-}
-
-type ErrorAuditLogRecordValidation struct {
-	Message string
-}
-
-func (e *ErrorAuditLogRecordValidation) Error() string {
-	return e.Message
 }
 
 type ErrorResourceNotFound struct {
@@ -126,9 +120,11 @@ func DefineStatusCode(err error) int {
 	var errBadRequest *ErrorBadRequest
 	var errValidation *ErrorValidation
 	var errDecodingReq *ErrorDecodingRequest
+	var errAuditlogValidation *domain.ErrorAuditLogRecordValidation
 	if errors.As(err, &errBadRequest) ||
 		errors.As(err, &errValidation) ||
-		errors.As(err, &errDecodingReq) {
+		errors.As(err, &errDecodingReq) ||
+		errors.As(err, &errAuditlogValidation) {
 		return http.StatusBadRequest
 	}
 

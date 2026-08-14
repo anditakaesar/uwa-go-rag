@@ -82,7 +82,7 @@ func (r *AuditRepository) FindAll(ctx context.Context, param *domain.AuditLogFet
 		return nil, err
 	}
 
-	param.Pagination.WrapPaging(&selectQuery)
+	wrapPaging(param.Pagination, &selectQuery)
 	query, args, err := selectQuery.SQL()
 	if err != nil {
 		return nil, err

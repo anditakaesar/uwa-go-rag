@@ -23,7 +23,7 @@ type Services struct {
 	CookieService *cookie.Service
 	FileService   *file.Service
 	WebRenderer   *web.Renderer
-	ChatService   *chat.ChatService
+	ChatService   *chat.Service
 	RoleService   *role.RoleService
 	RiverClient   *river.Client[pgx.Tx]
 	AuditService  *audit.AuditRecorder

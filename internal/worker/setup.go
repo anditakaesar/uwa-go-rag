@@ -5,7 +5,6 @@ import (
 )
 
 type RegisterWorkerDep struct {
-	ChatService     ChatService
 	RagService      RagService
 	ChunkRepository ChunkRepository
 	Embedder        Embedder
@@ -19,7 +18,6 @@ func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
 	workers := river.NewWorkers()
 
 	registrations := []func() error{
-		func() error { return river.AddWorkerSafely(workers, NewSortWorker(dep.ChatService)) },
 		func() error {
 			return river.AddWorkerSafely(workers, NewProcessDocWorker(ProcessDocWorkerDep{
 				RagService:    dep.RagService,
@@ -28,7 +26,9 @@ func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
 				FileService:   dep.FileService,
 			}))
 		},
-		func() error { return river.AddWorkerSafely(workers, NewChunkGeneratorWorker(dep.ChunkRepository, dep.Embedder)) },
+		func() error {
+			return river.AddWorkerSafely(workers, NewChunkGeneratorWorker(dep.ChunkRepository, dep.Embedder))
+		},
 		func() error {
 			return river.AddWorkerSafely(workers, NewMarkFileEmbeddedWorker(dep.FileService, dep.ChunkRepository))
 		},

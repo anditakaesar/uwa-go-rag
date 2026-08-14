@@ -95,7 +95,7 @@ func (r *RoleRepository) FetchAll(ctx context.Context, param *domain.FetchAllRol
 		return nil, err
 	}
 
-	param.Pagination.WrapPaging(&selectQuery)
+	wrapPaging(param.Pagination, &selectQuery)
 	query, args, err = selectQuery.SQL()
 	if err != nil {
 		return nil, err

@@ -110,7 +110,7 @@ func (r *FileRepository) FindAll(ctx context.Context, param *domain.FindAllFiles
 		return nil, err
 	}
 
-	param.Pagination.WrapPaging(&selectQuery)
+	wrapPaging(param.Pagination, &selectQuery)
 	query, args, err := selectQuery.SQL()
 	if err != nil {
 		return nil, err

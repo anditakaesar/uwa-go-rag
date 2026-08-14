@@ -17,6 +17,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/application"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
+	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 	"github.com/google/uuid"
 )
 
@@ -100,7 +101,11 @@ func sanitizeFilename(filename string) string {
 }
 
 func (svc *Service) GeneratePresignURL(ctx context.Context, param domain.GeneratePresignURLParam) (*domain.GeneratePresignURLReturn, error) {
-	identity := ctx.Value(domain.IdentityKey).(domain.Identity)
+	identity, ok := domain.IdentityFromContext(ctx)
+	if !ok {
+		return nil, &xerror.ErrorPermission{Message: "permission required"}
+	}
+
 	cleanFilename := sanitizeFilename(param.Name)
 	extensionFile := filepath.Ext(param.Name)
 	newID, err := uuid.NewV7()

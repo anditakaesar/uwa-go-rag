@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
-	"github.com/anditakaesar/uwa-go-rag/internal/xerror"
 )
 
 type AuditAction string
@@ -16,6 +15,14 @@ const (
 	USER_LOGIN       AuditAction = "user.login"
 	FILE_PROCESS_RAG AuditAction = "file.process_rag"
 )
+
+type ErrorAuditLogRecordValidation struct {
+	Message string
+}
+
+func (e *ErrorAuditLogRecordValidation) Error() string {
+	return e.Message
+}
 
 type AuditLog struct {
 	ID int64 `json:"id"`
@@ -63,7 +70,7 @@ func (auditlog *AuditLog) Validate() error {
 	}
 
 	if len(errFields) > 0 {
-		return &xerror.ErrorAuditLogRecordValidation{
+		return &ErrorAuditLogRecordValidation{
 			Message: fmt.Sprintf("error auditlog validation: %v", errFields),
 		}
 	}

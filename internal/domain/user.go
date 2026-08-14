@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/common"
-	"github.com/anditakaesar/uwa-go-rag/internal/env"
 )
 
 type User struct {
@@ -21,7 +20,7 @@ type UserEnriched struct {
 
 type ctxKeyUser string
 
-const UserCtxKey ctxKeyUser = env.USER_CTX_KEY
+const UserCtxKey ctxKeyUser = USER_CTX_KEY
 
 func UserFromContext(ctx context.Context) (*User, bool) {
 	user, ok := ctx.Value(UserCtxKey).(*User)

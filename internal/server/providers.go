@@ -78,7 +78,7 @@ type serviceSet struct {
 	jwtSvc    *jwt.Service
 	cookieSvc *cookie.Service
 	fileSvc   *file.Service
-	chatSvc   *chat.ChatService
+	chatSvc   *chat.Service
 	ragSvc    *rag.Service
 	auditSvc  *audit.AuditRecorder
 	roleSvc   *role.RoleService
@@ -105,12 +105,12 @@ func newServiceSet(repos *repositorySet, clients *clientSet) *serviceSet {
 			UOW:           repos.uow,
 			JobQueue:      clients.riverQueue,
 		}),
-		chatSvc: chat.NewChatService(chat.ChatServiceDep{
+		chatSvc: chat.NewService(chat.ServiceDependency{
 			ChunkRepo: repos.chunkRepo,
 			AIClient:  clients.aiClient,
 			Embedder:  clients.aiClient,
 			Recorder:  noopUnansweredRecorder{},
-			JobQueue:  clients.riverQueue,
+			Queue:     clients.riverQueue,
 			UploadDir: env.Get().Values.UploadDir,
 		}),
 		ragSvc: rag.NewRagService(rag.ServiceDependency{
@@ -127,7 +127,6 @@ func newServiceSet(repos *repositorySet, clients *clientSet) *serviceSet {
 
 func registerRiver(pool *pgxpool.Pool, repos *repositorySet, svcs *serviceSet, clients *clientSet) (*river.Client[pgx.Tx], error) {
 	workers, err := worker.RegisterWorkers(worker.RegisterWorkerDep{
-		ChatService:     svcs.chatSvc,
 		RagService:      svcs.ragSvc,
 		ChunkRepository: repos.chunkRepo,
 		Embedder:        clients.aiClient,

@@ -35,11 +35,11 @@ func SetupChatApiRoutes(router chi.Router, h *ChatApi) {
 
 // handler
 type ChatApi struct {
-	ChatService IChatService
+	ChatService ChatService
 }
 
 type ChatApiDeps struct {
-	ChatService IChatService
+	ChatService ChatService
 }
 
 func NewChatApi(dep ChatApiDeps) *ChatApi {

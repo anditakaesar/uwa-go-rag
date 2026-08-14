@@ -17,7 +17,7 @@ import (
 
 const noContextMsg = "Maaf, saya tidak tahu. Silakan coba lagi dengan pertanyaan yang lebih spesifik."
 
-func newChatService(t *testing.T) (*chat.ChatService, *mocks.MockRetrievalRepository, *mocks.MockEmbedder, *mocks.MockLLMClient, *mocks.MockUnansweredRecorder) {
+func newChatService(t *testing.T) (*chat.Service, *mocks.MockRetrievalRepository, *mocks.MockEmbedder, *mocks.MockLLMClient, *mocks.MockUnansweredRecorder) {
 	t.Helper()
 
 	repo := mocks.NewMockRetrievalRepository(t)
@@ -25,7 +25,7 @@ func newChatService(t *testing.T) (*chat.ChatService, *mocks.MockRetrievalReposi
 	llm := mocks.NewMockLLMClient(t)
 	recorder := mocks.NewMockUnansweredRecorder(t)
 
-	svc := chat.NewChatService(chat.ChatServiceDep{
+	svc := chat.NewService(chat.ServiceDependency{
 		ChunkRepo: repo,
 		AIClient:  llm,
 		Embedder:  embedder,
