@@ -31,7 +31,8 @@ INSERT INTO "public"."role_permissions" ("role_id", "permission_id")
 INSERT INTO "public"."permissions" (resource, action, name)
 VALUES
     ('faqs', 'read', 'faqs.read'),
-    ('faqs', 'update', 'faqs.update')
+    ('faqs', 'update', 'faqs.update'),
+    ('faqs', 'delete', 'faqs.delete')
 ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO "public"."role_permissions" ("role_id", "permission_id")

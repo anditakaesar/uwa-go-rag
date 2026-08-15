@@ -17,8 +17,9 @@ import (
 )
 
 type FAQService interface {
-	ListUnanswered(ctx context.Context, limit, offset int) ([]domain.FAQ, error)
+	List(ctx context.Context, status domain.FAQStatus, limit, offset int) ([]domain.FAQ, error)
 	Answer(ctx context.Context, id uuid.UUID, answer string, answeredBy int64) (*domain.FAQ, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 // dto
@@ -93,6 +94,16 @@ func SetupFAQApiRoutes(router chi.Router, h *FAQApi) {
 				middlewares.RequirePermission("faqs.update"),
 			},
 		},
+		{
+			Endpoint: handler.Endpoint{
+				HttpMethod: http.MethodDelete,
+				Path:       "/faqs/{uuid}",
+				Handler:    handler.MakeHandler(h.Delete),
+			},
+			Middlewares: []func(http.Handler) http.Handler{
+				middlewares.RequirePermission("faqs.delete"),
+			},
+		},
 	}
 
 	for _, e := range endpoints {
@@ -126,14 +137,16 @@ func (h *FAQApi) List(w http.ResponseWriter, r *http.Request) error {
 	if status == "" {
 		status = string(domain.FAQStatusUnanswered)
 	}
-	if domain.FAQStatus(status) != domain.FAQStatusUnanswered {
+	switch domain.FAQStatus(status) {
+	case domain.FAQStatusUnanswered, domain.FAQStatusAnswered, domain.FAQStatusDismissed:
+	default:
 		return &xerror.ErrorValidation{Message: "status is not supported"}
 	}
 
 	pagination := handler.ParsePagination(r)
 	pagination.Normalize()
 
-	result, err := h.FAQService.ListUnanswered(r.Context(), pagination.Size, pagination.GetOffset())
+	result, err := h.FAQService.List(r.Context(), domain.FAQStatus(status), pagination.Size, pagination.GetOffset())
 	if err != nil {
 		return err
 	}
@@ -165,5 +178,20 @@ func (h *FAQApi) Answer(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	transport.SendJSON(w, http.StatusOK, FAQToAnswerResponse(answered))
+	return nil
+}
+
+func (h *FAQApi) Delete(w http.ResponseWriter, r *http.Request) error {
+	id, err := handler.ParsePathParam[uuid.UUID](r, "uuid")
+	if err != nil {
+		return err
+	}
+
+	err = h.FAQService.Delete(r.Context(), id)
+	if err != nil {
+		return err
+	}
+
+	transport.SendJSON(w, http.StatusOK, handler.DefaultSuccessResponse)
 	return nil
 }

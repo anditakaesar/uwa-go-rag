@@ -41,7 +41,7 @@ func TestFAQApi_List(test *testing.T) {
 		faqs := []domain.FAQ{
 			{ID: uuid.Must(uuid.NewV7()), Question: "Bagaimana cara reset password?", Status: domain.FAQStatusUnanswered, CreatedAt: now},
 		}
-		svc.EXPECT().ListUnanswered(mock.Anything, 10, 0).Return(faqs, nil)
+		svc.EXPECT().List(mock.Anything, domain.FAQStatusUnanswered, 10, 0).Return(faqs, nil)
 
 		api := faq.NewFAQApi(faq.FAQApiDependency{FAQService: svc})
 		h := handler.MakeHandler(api.List)
@@ -69,8 +69,13 @@ func TestFAQApi_List(test *testing.T) {
 		assert.Equal(t, 10, envelope.Meta.Size)
 	})
 
-	test.Run("unsupported status - validation error", func(t *testing.T) {
+	test.Run("status filter - answered passed through", func(t *testing.T) {
 		svc := mocks.NewMockFAQService(t)
+
+		answered := []domain.FAQ{
+			{ID: uuid.Must(uuid.NewV7()), Question: "q?", Status: domain.FAQStatusAnswered},
+		}
+		svc.EXPECT().List(mock.Anything, domain.FAQStatusAnswered, 10, 0).Return(answered, nil)
 
 		api := faq.NewFAQApi(faq.FAQApiDependency{FAQService: svc})
 		h := handler.MakeHandler(api.List)
@@ -80,12 +85,26 @@ func TestFAQApi_List(test *testing.T) {
 
 		h.ServeHTTP(rr, req)
 
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	test.Run("invalid status - validation error", func(t *testing.T) {
+		svc := mocks.NewMockFAQService(t)
+
+		api := faq.NewFAQApi(faq.FAQApiDependency{FAQService: svc})
+		h := handler.MakeHandler(api.List)
+
+		req := httptest.NewRequest(http.MethodGet, "/faqs?status=bogus", nil)
+		rr := httptest.NewRecorder()
+
+		h.ServeHTTP(rr, req)
+
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
 	})
 
 	test.Run("service failure - propagates", func(t *testing.T) {
 		svc := mocks.NewMockFAQService(t)
-		svc.EXPECT().ListUnanswered(mock.Anything, 10, 0).Return([]domain.FAQ{}, errQuery)
+		svc.EXPECT().List(mock.Anything, domain.FAQStatusUnanswered, 10, 0).Return([]domain.FAQ{}, errQuery)
 
 		api := faq.NewFAQApi(faq.FAQApiDependency{FAQService: svc})
 		h := handler.MakeHandler(api.List)
@@ -173,5 +192,58 @@ func TestFAQApi_Answer(test *testing.T) {
 		router.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
+	})
+}
+
+func TestFAQApi_Delete(test *testing.T) {
+	test.Parallel()
+
+	faqID := uuid.Must(uuid.NewV7())
+
+	test.Run("success", func(t *testing.T) {
+		svc := mocks.NewMockFAQService(t)
+		svc.EXPECT().Delete(mock.Anything, faqID).Return(nil)
+
+		api := faq.NewFAQApi(faq.FAQApiDependency{FAQService: svc})
+		router := chi.NewRouter()
+		router.Method(http.MethodDelete, "/faqs/{uuid}", handler.MakeHandler(api.Delete))
+
+		req := httptest.NewRequest(http.MethodDelete, "/faqs/"+faqID.String(), nil)
+		rr := httptest.NewRecorder()
+
+		router.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	test.Run("invalid uuid - not found", func(t *testing.T) {
+		svc := mocks.NewMockFAQService(t)
+
+		api := faq.NewFAQApi(faq.FAQApiDependency{FAQService: svc})
+		router := chi.NewRouter()
+		router.Method(http.MethodDelete, "/faqs/{uuid}", handler.MakeHandler(api.Delete))
+
+		req := httptest.NewRequest(http.MethodDelete, "/faqs/not-a-uuid", nil)
+		rr := httptest.NewRecorder()
+
+		router.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusNotFound, rr.Code)
+	})
+
+	test.Run("service failure - propagates", func(t *testing.T) {
+		svc := mocks.NewMockFAQService(t)
+		svc.EXPECT().Delete(mock.Anything, faqID).Return(errQuery)
+
+		api := faq.NewFAQApi(faq.FAQApiDependency{FAQService: svc})
+		router := chi.NewRouter()
+		router.Method(http.MethodDelete, "/faqs/{uuid}", handler.MakeHandler(api.Delete))
+
+		req := httptest.NewRequest(http.MethodDelete, "/faqs/"+faqID.String(), nil)
+		rr := httptest.NewRecorder()
+
+		router.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
 }

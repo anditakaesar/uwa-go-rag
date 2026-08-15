@@ -119,76 +119,139 @@ func (_c *MockFAQService_Answer_Call) RunAndReturn(run func(ctx context.Context,
 	return _c
 }
 
-// ListUnanswered provides a mock function for the type MockFAQService
-func (_mock *MockFAQService) ListUnanswered(ctx context.Context, limit int, offset int) ([]domain.FAQ, error) {
-	ret := _mock.Called(ctx, limit, offset)
+// Delete provides a mock function for the type MockFAQService
+func (_mock *MockFAQService) Delete(ctx context.Context, id uuid.UUID) error {
+	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListUnanswered")
+		panic("no return value specified for Delete")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockFAQService_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type MockFAQService_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *MockFAQService_Expecter) Delete(ctx any, id any) *MockFAQService_Delete_Call {
+	return &MockFAQService_Delete_Call{Call: _e.mock.On("Delete", ctx, id)}
+}
+
+func (_c *MockFAQService_Delete_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockFAQService_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFAQService_Delete_Call) Return(err error) *MockFAQService_Delete_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockFAQService_Delete_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) error) *MockFAQService_Delete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// List provides a mock function for the type MockFAQService
+func (_mock *MockFAQService) List(ctx context.Context, status domain.FAQStatus, limit int, offset int) ([]domain.FAQ, error) {
+	ret := _mock.Called(ctx, status, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for List")
 	}
 
 	var r0 []domain.FAQ
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int) ([]domain.FAQ, error)); ok {
-		return returnFunc(ctx, limit, offset)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FAQStatus, int, int) ([]domain.FAQ, error)); ok {
+		return returnFunc(ctx, status, limit, offset)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int) []domain.FAQ); ok {
-		r0 = returnFunc(ctx, limit, offset)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FAQStatus, int, int) []domain.FAQ); ok {
+		r0 = returnFunc(ctx, status, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.FAQ)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
-		r1 = returnFunc(ctx, limit, offset)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.FAQStatus, int, int) error); ok {
+		r1 = returnFunc(ctx, status, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}
 	return r0, r1
 }
 
-// MockFAQService_ListUnanswered_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListUnanswered'
-type MockFAQService_ListUnanswered_Call struct {
+// MockFAQService_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type MockFAQService_List_Call struct {
 	*mock.Call
 }
 
-// ListUnanswered is a helper method to define mock.On call
+// List is a helper method to define mock.On call
 //   - ctx context.Context
+//   - status domain.FAQStatus
 //   - limit int
 //   - offset int
-func (_e *MockFAQService_Expecter) ListUnanswered(ctx any, limit any, offset any) *MockFAQService_ListUnanswered_Call {
-	return &MockFAQService_ListUnanswered_Call{Call: _e.mock.On("ListUnanswered", ctx, limit, offset)}
+func (_e *MockFAQService_Expecter) List(ctx any, status any, limit any, offset any) *MockFAQService_List_Call {
+	return &MockFAQService_List_Call{Call: _e.mock.On("List", ctx, status, limit, offset)}
 }
 
-func (_c *MockFAQService_ListUnanswered_Call) Run(run func(ctx context.Context, limit int, offset int)) *MockFAQService_ListUnanswered_Call {
+func (_c *MockFAQService_List_Call) Run(run func(ctx context.Context, status domain.FAQStatus, limit int, offset int)) *MockFAQService_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 int
+		var arg1 domain.FAQStatus
 		if args[1] != nil {
-			arg1 = args[1].(int)
+			arg1 = args[1].(domain.FAQStatus)
 		}
 		var arg2 int
 		if args[2] != nil {
 			arg2 = args[2].(int)
 		}
+		var arg3 int
+		if args[3] != nil {
+			arg3 = args[3].(int)
+		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
 }
 
-func (_c *MockFAQService_ListUnanswered_Call) Return(fAQs []domain.FAQ, err error) *MockFAQService_ListUnanswered_Call {
+func (_c *MockFAQService_List_Call) Return(fAQs []domain.FAQ, err error) *MockFAQService_List_Call {
 	_c.Call.Return(fAQs, err)
 	return _c
 }
 
-func (_c *MockFAQService_ListUnanswered_Call) RunAndReturn(run func(ctx context.Context, limit int, offset int) ([]domain.FAQ, error)) *MockFAQService_ListUnanswered_Call {
+func (_c *MockFAQService_List_Call) RunAndReturn(run func(ctx context.Context, status domain.FAQStatus, limit int, offset int) ([]domain.FAQ, error)) *MockFAQService_List_Call {
 	_c.Call.Return(run)
 	return _c
 }

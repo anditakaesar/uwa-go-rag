@@ -404,3 +404,53 @@ func TestFaqRepository_SetLastIndexedHash(test *testing.T) {
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 }
+
+func TestFaqRepository_Delete(test *testing.T) {
+	test.Parallel()
+
+	test.Run("success - removes faqs row then files row", func(t *testing.T) {
+		mockDB, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mockDB.Close()
+
+		faq, _, faqID, _ := faqFixture()
+		now := time.Now().UTC()
+
+		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT " + faqColumns + " FROM faqs WHERE id = $1")).
+			WithArgs(faqID).
+			WillReturnRows(mockDB.NewRows(faqRowDefs).AddRow(faqRowValues(faq, "hash")...))
+
+		mockDB.ExpectExec(regexp.QuoteMeta("DELETE FROM faqs WHERE id = $1")).
+			WithArgs(faqID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+		mockDB.ExpectQuery(regexp.QuoteMeta("DELETE FROM files WHERE id = $1 RETURNING id, user_id, original_name, mime_type, size_bytes, s3_bucket, s3_key, status, embedding_status, metadata, created_at, updated_at")).
+			WithArgs(faq.FileID).
+			WillReturnRows(mockDB.NewRows([]string{
+				"id", "user_id", "original_name", "mime_type", "size_bytes", "s3_bucket", "s3_key", "status", "embedding_status", "metadata", "created_at", "updated_at",
+			}).AddRow(faq.FileID, 0, "Internal FAQ", "text/markdown", 0, "", "faq/x.md", "pending", "pending", map[string]any{"source": "faq"}, now, now))
+
+		r := newTestFaqRepository(mockDB)
+		err = r.Delete(context.Background(), faqID)
+
+		assert.NoError(t, err)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
+
+	test.Run("not found", func(t *testing.T) {
+		mockDB, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mockDB.Close()
+
+		faqID := uuid.Must(uuid.NewV7())
+		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT " + faqColumns + " FROM faqs WHERE id = $1")).
+			WithArgs(faqID).
+			WillReturnRows(mockDB.NewRows(faqRowDefs))
+
+		r := newTestFaqRepository(mockDB)
+		err = r.Delete(context.Background(), faqID)
+
+		assert.ErrorContains(t, err, "faq not found")
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
+}

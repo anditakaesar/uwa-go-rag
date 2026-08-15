@@ -20,4 +20,8 @@ type Repository interface {
 	Get(ctx context.Context, id uuid.UUID) (*domain.FAQ, error)
 	Answer(ctx context.Context, id uuid.UUID, answer string, answeredBy int64, now time.Time) (*domain.FAQ, error)
 	SetLastIndexedHash(ctx context.Context, id uuid.UUID, hash string) error
+	// Delete removes the faqs row and the FAQ's derived files row; the chunks
+	// rows cascade with the files row. Returns ErrorResourceNotFound when the
+	// FAQ does not exist.
+	Delete(ctx context.Context, id uuid.UUID) error
 }

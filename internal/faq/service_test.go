@@ -105,12 +105,12 @@ func TestFaqService_RecordUnanswered(test *testing.T) {
 	})
 }
 
-func TestFaqService_ListUnanswered(test *testing.T) {
+func TestFaqService_List(test *testing.T) {
 	test.Parallel()
 
 	ctx := context.Background()
 
-	test.Run("success", func(t *testing.T) {
+	test.Run("success - unanswered", func(t *testing.T) {
 		mockRepo := new(mocks.MockRepository)
 
 		faqs := []domain.FAQ{
@@ -119,7 +119,23 @@ func TestFaqService_ListUnanswered(test *testing.T) {
 		mockRepo.On("ListByStatus", ctx, domain.FAQStatusUnanswered, 20, 0).Return(faqs, nil).Once()
 
 		svc := faq.NewService(faq.ServiceDependency{Repo: mockRepo})
-		got, err := svc.ListUnanswered(ctx, 20, 0)
+		got, err := svc.List(ctx, domain.FAQStatusUnanswered, 20, 0)
+
+		assert.NoError(t, err)
+		assert.Len(t, got, 1)
+		mockRepo.AssertExpectations(t)
+	})
+
+	test.Run("success - answered status passed through", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+
+		faqs := []domain.FAQ{
+			{ID: uuid.Must(uuid.NewV7()), Question: "q?", Status: domain.FAQStatusAnswered},
+		}
+		mockRepo.On("ListByStatus", ctx, domain.FAQStatusAnswered, 20, 0).Return(faqs, nil).Once()
+
+		svc := faq.NewService(faq.ServiceDependency{Repo: mockRepo})
+		got, err := svc.List(ctx, domain.FAQStatusAnswered, 20, 0)
 
 		assert.NoError(t, err)
 		assert.Len(t, got, 1)
@@ -132,7 +148,7 @@ func TestFaqService_ListUnanswered(test *testing.T) {
 		mockRepo.On("ListByStatus", ctx, domain.FAQStatusUnanswered, 20, 0).Return([]domain.FAQ{}, errors.New("query_error")).Once()
 
 		svc := faq.NewService(faq.ServiceDependency{Repo: mockRepo})
-		got, err := svc.ListUnanswered(ctx, 20, 0)
+		got, err := svc.List(ctx, domain.FAQStatusUnanswered, 20, 0)
 
 		assert.ErrorContains(t, err, "query_error")
 		assert.Empty(t, got)
@@ -213,5 +229,62 @@ func TestFaqService_Answer(test *testing.T) {
 		assert.ErrorContains(t, err, "update_error")
 		assert.Nil(t, got)
 		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestFaqService_Delete(test *testing.T) {
+	test.Parallel()
+
+	ctx := context.Background()
+	faqID := uuid.Must(uuid.NewV7())
+
+	test.Run("success - deletes rows in tx and enqueues S3 cleanup", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockUow := new(custom.IMockUow)
+		mockQueue := new(mocks.MockJobQueue)
+
+		mockUow.On("Do", ctx, mock.Anything).Return(nil).Once()
+		mockRepo.On("Delete", ctx, faqID).Return(nil).Once()
+		mockQueue.On("EnqueueDeleteFile", ctx, domain.FAQS3Key(faqID)).Return(nil).Once()
+
+		svc := faq.NewService(faq.ServiceDependency{Repo: mockRepo, UOW: mockUow, JobQueue: mockQueue})
+		err := svc.Delete(ctx, faqID)
+
+		assert.NoError(t, err)
+		mockUow.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
+		mockQueue.AssertExpectations(t)
+	})
+
+	test.Run("repo not found - propagates", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockUow := new(custom.IMockUow)
+
+		mockUow.On("Do", ctx, mock.Anything).Return(errors.New("faq not found")).Once()
+		mockRepo.On("Delete", ctx, faqID).Return(errors.New("faq not found")).Once()
+
+		svc := faq.NewService(faq.ServiceDependency{Repo: mockRepo, UOW: mockUow})
+		err := svc.Delete(ctx, faqID)
+
+		assert.ErrorContains(t, err, "faq not found")
+		mockRepo.AssertExpectations(t)
+	})
+
+	test.Run("enqueue failure - propagates", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockUow := new(custom.IMockUow)
+		mockQueue := new(mocks.MockJobQueue)
+
+		mockUow.On("Do", ctx, mock.Anything).Return(nil).Once()
+		mockRepo.On("Delete", ctx, faqID).Return(nil).Once()
+		mockQueue.On("EnqueueDeleteFile", ctx, domain.FAQS3Key(faqID)).Return(errors.New("enqueue_error")).Once()
+
+		svc := faq.NewService(faq.ServiceDependency{Repo: mockRepo, UOW: mockUow, JobQueue: mockQueue})
+		err := svc.Delete(ctx, faqID)
+
+		assert.ErrorContains(t, err, "enqueue_error")
+		mockUow.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
+		mockQueue.AssertExpectations(t)
 	})
 }

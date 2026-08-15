@@ -283,8 +283,8 @@ func (s *Service) RecordUnanswered(ctx context.Context, question string) error {
     return err
 }
 
-// ListUnanswered returns open questions for internal curation.
-func (s *Service) ListUnanswered(ctx context.Context, limit, offset int) ([]domain.FAQ, error)
+// List returns FAQs in the given status for internal curation.
+func (s *Service) List(ctx context.Context, status domain.FAQStatus, limit, offset int) ([]domain.FAQ, error)
 
 // Answer validates + persists the answer, then enqueues IndexFaqArgs.
 // The enqueue happens after the repo call returns, so the worker never sees
@@ -441,7 +441,7 @@ All phases below are **delivered**. Actual delivery per phase:
 ```
 Phase 1: FAQ Domain & Storage ────────► 000008 migration (faqs only), domain.FAQ, consumer
                                         Repository interface, postgres repo (+ file row in UoW)
-Phase 2: Capture & Curation API ──────► RecordUnanswered + ListUnanswered + Answer endpoints
+Phase 2: Capture & Curation API ──────► RecordUnanswered + List(status) + Answer endpoints
 Phase 3: Indexing Worker ─────────────► IndexFaqArgs + FaqIndexWorker + queue method +
                                         Answer enqueue + listing filter
 Phase 4: Re-index & Tests ────────────► answer edits, unique-by-args (in-flight states),
@@ -449,7 +449,7 @@ Phase 4: Re-index & Tests ────────────► answer edits, 
 ```
 
 * **Phase 1:** `000008` migration (`faqs` table, `faq_status` enum, partial unique index, `answer_content_hash`/`last_indexed_hash`) + `down` file; `domain.FAQ` (+ `FAQS3Key`); consumer-side `Repository` interface (`CreateFile`, `CreateUnanswered`, `ListByStatus`, `Get`, `Answer`, `SetLastIndexedHash`, `ErrAlreadyCaptured`); postgres `FaqRepository` (mockery mocks). Deviation from the original §4.2 sketch: the transaction lives in the **service** (`FAQService.RecordUnanswered` wraps both repo calls in `application.UnitOfWork`), matching the existing `user`/`file` service pattern — the repo is transaction-agnostic.
-* **Phase 2:** `FAQService` (`RecordUnanswered` implementing `chat.UnansweredRecorder`, `ListUnanswered`, `Answer`); `FAQApi` + `SetupFAQApiRoutes` (`GET /api/faqs`, `PUT /api/faqs/{id}/answer`); `faqs.read`/`faqs.update` permissions seeded; wired into `internal/server/setup.go`/`providers.go`/`apis.go`/`routes.go`; `noopUnansweredRecorder` removed and `faqSvc` injected as the chat `Recorder`.
+* **Phase 2:** `FAQService` (`RecordUnanswered` implementing `chat.UnansweredRecorder`, `List(status, limit, offset)`, `Answer`); `FAQApi` + `SetupFAQApiRoutes` (`GET /api/faqs`, `PUT /api/faqs/{id}/answer`); `faqs.read`/`faqs.update` permissions seeded; wired into `internal/server/setup.go`/`providers.go`/`apis.go`/`routes.go`; `noopUnansweredRecorder` removed and `faqSvc` injected as the chat `Recorder`.
 * **Phase 3:** `FaqIndexWorker` + `IndexFaqArgs` + `RiverQueue.EnqueueIndexFaq` (unique-by-args); `FAQService.Answer` enqueues `Index-FAQ` after the commit; registered in `RegisterWorkers` (`RegisterWorkerDep` gains `FaqRepository`; worker adapters gain `FileService.SetStatus`, `ChunkRepository.DeleteByFileID`, `JobQueue.EnqueueRagFile`); `file.Service.SetStatus`; `FileRepository.FindAll` gains the `s3_key NOT LIKE 'faq/%'` filter; verified an answered FAQ lands as an embedded chunk after one pipeline cycle.
 * **Phase 4:** answer edits supported (`repo.Answer` accepts re-answering `answered` rows, rejects `dismissed`); `EnqueueIndexFaq` `ByState` scoped to in-flight states (river's default includes `completed` and would block re-indexing after the first index); tests — dedupe capture, answer → job enqueue, worker hash-skip/delete/upload/enqueue, full pipeline round-trip (Index-FAQ → Process-RAG-File → Generate-Chunks → Mark-File-Embedded), re-index replaces old chunks, idempotent no-op on unchanged answer; e2e verified: index, edit re-index, idempotent re-answer, retrieval closure, listing isolation.
 

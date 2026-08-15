@@ -221,6 +221,29 @@ func (r *FaqRepository) SetLastIndexedHash(ctx context.Context, id uuid.UUID, ha
 	return err
 }
 
+// Delete removes the faqs row and the FAQ's derived files row. The chunks
+// rows are removed by the files FK ON DELETE CASCADE. The faqs row must go
+// first: faqs.file_id references files(id) without a cascade.
+func (r *FaqRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	faq, err := r.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	deleteFAQ := pgq.Delete("faqs").Where("id = ?", id)
+	sql, args, err := deleteFAQ.SQL()
+	if err != nil {
+		return err
+	}
+
+	if _, err := Executor(ctx, r.db).Exec(ctx, sql, args...); err != nil {
+		return err
+	}
+
+	_, err = r.fileRepo.Delete(ctx, faq.FileID)
+	return err
+}
+
 func isUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"

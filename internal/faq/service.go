@@ -15,6 +15,7 @@ import (
 
 type JobQueue interface {
 	EnqueueIndexFaq(ctx context.Context, args worker.IndexFaqArgs) error
+	EnqueueDeleteFile(ctx context.Context, key string) error
 }
 
 type ServiceDependency struct {
@@ -64,9 +65,9 @@ func (s *Service) RecordUnanswered(ctx context.Context, question string) error {
 	return err
 }
 
-// ListUnanswered returns open questions for internal curation.
-func (s *Service) ListUnanswered(ctx context.Context, limit, offset int) ([]domain.FAQ, error) {
-	return s.repo.ListByStatus(ctx, domain.FAQStatusUnanswered, limit, offset)
+// List returns FAQs in the given status for internal curation.
+func (s *Service) List(ctx context.Context, status domain.FAQStatus, limit, offset int) ([]domain.FAQ, error) {
+	return s.repo.ListByStatus(ctx, status, limit, offset)
 }
 
 // Answer validates and persists the canonical answer, flipping the FAQ to
@@ -88,4 +89,18 @@ func (s *Service) Answer(ctx context.Context, id uuid.UUID, answer string, answe
 	}
 
 	return faq, nil
+}
+
+// Delete hard-deletes the FAQ and its derived state: the faqs row and the
+// files row (chunks cascade) are removed in one transaction, then the S3
+// markdown object is deleted asynchronously after commit.
+func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
+	err := s.uow.Do(ctx, func(txCtx context.Context) error {
+		return s.repo.Delete(txCtx, id)
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.queue.EnqueueDeleteFile(ctx, domain.FAQS3Key(id))
 }
