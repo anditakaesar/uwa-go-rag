@@ -5,6 +5,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/auth"
 	"github.com/anditakaesar/uwa-go-rag/internal/chat"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
+	"github.com/anditakaesar/uwa-go-rag/internal/faq"
 	"github.com/anditakaesar/uwa-go-rag/internal/file"
 	"github.com/anditakaesar/uwa-go-rag/internal/role"
 	"github.com/anditakaesar/uwa-go-rag/internal/user"
@@ -19,6 +20,7 @@ type Apis struct {
 	RoleApi     *role.RoleApi
 	AuditLogApi *audit.Api
 	FileApi     *file.FileApi
+	FAQApi      *faq.FAQApi
 }
 
 func newApis(infraSvc *Services) *Apis {
@@ -54,6 +56,9 @@ func newApis(infraSvc *Services) *Apis {
 			FileService: infraSvc.FileService,
 			JobQueue:    infraSvc.JobQueue,
 			RagService:  infraSvc.RagService,
+		}),
+		FAQApi: faq.NewFAQApi(faq.FAQApiDependency{
+			FAQService: infraSvc.FAQService,
 		}),
 	}
 }

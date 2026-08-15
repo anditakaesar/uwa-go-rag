@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivertype"
 )
 
 func NewRiverClient(db *pgxpool.Pool, workers *river.Workers) (*river.Client[pgx.Tx], error) {
@@ -45,6 +46,26 @@ func (r *RiverQueue) EnqueueRagFile(ctx context.Context, fileID uuid.UUID, objec
 		FileID:    fileID.String(),
 		ObjectKey: objectKey,
 	}, nil)
+	return err
+}
+
+// EnqueueIndexFaq queues an Index-FAQ job. UniqueOpts{ByArgs: true} guarantees
+// at most one live Index-FAQ job per FAQ at a time, serializing concurrent
+// answer edits. ByState is scoped to in-flight states so a completed index
+// does not block the next one (answer edits must be re-indexable).
+func (r *RiverQueue) EnqueueIndexFaq(ctx context.Context, args worker.IndexFaqArgs) error {
+	_, err := r.client.Insert(ctx, args, &river.InsertOpts{
+		UniqueOpts: river.UniqueOpts{
+			ByArgs: true,
+			ByState: []rivertype.JobState{
+				rivertype.JobStateAvailable,
+				rivertype.JobStatePending,
+				rivertype.JobStateRunning,
+				rivertype.JobStateRetryable,
+				rivertype.JobStateScheduled,
+			},
+		},
+	})
 	return err
 }
 

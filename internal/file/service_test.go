@@ -178,3 +178,43 @@ func TestFileService_SetEmbeddingStatus(test *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestFileService_SetStatus(test *testing.T) {
+	fileID := uuid.Must(uuid.NewV7())
+
+	status := domain.UPLOAD_STATUS_COMPLETED
+
+	test.Run("success", func(t *testing.T) {
+		fileRepo := mocks.NewMockFileRepository(t)
+		fileRepo.EXPECT().Update(mock.Anything, fileID, domain.UpdateFileParam{
+			Status: &status,
+		}).Return(&domain.File{}, nil)
+
+		svc := file.NewService(file.ServiceDependency{
+			DirName:      "uploadDir",
+			AllowedTypes: allowedTypesTest,
+			FileRepo:     fileRepo,
+		})
+
+		err := svc.SetStatus(context.Background(), fileID, status)
+
+		assert.NoError(t, err)
+	})
+
+	test.Run("error", func(t *testing.T) {
+		fileRepo := mocks.NewMockFileRepository(t)
+		fileRepo.EXPECT().Update(mock.Anything, fileID, domain.UpdateFileParam{
+			Status: &status,
+		}).Return(nil, errors.New("update_error"))
+
+		svc := file.NewService(file.ServiceDependency{
+			DirName:      "uploadDir",
+			AllowedTypes: allowedTypesTest,
+			FileRepo:     fileRepo,
+		})
+
+		err := svc.SetStatus(context.Background(), fileID, status)
+
+		assert.Error(t, err)
+	})
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/auth"
 	"github.com/anditakaesar/uwa-go-rag/internal/chat"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
+	"github.com/anditakaesar/uwa-go-rag/internal/faq"
 	"github.com/anditakaesar/uwa-go-rag/internal/file"
 	"github.com/anditakaesar/uwa-go-rag/internal/role"
 	"github.com/anditakaesar/uwa-go-rag/internal/server/middlewares"
@@ -79,4 +80,5 @@ func registerAPIRoutes(r chi.Router, infraSvc *Services, apis *Apis) {
 	role.SetupRoleApiRoutes(r, apis.RoleApi)
 	audit.SetupAuditLogApiRoutes(r, apis.AuditLogApi)
 	file.SetupFileApiRoutes(r, apis.FileApi)
+	faq.SetupFAQApiRoutes(r, apis.FAQApi)
 }

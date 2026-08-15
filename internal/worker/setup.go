@@ -12,6 +12,7 @@ type RegisterWorkerDep struct {
 	FileService     FileService
 	StorageClient   StorageClient
 	JobQueue        JobQueue
+	FaqRepository   FaqRepository
 }
 
 func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
@@ -40,6 +41,15 @@ func RegisterWorkers(dep RegisterWorkerDep) (*river.Workers, error) {
 			}))
 		},
 		func() error { return river.AddWorkerSafely(workers, NewDeleteFileWorker(dep.StorageClient)) },
+		func() error {
+			return river.AddWorkerSafely(workers, NewFaqIndexWorker(FaqIndexWorkerDep{
+				FaqRepository:   dep.FaqRepository,
+				StorageClient:   dep.StorageClient,
+				ChunkRepository: dep.ChunkRepository,
+				JobQueue:        dep.JobQueue,
+				FileService:     dep.FileService,
+			}))
+		},
 	}
 
 	for _, reg := range registrations {

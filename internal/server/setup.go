@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/anditakaesar/uwa-go-rag/internal/audit"
 	"github.com/anditakaesar/uwa-go-rag/internal/chat"
+	"github.com/anditakaesar/uwa-go-rag/internal/faq"
 	"github.com/anditakaesar/uwa-go-rag/internal/file"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/cookie"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/jwt"
@@ -30,6 +31,7 @@ type Services struct {
 	RagService    *rag.Service
 	StorageClient *storage.RustFS
 	JobQueue      *queue.RiverQueue
+	FAQService    *faq.Service
 }
 
 func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
@@ -51,5 +53,6 @@ func NewInfra(pool *pgxpool.Pool, infraStorage *storage.S3Client) *Services {
 		RagService:    svcs.ragSvc,
 		StorageClient: clients.storageClient,
 		JobQueue:      clients.riverQueue,
+		FAQService:    svcs.faqSvc,
 	}
 }

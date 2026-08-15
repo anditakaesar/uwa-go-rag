@@ -169,3 +169,66 @@ func (_c *MockFileService_SetEmbeddingStatus_Call) RunAndReturn(run func(ctx con
 	_c.Call.Return(run)
 	return _c
 }
+
+// SetStatus provides a mock function for the type MockFileService
+func (_mock *MockFileService) SetStatus(ctx context.Context, fileID uuid.UUID, status domain.UploadStatus) error {
+	ret := _mock.Called(ctx, fileID, status)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetStatus")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, domain.UploadStatus) error); ok {
+		r0 = returnFunc(ctx, fileID, status)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockFileService_SetStatus_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetStatus'
+type MockFileService_SetStatus_Call struct {
+	*mock.Call
+}
+
+// SetStatus is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fileID uuid.UUID
+//   - status domain.UploadStatus
+func (_e *MockFileService_Expecter) SetStatus(ctx any, fileID any, status any) *MockFileService_SetStatus_Call {
+	return &MockFileService_SetStatus_Call{Call: _e.mock.On("SetStatus", ctx, fileID, status)}
+}
+
+func (_c *MockFileService_SetStatus_Call) Run(run func(ctx context.Context, fileID uuid.UUID, status domain.UploadStatus)) *MockFileService_SetStatus_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 domain.UploadStatus
+		if args[2] != nil {
+			arg2 = args[2].(domain.UploadStatus)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFileService_SetStatus_Call) Return(err error) *MockFileService_SetStatus_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockFileService_SetStatus_Call) RunAndReturn(run func(ctx context.Context, fileID uuid.UUID, status domain.UploadStatus) error) *MockFileService_SetStatus_Call {
+	_c.Call.Return(run)
+	return _c
+}

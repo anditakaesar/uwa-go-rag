@@ -93,8 +93,11 @@ func (r *FileRepository) Get(ctx context.Context, fileID uuid.UUID) (*domain.Fil
 }
 
 func (r *FileRepository) FindAll(ctx context.Context, param *domain.FindAllFilesParam) ([]domain.File, error) {
+	// System-owned FAQ file rows are excluded from normal listings.
 	selectQuery := pgq.Select(fileColumns).
-		From("files").OrderBy("created_at DESC")
+		From("files").
+		Where("s3_key NOT LIKE 'faq/%'").
+		OrderBy("created_at DESC")
 
 	if len(param.MimeTypes) > 0 {
 		selectQuery = selectQuery.Where(pgq.Eq{"mime_type": param.MimeTypes})

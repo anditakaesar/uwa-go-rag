@@ -162,8 +162,9 @@ No changes to `chunks` or `files` — both tables and all their constraints (inc
 `chunks.file_id` is `NOT NULL REFERENCES files(id)` (ingestion contract). Each FAQ gets its **own** `files` row, created inside the same transaction as the `faqs` row at capture time (`RecordUnanswered`), so `faqs.file_id NOT NULL` always holds:
 
 ```sql
--- Created by FaqRepository.RecordUnanswered within a UnitOfWork transaction.
--- FaqID below is the faqs.id generated first.
+-- Created by FAQService.RecordUnanswered via FaqRepository.CreateFile
+-- within a UnitOfWork transaction; CreateUnanswered inserts the faqs row
+-- in the same transaction. FaqID below is the faqs.id generated first.
 INSERT INTO "public"."files" (
     id, user_id, original_name, mime_type, size_bytes,
     s3_bucket, s3_key, status, metadata
@@ -173,9 +174,9 @@ INSERT INTO "public"."files" (
 );
 ```
 
-* `s3_key = 'faq/<faq_id>.md'` is **derived from the FAQ** — reproducible at any time, never a magic constant. An audit, cleanup job, or re-index can always reconstruct it.
+* `s3_key = 'faq/<faq_id>.md'` is **derived from the FAQ** — reproducible at any time, never a magic constant. An audit, cleanup job, or re-index can always reconstruct it. The derivation lives in `domain.FAQS3Key(faqID)` (shared by the postgres repo and `FaqIndexWorker`).
 * `user_id = 0` marks a system-owned row.
-* `status` starts `'pending'` and flips to `'completed'` when `FaqIndexWorker` uploads the markdown.
+* `status` starts `'pending'` and flips to `'completed'` when `FaqIndexWorker` uploads the markdown (via `file.Service.SetStatus`).
 * `embedding_status` starts `'pending'` (column default) and flows `'processing' → 'completed'` through the existing pipeline, driven by `MarkFileEmbeddedWorker` — the FAQ's "indexed" signal with zero new tracking code.
 * **File listings must exclude FAQ rows**: `FileRepository.FindAll` gains `s3_key NOT LIKE 'faq/%'` so the system-owned rows never surface (this also covers the listing count subquery, which is derived from the same select).
 * No S3 object exists until the first answer is saved — `RecordUnanswered` creates the row only; uploads happen in `FaqIndexWorker`.
@@ -200,6 +201,11 @@ const (
     FAQStatusDismissed  FAQStatus = "dismissed"
 )
 
+// FAQS3Key is the derived object storage key for a FAQ's markdown file.
+func FAQS3Key(faqID uuid.UUID) string {
+    return fmt.Sprintf("faq/%s.md", faqID.String())
+}
+
 type FAQ struct {
     ID                uuid.UUID
     Question          string
@@ -220,8 +226,13 @@ type FAQ struct {
 
 ```go
 // internal/faq/repository.go (implemented in internal/infra/db/postgres)
+// ErrAlreadyCaptured is returned when an unanswered FAQ for the same
+// normalized question already exists; callers treat it as a silent no-op.
+var ErrAlreadyCaptured = errors.New("faq already captured")
+
 type Repository interface {
-    RecordUnanswered(ctx context.Context, question string, askedBy *int64) error
+    CreateFile(ctx context.Context, faqID uuid.UUID) (uuid.UUID, error)
+    CreateUnanswered(ctx context.Context, newFAQ domain.FAQ) error
     ListByStatus(ctx context.Context, status domain.FAQStatus, limit, offset int) ([]domain.FAQ, error)
     Get(ctx context.Context, id uuid.UUID) (*domain.FAQ, error)
     Answer(ctx context.Context, id uuid.UUID, answer string, answeredBy int64, now time.Time) (*domain.FAQ, error)
@@ -230,21 +241,47 @@ type Repository interface {
 ```
 
 Notes:
-* `RecordUnanswered` creates the `files` row and the `faqs` row in **one transaction** (`application.UnitOfWork` — the same pattern `user`/`file` services use).
-* `Answer` sets `answer_content_hash = sha256(answer)` alongside the status flip.
+* `CreateFile` inserts the derived `files` row and returns the generated `fileID`; `CreateUnanswered` inserts the `faqs` row and maps the partial-unique-index violation (`23505`) to `ErrAlreadyCaptured`.
+* The **transaction lives in the service**: `FAQService.RecordUnanswered` wraps `CreateFile` + `CreateUnanswered` in `application.UnitOfWork` (the same pattern `user`/`file` services use), so a duplicate question rolls back the just-created file row and `RecordUnanswered` returns nil.
+* `Answer` sets `answer_content_hash = sha256(answer)` alongside the status flip. Re-answering an `answered` FAQ is an **answer edit** (the new hash drives re-indexing); only `dismissed` rows are rejected.
 
 ### 4.3 FAQ Service
 
 ```go
 // internal/faq/service.go
+type JobQueue interface {
+    EnqueueIndexFaq(ctx context.Context, args worker.IndexFaqArgs) error
+}
+
 type Service struct {
     repo  Repository
+    uow   application.UnitOfWork
     queue JobQueue
 }
 
 // Implements chat.UnansweredRecorder (retrieval PRD §3.4); replaces the
 // noopUnansweredRecorder placeholder wired in internal/server/providers.go.
-func (s *Service) RecordUnanswered(ctx context.Context, question string) error
+func (s *Service) RecordUnanswered(ctx context.Context, question string) error {
+    err := s.uow.Do(ctx, func(txCtx context.Context) error {
+        faqID, err := uuid.NewV7()
+        if err != nil {
+            return err
+        }
+        fileID, err := s.repo.CreateFile(txCtx, faqID)
+        if err != nil {
+            return err
+        }
+        return s.repo.CreateUnanswered(txCtx, domain.FAQ{
+            ID:       faqID,
+            FileID:   fileID,
+            Question: question,
+        })
+    })
+    if errors.Is(err, ErrAlreadyCaptured) {
+        return nil // dedupe is a silent no-op
+    }
+    return err
+}
 
 // ListUnanswered returns open questions for internal curation.
 func (s *Service) ListUnanswered(ctx context.Context, limit, offset int) ([]domain.FAQ, error)
@@ -257,7 +294,7 @@ func (s *Service) Answer(ctx context.Context, id uuid.UUID, answer string, answe
     if err != nil {
         return nil, err
     }
-    if err := s.queue.EnqueueIndexFaq(ctx, IndexFaqArgs{FAQID: faq.ID.String()}); err != nil {
+    if err := s.queue.EnqueueIndexFaq(ctx, worker.IndexFaqArgs{FAQID: faq.ID.String()}); err != nil {
         return nil, err
     }
     return faq, nil
@@ -278,15 +315,18 @@ func (IndexFaqArgs) Kind() string { return "Index-FAQ" }
 
 type FaqIndexWorker struct {
     river.WorkerDefaults[IndexFaqArgs]
-    faqRepo       FaqRepository   // Get, SetLastIndexedHash
+    faqRepo       FaqRepository   // Get, SetLastIndexedHash (worker adapter interface)
     storageClient StorageClient   // UploadObject
     chunkRepo     ChunkRepository // DeleteByFileID (exists on postgres repo; added to worker adapter)
-    jobQueue      JobQueue        // EnqueueRagFile (existing)
-    fileService   FileService     // SetStatus/mark files.status='completed'
+    jobQueue      JobQueue        // EnqueueRagFile (added to worker adapter)
+    fileService   FileService     // SetStatus (added to file.Service and the worker adapter)
 }
 
 func (w *FaqIndexWorker) Work(ctx context.Context, job *river.Job[IndexFaqArgs]) error {
-    faq, err := w.faqRepo.Get(ctx, idFrom(job.Args.FAQID))
+    faqID, err := uuid.Parse(job.Args.FAQID)
+    if err != nil { return err }
+
+    faq, err := w.faqRepo.Get(ctx, faqID)
     if err != nil { return err }
     if faq.Status != domain.FAQStatusAnswered { return nil } // skip stale
     if faq.LastIndexedHash == faq.AnswerContentHash { return nil } // idempotent skip
@@ -296,10 +336,11 @@ func (w *FaqIndexWorker) Work(ctx context.Context, job *river.Job[IndexFaqArgs])
     // Idempotent re-index: stale chunks must not coexist with new ones.
     if err := w.chunkRepo.DeleteByFileID(ctx, faq.FileID); err != nil { return err }
 
-    if err := w.storageClient.UploadObject(ctx, faqS3Key(faq.ID), "text/markdown", source); err != nil { return err }
+    objectKey := domain.FAQS3Key(faq.ID)
+    if err := w.storageClient.UploadObject(ctx, objectKey, "text/markdown", source); err != nil { return err }
     if err := w.fileService.SetStatus(ctx, faq.FileID, domain.UPLOAD_STATUS_COMPLETED); err != nil { return err }
 
-    if err := w.jobQueue.EnqueueRagFile(ctx, faq.FileID, faqS3Key(faq.ID)); err != nil { return err }
+    if err := w.jobQueue.EnqueueRagFile(ctx, faq.FileID, objectKey); err != nil { return err }
 
     return w.faqRepo.SetLastIndexedHash(ctx, faq.ID, faq.AnswerContentHash)
 }
@@ -307,15 +348,31 @@ func (w *FaqIndexWorker) Work(ctx context.Context, job *river.Job[IndexFaqArgs])
 
 * The worker **never writes chunks directly** — it hands off to `Process-RAG-File`; partial FAQ indexing is impossible.
 * Any failure (upload, embed API, store) retries via River's per-job semantics; because stale chunks were deleted up front, a retry simply regenerates them — the flow is idempotent.
-* **Concurrency hardening:** enqueue `Index-FAQ` with River `InsertOpts{UniqueOpts: {ByArgs: true}}` so at most one Index-FAQ job exists per FAQ at a time (concurrent answer edits serialize).
-* Registered in `RegisterWorkers` (`internal/worker/setup.go`), whose `RegisterWorkerDep` gains `FaqRepository` and `FileService` (with a status-update method), and whose `ChunkRepository` interface gains `DeleteByFileID`.
+* **Concurrency hardening:** enqueue `Index-FAQ` with River `InsertOpts{UniqueOpts: {ByArgs: true}}` so at most one Index-FAQ job exists per FAQ at a time (concurrent answer edits serialize). `ByState` is scoped to the in-flight states (`available`, `pending`, `running`, `retryable`, `scheduled`) — river's default includes `completed`, which would block re-enqueue after a successful index until the job cleaner purges it, breaking answer edits.
+* Registered in `RegisterWorkers` (`internal/worker/setup.go`), whose `RegisterWorkerDep` gains `FaqRepository`; `FileService` gains `SetStatus`, `ChunkRepository` gains `DeleteByFileID`, and `JobQueue` gains `EnqueueRagFile` (worker adapter interfaces).
 
 ### 4.5 Queue
 
 ```go
 // internal/infra/queue/river.go (new method)
-func (r *RiverQueue) EnqueueIndexFaq(ctx context.Context, args worker.IndexFaqArgs) error
+func (r *RiverQueue) EnqueueIndexFaq(ctx context.Context, args worker.IndexFaqArgs) error {
+    _, err := r.client.Insert(ctx, args, &river.InsertOpts{
+        UniqueOpts: river.UniqueOpts{
+            ByArgs: true,
+            ByState: []rivertype.JobState{
+                rivertype.JobStateAvailable,
+                rivertype.JobStatePending,
+                rivertype.JobStateRunning,
+                rivertype.JobStateRetryable,
+                rivertype.JobStateScheduled,
+            },
+        },
+    })
+    return err
+}
 ```
+
+The `ByState` list keeps the unique constraint on in-flight jobs only: a completed `Index-FAQ` must not block the next edit. River encodes the state bitmask per job; the partial unique index only conflicts while the existing job's state is inside the mask.
 
 ---
 
@@ -336,9 +393,11 @@ This section directly answers *"how does the pipeline work after the internal us
 
 ## 6. HTTP Contract (Internal Users)
 
-Routes registered behind an authenticated internal role using the existing `middlewares.RequirePermission` / auth patterns. Placeholder request/response shown; final shapes follow `transport.SendJSON` conventions.
+Routes registered behind `middlewares.RequireAuth` + `middlewares.RequirePermission` using the existing patterns: `GET /api/faqs` → `faqs.read`, `PUT /api/faqs/{id}/answer` → `faqs.update` (permissions seeded for `superadmin` in `db/seed/roles_resource_users.sql`). Handlers live in `internal/faq/handler.go` (`FAQApi` + `FAQService` interface, mockery `MockFAQService`) and follow `transport.SendJSON` conventions — every response is wrapped in a `{"data": ..., "meta": ...}` envelope.
 
-**List unanswered questions** — `GET /api/faqs?status=unanswered&page=1&pageSize=20`
+**List unanswered questions** — `GET /api/faqs?status=unanswered&page=1&size=20`
+
+`status` defaults to `unanswered` and only `unanswered` is supported in this MVP (any other value → 400). Pagination follows the codebase `page`/`size` convention (`common.Pagination`).
 
 ```json
 {
@@ -346,11 +405,13 @@ Routes registered behind an authenticated internal role using the existing `midd
     { "id": "…", "question": "Bagaimana cara reset password?", "askedBy": null,
       "createdAt": "…" }
   ],
-  "pagination": { "page": 1, "pageSize": 20, "total": 1 }
+  "meta": { "page": 1, "size": 20, "total": 1 }
 }
 ```
 
-**Answer a question** — `PUT /api/faqs/{id}/answer`
+**Answer (or edit) a question** — `PUT /api/faqs/{id}/answer`
+
+`answeredBy` is taken from the JWT identity (`domain.IdentityFromContext`). Re-answering an already-`answered` FAQ is an **answer edit**: the answer is replaced, `answer_content_hash` is bumped, and a new `Index-FAQ` job re-indexes it.
 
 ```json
 { "answer": "Buka halaman Login → klik Lupa Password → ikuti email reset." }
@@ -369,23 +430,28 @@ Response `200 OK`:
 }
 ```
 
-Error responses follow the existing `xerror` / `GlobalErrorMiddleware` patterns (not found, empty answer, not in unanswered status).
+Error responses follow the existing `xerror` / `GlobalErrorMiddleware` patterns (not found, empty answer, dismissed status, unsupported status filter).
 
 ---
 
 ## 7. Implementation Phases
 
+All phases below are **delivered**. Actual delivery per phase:
+
 ```
-Phase 1: FAQ Domain & Storage ────────► 000008 migration (faqs only), postgres repo (+ file row in UoW)
+Phase 1: FAQ Domain & Storage ────────► 000008 migration (faqs only), domain.FAQ, consumer
+                                        Repository interface, postgres repo (+ file row in UoW)
 Phase 2: Capture & Curation API ──────► RecordUnanswered + ListUnanswered + Answer endpoints
-Phase 3: Indexing Worker ─────────────► IndexFaqArgs + FaqIndexWorker + queue method + listing filter
-Phase 4: Re-index & Tests ────────────► idempotent delete-and-regenerate on edit + e2e tests
+Phase 3: Indexing Worker ─────────────► IndexFaqArgs + FaqIndexWorker + queue method +
+                                        Answer enqueue + listing filter
+Phase 4: Re-index & Tests ────────────► answer edits, unique-by-args (in-flight states),
+                                        pipeline round-trip + re-index tests, e2e verification
 ```
 
-* **Week 1:** Add `000008` migration (`faqs` table, `faq_status` enum, partial unique index, `answer_content_hash`/`last_indexed_hash`) + `down` file; `domain.FAQ`; postgres `FaqRepository` (mockery mocks).
-* **Week 2:** `FAQService` (`RecordUnanswered` implementing `chat.UnansweredRecorder`, `ListUnanswered`, `Answer`); internal HTTP routes; wire into `internal/server/setup.go`/`providers.go`/`apis.go`/`routes.go`; replace `noopUnansweredRecorder` in `providers.go`.
-* **Week 3:** `FaqIndexWorker` + `IndexFaqArgs` + `RiverQueue.EnqueueIndexFaq`; register in `RegisterWorkers` (add `FaqRepository` + `FileService` status method to `RegisterWorkerDep`, add `DeleteByFileID` to the worker `ChunkRepository` interface); `FileRepository.FindAll` gains the `s3_key NOT LIKE 'faq/%'` filter; verify an answered FAQ lands as an embedded chunk after one pipeline cycle.
-* **Week 4:** Re-index on answer edit (hash gate + `DeleteByFileID` + regenerate); River unique-by-args on `Index-FAQ`; tests (dedupe capture, answer → job enqueue, worker hash-skip/delete/upload/enqueue, pipeline round-trip retrieves the FAQ chunk, re-index replaces old chunks) matching existing mockery + testify patterns.
+* **Phase 1:** `000008` migration (`faqs` table, `faq_status` enum, partial unique index, `answer_content_hash`/`last_indexed_hash`) + `down` file; `domain.FAQ` (+ `FAQS3Key`); consumer-side `Repository` interface (`CreateFile`, `CreateUnanswered`, `ListByStatus`, `Get`, `Answer`, `SetLastIndexedHash`, `ErrAlreadyCaptured`); postgres `FaqRepository` (mockery mocks). Deviation from the original §4.2 sketch: the transaction lives in the **service** (`FAQService.RecordUnanswered` wraps both repo calls in `application.UnitOfWork`), matching the existing `user`/`file` service pattern — the repo is transaction-agnostic.
+* **Phase 2:** `FAQService` (`RecordUnanswered` implementing `chat.UnansweredRecorder`, `ListUnanswered`, `Answer`); `FAQApi` + `SetupFAQApiRoutes` (`GET /api/faqs`, `PUT /api/faqs/{id}/answer`); `faqs.read`/`faqs.update` permissions seeded; wired into `internal/server/setup.go`/`providers.go`/`apis.go`/`routes.go`; `noopUnansweredRecorder` removed and `faqSvc` injected as the chat `Recorder`.
+* **Phase 3:** `FaqIndexWorker` + `IndexFaqArgs` + `RiverQueue.EnqueueIndexFaq` (unique-by-args); `FAQService.Answer` enqueues `Index-FAQ` after the commit; registered in `RegisterWorkers` (`RegisterWorkerDep` gains `FaqRepository`; worker adapters gain `FileService.SetStatus`, `ChunkRepository.DeleteByFileID`, `JobQueue.EnqueueRagFile`); `file.Service.SetStatus`; `FileRepository.FindAll` gains the `s3_key NOT LIKE 'faq/%'` filter; verified an answered FAQ lands as an embedded chunk after one pipeline cycle.
+* **Phase 4:** answer edits supported (`repo.Answer` accepts re-answering `answered` rows, rejects `dismissed`); `EnqueueIndexFaq` `ByState` scoped to in-flight states (river's default includes `completed` and would block re-indexing after the first index); tests — dedupe capture, answer → job enqueue, worker hash-skip/delete/upload/enqueue, full pipeline round-trip (Index-FAQ → Process-RAG-File → Generate-Chunks → Mark-File-Embedded), re-index replaces old chunks, idempotent no-op on unchanged answer; e2e verified: index, edit re-index, idempotent re-answer, retrieval closure, listing isolation.
 
 ---
 

@@ -23,11 +23,13 @@ type Embedder interface {
 type ChunkRepository interface {
 	StoreBatch(ctx context.Context, chunks []domain.Chunk) error
 	CountEmbeddedByFileID(ctx context.Context, fileID uuid.UUID) (int, error)
+	DeleteByFileID(ctx context.Context, fileID uuid.UUID) error
 }
 
 type JobQueue interface {
 	EnqueueGenerateChunks(ctx context.Context, args GenerateChunksArgs) error
 	EnqueueMarkFileEmbedded(ctx context.Context, args MarkFileEmbeddedArgs) error
+	EnqueueRagFile(ctx context.Context, fileID uuid.UUID, objectKey string) error
 }
 
 type Recorder interface {
@@ -45,4 +47,12 @@ type StorageClient interface {
 type FileService interface {
 	Get(ctx context.Context, fileID uuid.UUID) (*domain.File, error)
 	SetEmbeddingStatus(ctx context.Context, fileID uuid.UUID, status domain.EmbeddingStatus) error
+	SetStatus(ctx context.Context, fileID uuid.UUID, status domain.UploadStatus) error
+}
+
+// FaqRepository is the minimal FAQ read/write surface the FaqIndexWorker
+// needs. Implemented by postgres.FaqRepository.
+type FaqRepository interface {
+	Get(ctx context.Context, id uuid.UUID) (*domain.FAQ, error)
+	SetLastIndexedHash(ctx context.Context, id uuid.UUID, hash string) error
 }

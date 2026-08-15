@@ -27,6 +27,13 @@ packages:
       LLMClient:
       UnansweredRecorder:
       ChatService:
+  github.com/anditakaesar/uwa-go-rag/internal/faq:
+    config:
+      dir: "internal/faq/mocks"
+    interfaces:
+      Repository:
+      FAQService:
+      JobQueue:
   github.com/anditakaesar/uwa-go-rag/internal/file:
     config:
       dir: "internal/file/mocks"
@@ -90,3 +97,4 @@ packages:
       StorageClient:
       Embedder:
       FileService:
+      FaqRepository:

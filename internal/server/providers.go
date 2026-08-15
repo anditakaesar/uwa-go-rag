@@ -8,6 +8,7 @@ import (
 	"github.com/anditakaesar/uwa-go-rag/internal/audit"
 	"github.com/anditakaesar/uwa-go-rag/internal/chat"
 	"github.com/anditakaesar/uwa-go-rag/internal/env"
+	"github.com/anditakaesar/uwa-go-rag/internal/faq"
 	"github.com/anditakaesar/uwa-go-rag/internal/file"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/ai"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/cookie"
@@ -34,11 +35,12 @@ type repositorySet struct {
 	roleRepo           *postgres.RoleRepository
 	rolePermissionRepo *postgres.PermissionRepo
 	fileRepo           *postgres.FileRepository
+	faqRepo            *postgres.FaqRepository
 	uow                application.UnitOfWork
 }
 
 func newRepositorySet(pool *pgxpool.Pool) *repositorySet {
-	return &repositorySet{
+	repos := &repositorySet{
 		userRepo:           postgres.NewUserRepository(pool),
 		chunkRepo:          postgres.NewChunkRepository(pool),
 		auditRepo:          postgres.NewAuditRepository(pool),
@@ -47,6 +49,9 @@ func newRepositorySet(pool *pgxpool.Pool) *repositorySet {
 		fileRepo:           postgres.NewFileRepository(pool),
 		uow:                postgres.NewUnitOfWork(pool),
 	}
+	repos.faqRepo = postgres.NewFaqRepository(pool, repos.fileRepo)
+
+	return repos
 }
 
 type clientSet struct {
@@ -82,9 +87,16 @@ type serviceSet struct {
 	ragSvc    *rag.Service
 	auditSvc  *audit.AuditRecorder
 	roleSvc   *role.RoleService
+	faqSvc    *faq.Service
 }
 
 func newServiceSet(repos *repositorySet, clients *clientSet) *serviceSet {
+	faqSvc := faq.NewService(faq.ServiceDependency{
+		Repo:     repos.faqRepo,
+		UOW:      repos.uow,
+		JobQueue: clients.riverQueue,
+	})
+
 	return &serviceSet{
 		userSvc: user.NewUserService(user.ServiceDependency{
 			UserRepo:    repos.userRepo,
@@ -109,7 +121,7 @@ func newServiceSet(repos *repositorySet, clients *clientSet) *serviceSet {
 			ChunkRepo: repos.chunkRepo,
 			AIClient:  clients.aiClient,
 			Embedder:  clients.aiClient,
-			Recorder:  noopUnansweredRecorder{},
+			Recorder:  faqSvc,
 			Queue:     clients.riverQueue,
 			UploadDir: env.Get().Values.UploadDir,
 		}),
@@ -122,6 +134,7 @@ func newServiceSet(repos *repositorySet, clients *clientSet) *serviceSet {
 		roleSvc: role.NewRoleService(role.RoleServiceDep{
 			RoleRepo: repos.roleRepo,
 		}),
+		faqSvc: faqSvc,
 	}
 }
 
@@ -134,6 +147,7 @@ func registerRiver(pool *pgxpool.Pool, repos *repositorySet, svcs *serviceSet, c
 		FileService:     svcs.fileSvc,
 		StorageClient:   clients.storageClient,
 		JobQueue:        clients.riverQueue,
+		FaqRepository:   repos.faqRepo,
 	})
 	if err != nil {
 		return nil, err

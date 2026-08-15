@@ -105,6 +105,63 @@ func (_c *MockChunkRepository_CountEmbeddedByFileID_Call) RunAndReturn(run func(
 	return _c
 }
 
+// DeleteByFileID provides a mock function for the type MockChunkRepository
+func (_mock *MockChunkRepository) DeleteByFileID(ctx context.Context, fileID uuid.UUID) error {
+	ret := _mock.Called(ctx, fileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteByFileID")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, fileID)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockChunkRepository_DeleteByFileID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteByFileID'
+type MockChunkRepository_DeleteByFileID_Call struct {
+	*mock.Call
+}
+
+// DeleteByFileID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fileID uuid.UUID
+func (_e *MockChunkRepository_Expecter) DeleteByFileID(ctx any, fileID any) *MockChunkRepository_DeleteByFileID_Call {
+	return &MockChunkRepository_DeleteByFileID_Call{Call: _e.mock.On("DeleteByFileID", ctx, fileID)}
+}
+
+func (_c *MockChunkRepository_DeleteByFileID_Call) Run(run func(ctx context.Context, fileID uuid.UUID)) *MockChunkRepository_DeleteByFileID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockChunkRepository_DeleteByFileID_Call) Return(err error) *MockChunkRepository_DeleteByFileID_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockChunkRepository_DeleteByFileID_Call) RunAndReturn(run func(ctx context.Context, fileID uuid.UUID) error) *MockChunkRepository_DeleteByFileID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // StoreBatch provides a mock function for the type MockChunkRepository
 func (_mock *MockChunkRepository) StoreBatch(ctx context.Context, chunks []domain.Chunk) error {
 	ret := _mock.Called(ctx, chunks)

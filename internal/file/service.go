@@ -178,6 +178,13 @@ func (svc *Service) SetEmbeddingStatus(ctx context.Context, id uuid.UUID, status
 	return err
 }
 
+func (svc *Service) SetStatus(ctx context.Context, id uuid.UUID, status domain.UploadStatus) error {
+	_, err := svc.fileRepo.Update(ctx, id, domain.UpdateFileParam{
+		Status: &status,
+	})
+	return err
+}
+
 func (svc *Service) Get(ctx context.Context, id uuid.UUID) (*domain.File, error) {
 	return svc.fileRepo.Get(ctx, id)
 }

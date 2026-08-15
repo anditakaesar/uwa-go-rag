@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/worker"
+	"github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -148,6 +149,69 @@ func (_c *MockJobQueue_EnqueueMarkFileEmbedded_Call) Return(err error) *MockJobQ
 }
 
 func (_c *MockJobQueue_EnqueueMarkFileEmbedded_Call) RunAndReturn(run func(ctx context.Context, args worker.MarkFileEmbeddedArgs) error) *MockJobQueue_EnqueueMarkFileEmbedded_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// EnqueueRagFile provides a mock function for the type MockJobQueue
+func (_mock *MockJobQueue) EnqueueRagFile(ctx context.Context, fileID uuid.UUID, objectKey string) error {
+	ret := _mock.Called(ctx, fileID, objectKey)
+
+	if len(ret) == 0 {
+		panic("no return value specified for EnqueueRagFile")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) error); ok {
+		r0 = returnFunc(ctx, fileID, objectKey)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockJobQueue_EnqueueRagFile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnqueueRagFile'
+type MockJobQueue_EnqueueRagFile_Call struct {
+	*mock.Call
+}
+
+// EnqueueRagFile is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fileID uuid.UUID
+//   - objectKey string
+func (_e *MockJobQueue_Expecter) EnqueueRagFile(ctx any, fileID any, objectKey any) *MockJobQueue_EnqueueRagFile_Call {
+	return &MockJobQueue_EnqueueRagFile_Call{Call: _e.mock.On("EnqueueRagFile", ctx, fileID, objectKey)}
+}
+
+func (_c *MockJobQueue_EnqueueRagFile_Call) Run(run func(ctx context.Context, fileID uuid.UUID, objectKey string)) *MockJobQueue_EnqueueRagFile_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockJobQueue_EnqueueRagFile_Call) Return(err error) *MockJobQueue_EnqueueRagFile_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockJobQueue_EnqueueRagFile_Call) RunAndReturn(run func(ctx context.Context, fileID uuid.UUID, objectKey string) error) *MockJobQueue_EnqueueRagFile_Call {
 	_c.Call.Return(run)
 	return _c
 }
