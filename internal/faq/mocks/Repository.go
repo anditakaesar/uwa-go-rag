@@ -308,6 +308,74 @@ func (_c *MockRepository_Delete_Call) RunAndReturn(run func(ctx context.Context,
 	return _c
 }
 
+// Fetch provides a mock function for the type MockRepository
+func (_mock *MockRepository) Fetch(ctx context.Context, param *domain.FetchFAQParam) ([]domain.FAQ, error) {
+	ret := _mock.Called(ctx, param)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Fetch")
+	}
+
+	var r0 []domain.FAQ
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FetchFAQParam) ([]domain.FAQ, error)); ok {
+		return returnFunc(ctx, param)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FetchFAQParam) []domain.FAQ); ok {
+		r0 = returnFunc(ctx, param)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.FAQ)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.FetchFAQParam) error); ok {
+		r1 = returnFunc(ctx, param)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockRepository_Fetch_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Fetch'
+type MockRepository_Fetch_Call struct {
+	*mock.Call
+}
+
+// Fetch is a helper method to define mock.On call
+//   - ctx context.Context
+//   - param *domain.FetchFAQParam
+func (_e *MockRepository_Expecter) Fetch(ctx any, param any) *MockRepository_Fetch_Call {
+	return &MockRepository_Fetch_Call{Call: _e.mock.On("Fetch", ctx, param)}
+}
+
+func (_c *MockRepository_Fetch_Call) Run(run func(ctx context.Context, param *domain.FetchFAQParam)) *MockRepository_Fetch_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *domain.FetchFAQParam
+		if args[1] != nil {
+			arg1 = args[1].(*domain.FetchFAQParam)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockRepository_Fetch_Call) Return(fAQs []domain.FAQ, err error) *MockRepository_Fetch_Call {
+	_c.Call.Return(fAQs, err)
+	return _c
+}
+
+func (_c *MockRepository_Fetch_Call) RunAndReturn(run func(ctx context.Context, param *domain.FetchFAQParam) ([]domain.FAQ, error)) *MockRepository_Fetch_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Get provides a mock function for the type MockRepository
 func (_mock *MockRepository) Get(ctx context.Context, id uuid.UUID) (*domain.FAQ, error) {
 	ret := _mock.Called(ctx, id)
@@ -372,86 +440,6 @@ func (_c *MockRepository_Get_Call) Return(fAQ *domain.FAQ, err error) *MockRepos
 }
 
 func (_c *MockRepository_Get_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) (*domain.FAQ, error)) *MockRepository_Get_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// ListByStatus provides a mock function for the type MockRepository
-func (_mock *MockRepository) ListByStatus(ctx context.Context, status domain.FAQStatus, limit int, offset int) ([]domain.FAQ, error) {
-	ret := _mock.Called(ctx, status, limit, offset)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListByStatus")
-	}
-
-	var r0 []domain.FAQ
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FAQStatus, int, int) ([]domain.FAQ, error)); ok {
-		return returnFunc(ctx, status, limit, offset)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FAQStatus, int, int) []domain.FAQ); ok {
-		r0 = returnFunc(ctx, status, limit, offset)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.FAQ)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.FAQStatus, int, int) error); ok {
-		r1 = returnFunc(ctx, status, limit, offset)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockRepository_ListByStatus_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListByStatus'
-type MockRepository_ListByStatus_Call struct {
-	*mock.Call
-}
-
-// ListByStatus is a helper method to define mock.On call
-//   - ctx context.Context
-//   - status domain.FAQStatus
-//   - limit int
-//   - offset int
-func (_e *MockRepository_Expecter) ListByStatus(ctx any, status any, limit any, offset any) *MockRepository_ListByStatus_Call {
-	return &MockRepository_ListByStatus_Call{Call: _e.mock.On("ListByStatus", ctx, status, limit, offset)}
-}
-
-func (_c *MockRepository_ListByStatus_Call) Run(run func(ctx context.Context, status domain.FAQStatus, limit int, offset int)) *MockRepository_ListByStatus_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 domain.FAQStatus
-		if args[1] != nil {
-			arg1 = args[1].(domain.FAQStatus)
-		}
-		var arg2 int
-		if args[2] != nil {
-			arg2 = args[2].(int)
-		}
-		var arg3 int
-		if args[3] != nil {
-			arg3 = args[3].(int)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-			arg3,
-		)
-	})
-	return _c
-}
-
-func (_c *MockRepository_ListByStatus_Call) Return(fAQs []domain.FAQ, err error) *MockRepository_ListByStatus_Call {
-	_c.Call.Return(fAQs, err)
-	return _c
-}
-
-func (_c *MockRepository_ListByStatus_Call) RunAndReturn(run func(ctx context.Context, status domain.FAQStatus, limit int, offset int) ([]domain.FAQ, error)) *MockRepository_ListByStatus_Call {
 	_c.Call.Return(run)
 	return _c
 }

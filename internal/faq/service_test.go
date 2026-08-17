@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/anditakaesar/uwa-go-rag/internal/application/mocks/custom"
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/faq"
 	"github.com/anditakaesar/uwa-go-rag/internal/faq/mocks"
@@ -109,6 +110,7 @@ func TestFaqService_List(test *testing.T) {
 	test.Parallel()
 
 	ctx := context.Background()
+	unanswered := domain.FAQStatusUnanswered
 
 	test.Run("success - unanswered", func(t *testing.T) {
 		mockRepo := new(mocks.MockRepository)
@@ -116,10 +118,22 @@ func TestFaqService_List(test *testing.T) {
 		faqs := []domain.FAQ{
 			{ID: uuid.Must(uuid.NewV7()), Question: "Bagaimana cara reset password?", Status: domain.FAQStatusUnanswered},
 		}
-		mockRepo.On("ListByStatus", ctx, domain.FAQStatusUnanswered, 20, 0).Return(faqs, nil).Once()
+		mockRepo.On("Fetch", ctx, &domain.FetchFAQParam{
+			Status: &unanswered,
+			Pagination: common.Pagination{
+				Page: 1,
+				Size: 10,
+			},
+		}).Return(faqs, nil).Once()
 
 		svc := faq.NewService(faq.ServiceDependency{Repo: mockRepo})
-		got, err := svc.List(ctx, domain.FAQStatusUnanswered, 20, 0)
+		got, err := svc.List(ctx, &domain.FetchFAQParam{
+			Status: &unanswered,
+			Pagination: common.Pagination{
+				Page: 1,
+				Size: 10,
+			},
+		})
 
 		assert.NoError(t, err)
 		assert.Len(t, got, 1)
@@ -132,10 +146,22 @@ func TestFaqService_List(test *testing.T) {
 		faqs := []domain.FAQ{
 			{ID: uuid.Must(uuid.NewV7()), Question: "q?", Status: domain.FAQStatusAnswered},
 		}
-		mockRepo.On("ListByStatus", ctx, domain.FAQStatusAnswered, 20, 0).Return(faqs, nil).Once()
+		mockRepo.On("Fetch", ctx, &domain.FetchFAQParam{
+			Status: &unanswered,
+			Pagination: common.Pagination{
+				Page: 1,
+				Size: 10,
+			},
+		}).Return(faqs, nil).Once()
 
 		svc := faq.NewService(faq.ServiceDependency{Repo: mockRepo})
-		got, err := svc.List(ctx, domain.FAQStatusAnswered, 20, 0)
+		got, err := svc.List(ctx, &domain.FetchFAQParam{
+			Status: &unanswered,
+			Pagination: common.Pagination{
+				Page: 1,
+				Size: 10,
+			},
+		})
 
 		assert.NoError(t, err)
 		assert.Len(t, got, 1)
@@ -145,10 +171,22 @@ func TestFaqService_List(test *testing.T) {
 	test.Run("repository failure - propagates", func(t *testing.T) {
 		mockRepo := new(mocks.MockRepository)
 
-		mockRepo.On("ListByStatus", ctx, domain.FAQStatusUnanswered, 20, 0).Return([]domain.FAQ{}, errors.New("query_error")).Once()
+		mockRepo.On("Fetch", ctx, &domain.FetchFAQParam{
+			Status: &unanswered,
+			Pagination: common.Pagination{
+				Page: 1,
+				Size: 10,
+			},
+		}).Return([]domain.FAQ{}, errors.New("query_error")).Once()
 
 		svc := faq.NewService(faq.ServiceDependency{Repo: mockRepo})
-		got, err := svc.List(ctx, domain.FAQStatusUnanswered, 20, 0)
+		got, err := svc.List(ctx, &domain.FetchFAQParam{
+			Status: &unanswered,
+			Pagination: common.Pagination{
+				Page: 1,
+				Size: 10,
+			},
+		})
 
 		assert.ErrorContains(t, err, "query_error")
 		assert.Empty(t, got)

@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/anditakaesar/uwa-go-rag/internal/domain"
 	"github.com/anditakaesar/uwa-go-rag/internal/faq"
 	"github.com/anditakaesar/uwa-go-rag/internal/faq/mocks"
@@ -34,6 +35,7 @@ func contextWithIdentity(r *http.Request, userID int64) context.Context {
 func TestFAQApi_List(test *testing.T) {
 	test.Parallel()
 
+	answeredStr := domain.FAQStatusAnswered
 	test.Run("success - returns unanswered FAQs with pagination", func(t *testing.T) {
 		svc := mocks.NewMockFAQService(t)
 
@@ -41,7 +43,13 @@ func TestFAQApi_List(test *testing.T) {
 		faqs := []domain.FAQ{
 			{ID: uuid.Must(uuid.NewV7()), Question: "Bagaimana cara reset password?", Status: domain.FAQStatusUnanswered, CreatedAt: now},
 		}
-		svc.EXPECT().List(mock.Anything, domain.FAQStatusUnanswered, 10, 0).Return(faqs, nil)
+		svc.EXPECT().List(mock.Anything, &domain.FetchFAQParam{
+			Status: nil,
+			Pagination: common.Pagination{
+				Page: 1,
+				Size: 10,
+			},
+		}).Return(faqs, nil)
 
 		api := faq.NewFAQApi(faq.ApiDependency{FAQService: svc})
 		h := handler.MakeHandler(api.List)
@@ -56,17 +64,20 @@ func TestFAQApi_List(test *testing.T) {
 		var envelope struct {
 			Data []faq.FAQListResponse `json:"data"`
 			Meta struct {
-				Page  int   `json:"page"`
-				Size  int   `json:"size"`
-				Total int64 `json:"total"`
+				Status     string `json:"status"`
+				Pagination struct {
+					Page  int   `json:"page"`
+					Size  int   `json:"size"`
+					Total int64 `json:"total"`
+				} `json:"pagination"`
 			} `json:"meta"`
 		}
 		require.NoError(t, json.NewDecoder(rr.Body).Decode(&envelope))
 
 		require.Len(t, envelope.Data, 1)
 		assert.Equal(t, "Bagaimana cara reset password?", envelope.Data[0].Question)
-		assert.Equal(t, 1, envelope.Meta.Page)
-		assert.Equal(t, 10, envelope.Meta.Size)
+		assert.Equal(t, 1, envelope.Meta.Pagination.Page)
+		assert.Equal(t, 10, envelope.Meta.Pagination.Size)
 	})
 
 	test.Run("status filter - answered passed through", func(t *testing.T) {
@@ -75,7 +86,13 @@ func TestFAQApi_List(test *testing.T) {
 		answered := []domain.FAQ{
 			{ID: uuid.Must(uuid.NewV7()), Question: "q?", Status: domain.FAQStatusAnswered},
 		}
-		svc.EXPECT().List(mock.Anything, domain.FAQStatusAnswered, 10, 0).Return(answered, nil)
+		svc.EXPECT().List(mock.Anything, &domain.FetchFAQParam{
+			Status: &answeredStr,
+			Pagination: common.Pagination{
+				Page: 1,
+				Size: 10,
+			},
+		}).Return(answered, nil)
 
 		api := faq.NewFAQApi(faq.ApiDependency{FAQService: svc})
 		h := handler.MakeHandler(api.List)
@@ -104,7 +121,13 @@ func TestFAQApi_List(test *testing.T) {
 
 	test.Run("service failure - propagates", func(t *testing.T) {
 		svc := mocks.NewMockFAQService(t)
-		svc.EXPECT().List(mock.Anything, domain.FAQStatusUnanswered, 10, 0).Return([]domain.FAQ{}, errQuery)
+		svc.EXPECT().List(mock.Anything, &domain.FetchFAQParam{
+			Status: nil,
+			Pagination: common.Pagination{
+				Page: 1,
+				Size: 10,
+			},
+		}).Return([]domain.FAQ{}, errQuery)
 
 		api := faq.NewFAQApi(faq.ApiDependency{FAQService: svc})
 		h := handler.MakeHandler(api.List)

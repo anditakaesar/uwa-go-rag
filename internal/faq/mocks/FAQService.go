@@ -177,8 +177,8 @@ func (_c *MockFAQService_Delete_Call) RunAndReturn(run func(ctx context.Context,
 }
 
 // List provides a mock function for the type MockFAQService
-func (_mock *MockFAQService) List(ctx context.Context, status domain.FAQStatus, limit int, offset int) ([]domain.FAQ, error) {
-	ret := _mock.Called(ctx, status, limit, offset)
+func (_mock *MockFAQService) List(ctx context.Context, param *domain.FetchFAQParam) ([]domain.FAQ, error) {
+	ret := _mock.Called(ctx, param)
 
 	if len(ret) == 0 {
 		panic("no return value specified for List")
@@ -186,18 +186,18 @@ func (_mock *MockFAQService) List(ctx context.Context, status domain.FAQStatus, 
 
 	var r0 []domain.FAQ
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FAQStatus, int, int) ([]domain.FAQ, error)); ok {
-		return returnFunc(ctx, status, limit, offset)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FetchFAQParam) ([]domain.FAQ, error)); ok {
+		return returnFunc(ctx, param)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.FAQStatus, int, int) []domain.FAQ); ok {
-		r0 = returnFunc(ctx, status, limit, offset)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.FetchFAQParam) []domain.FAQ); ok {
+		r0 = returnFunc(ctx, param)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.FAQ)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.FAQStatus, int, int) error); ok {
-		r1 = returnFunc(ctx, status, limit, offset)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.FetchFAQParam) error); ok {
+		r1 = returnFunc(ctx, param)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -211,36 +211,24 @@ type MockFAQService_List_Call struct {
 
 // List is a helper method to define mock.On call
 //   - ctx context.Context
-//   - status domain.FAQStatus
-//   - limit int
-//   - offset int
-func (_e *MockFAQService_Expecter) List(ctx any, status any, limit any, offset any) *MockFAQService_List_Call {
-	return &MockFAQService_List_Call{Call: _e.mock.On("List", ctx, status, limit, offset)}
+//   - param *domain.FetchFAQParam
+func (_e *MockFAQService_Expecter) List(ctx any, param any) *MockFAQService_List_Call {
+	return &MockFAQService_List_Call{Call: _e.mock.On("List", ctx, param)}
 }
 
-func (_c *MockFAQService_List_Call) Run(run func(ctx context.Context, status domain.FAQStatus, limit int, offset int)) *MockFAQService_List_Call {
+func (_c *MockFAQService_List_Call) Run(run func(ctx context.Context, param *domain.FetchFAQParam)) *MockFAQService_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 domain.FAQStatus
+		var arg1 *domain.FetchFAQParam
 		if args[1] != nil {
-			arg1 = args[1].(domain.FAQStatus)
-		}
-		var arg2 int
-		if args[2] != nil {
-			arg2 = args[2].(int)
-		}
-		var arg3 int
-		if args[3] != nil {
-			arg3 = args[3].(int)
+			arg1 = args[1].(*domain.FetchFAQParam)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
-			arg3,
 		)
 	})
 	return _c
@@ -251,7 +239,7 @@ func (_c *MockFAQService_List_Call) Return(fAQs []domain.FAQ, err error) *MockFA
 	return _c
 }
 
-func (_c *MockFAQService_List_Call) RunAndReturn(run func(ctx context.Context, status domain.FAQStatus, limit int, offset int) ([]domain.FAQ, error)) *MockFAQService_List_Call {
+func (_c *MockFAQService_List_Call) RunAndReturn(run func(ctx context.Context, param *domain.FetchFAQParam) ([]domain.FAQ, error)) *MockFAQService_List_Call {
 	_c.Call.Return(run)
 	return _c
 }

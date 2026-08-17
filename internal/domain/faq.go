@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/anditakaesar/uwa-go-rag/internal/common"
 	"github.com/google/uuid"
 )
 
@@ -35,4 +36,9 @@ type FAQ struct {
 	CreatedAt         time.Time
 	AnsweredAt        *time.Time
 	UpdatedAt         time.Time
+}
+
+type FetchFAQParam struct {
+	Status     *FAQStatus        `json:"status"`
+	Pagination common.Pagination `json:"pagination"`
 }

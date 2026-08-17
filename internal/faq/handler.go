@@ -17,7 +17,7 @@ import (
 )
 
 type FAQService interface {
-	List(ctx context.Context, status domain.FAQStatus, limit, offset int) ([]domain.FAQ, error)
+	List(ctx context.Context, param *domain.FetchFAQParam) ([]domain.FAQ, error)
 	Answer(ctx context.Context, id uuid.UUID, answer string, answeredBy int64) (*domain.FAQ, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
@@ -27,6 +27,8 @@ type FAQListResponse struct {
 	ID        uuid.UUID `json:"id"`
 	Question  string    `json:"question"`
 	AskedBy   *int64    `json:"askedBy"`
+	Status    string    `json:"status"`
+	Answer    string    `json:"answer"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
@@ -35,6 +37,8 @@ func FAQToListResponse(f domain.FAQ) FAQListResponse {
 		ID:        f.ID,
 		Question:  f.Question,
 		AskedBy:   f.AskedBy,
+		Status:    string(f.Status),
+		Answer:    f.Answer,
 		CreatedAt: f.CreatedAt,
 	}
 }
@@ -132,26 +136,46 @@ func NewFAQApi(dep ApiDependency) *Api {
 	}
 }
 
-func (h *Api) List(w http.ResponseWriter, r *http.Request) error {
-	status := strings.TrimSpace(r.URL.Query().Get("status"))
-	if status == "" {
-		status = string(domain.FAQStatusUnanswered)
+type ListFAQRequest struct {
+	Status *domain.FAQStatus
+}
+
+func parseParam(r *http.Request) (*ListFAQRequest, error) {
+	req := ListFAQRequest{}
+	statusStr := strings.TrimSpace(r.URL.Query().Get("status"))
+	if statusStr != "" {
+		status := domain.FAQStatus(statusStr)
+		switch status {
+		case domain.FAQStatusUnanswered, domain.FAQStatusAnswered, domain.FAQStatusDismissed:
+		default:
+			return nil, &xerror.ErrorValidation{Message: "status is not supported"}
+		}
+
+		req.Status = &status
 	}
-	switch domain.FAQStatus(status) {
-	case domain.FAQStatusUnanswered, domain.FAQStatusAnswered, domain.FAQStatusDismissed:
-	default:
-		return &xerror.ErrorValidation{Message: "status is not supported"}
+
+	return &req, nil
+}
+
+func (h *Api) List(w http.ResponseWriter, r *http.Request) error {
+	req, err := parseParam(r)
+	if err != nil {
+		return err
 	}
 
 	pagination := handler.ParsePagination(r)
 	pagination.Normalize()
 
-	result, err := h.FAQService.List(r.Context(), domain.FAQStatus(status), pagination.Size, pagination.GetOffset())
+	param := &domain.FetchFAQParam{
+		Status:     req.Status,
+		Pagination: pagination,
+	}
+	result, err := h.FAQService.List(r.Context(), param)
 	if err != nil {
 		return err
 	}
 
-	transport.SendJSON(w, http.StatusOK, FAQListToResponse(result), transport.WithMeta(pagination))
+	transport.SendJSON(w, http.StatusOK, FAQListToResponse(result), transport.WithMeta(param))
 	return nil
 }
 

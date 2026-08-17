@@ -244,6 +244,50 @@ func (r *FaqRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+func (r *FaqRepository) Fetch(ctx context.Context, param *domain.FetchFAQParam) ([]domain.FAQ, error) {
+	selectQuery := pgq.Select(faqColumns).
+		From("faqs").
+		OrderBy("created_at ASC")
+
+	if param.Status != nil {
+		selectQuery = selectQuery.Where("status = ?", param.Status)
+	}
+
+	countQuery, countArgs, err := pgq.Select(COUNT_AS_TOTAL).FromSelect(selectQuery, "f").SQL()
+	if err != nil {
+		return nil, err
+	}
+
+	err = Executor(ctx, r.db).QueryRow(ctx, countQuery, countArgs...).Scan(&param.Pagination.Total)
+	if err != nil {
+		return nil, err
+	}
+
+	wrapPaging(param.Pagination, &selectQuery)
+	sql, args, err := selectQuery.SQL()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := Executor(ctx, r.db).Query(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	faqs := []domain.FAQ{}
+
+	for rows.Next() {
+		f, err := scanFAQRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		faqs = append(faqs, *f)
+	}
+
+	return faqs, rows.Err()
+}
+
 func isUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"

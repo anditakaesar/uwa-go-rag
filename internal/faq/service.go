@@ -66,8 +66,8 @@ func (s *Service) RecordUnanswered(ctx context.Context, question string) error {
 }
 
 // List returns FAQs in the given status for internal curation.
-func (s *Service) List(ctx context.Context, status domain.FAQStatus, limit, offset int) ([]domain.FAQ, error) {
-	return s.repo.ListByStatus(ctx, status, limit, offset)
+func (s *Service) List(ctx context.Context, param *domain.FetchFAQParam) ([]domain.FAQ, error) {
+	return s.repo.Fetch(ctx, param)
 }
 
 // Answer validates and persists the canonical answer, flipping the FAQ to
