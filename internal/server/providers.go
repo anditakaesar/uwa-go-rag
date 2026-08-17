@@ -86,7 +86,7 @@ type serviceSet struct {
 	chatSvc   *chat.Service
 	ragSvc    *rag.Service
 	auditSvc  *audit.AuditRecorder
-	roleSvc   *role.RoleService
+	roleSvc   *role.Service
 	faqSvc    *faq.Service
 }
 
@@ -131,7 +131,7 @@ func newServiceSet(repos *repositorySet, clients *clientSet) *serviceSet {
 			FileRepo:  repos.fileRepo,
 		}),
 		auditSvc: audit.NewAuditLogRecorder(repos.auditRepo),
-		roleSvc: role.NewRoleService(role.RoleServiceDep{
+		roleSvc: role.NewRoleService(role.ServiceDependency{
 			RoleRepo: repos.roleRepo,
 		}),
 		faqSvc: faqSvc,

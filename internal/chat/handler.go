@@ -12,7 +12,7 @@ import (
 )
 
 // routes
-func SetupChatApiRoutes(router chi.Router, h *ChatApi) {
+func SetupRoutes(router chi.Router, h *Api) {
 	protectedEndpoints := []handler.EndpointWithMiddleware{
 		{
 			Endpoint: handler.Endpoint{
@@ -34,16 +34,16 @@ func SetupChatApiRoutes(router chi.Router, h *ChatApi) {
 }
 
 // handler
-type ChatApi struct {
+type Api struct {
 	ChatService ChatService
 }
 
-type ChatApiDeps struct {
+type ApiDependency struct {
 	ChatService ChatService
 }
 
-func NewChatApi(dep ChatApiDeps) *ChatApi {
-	return &ChatApi{
+func NewChatApi(dep ApiDependency) *Api {
+	return &Api{
 		ChatService: dep.ChatService,
 	}
 }
@@ -52,7 +52,7 @@ type ChatReq struct {
 	Prompt string `json:"prompt"`
 }
 
-func (h *ChatApi) SendMessage(w http.ResponseWriter, r *http.Request) error {
+func (h *Api) SendMessage(w http.ResponseWriter, r *http.Request) error {
 	var req ChatReq
 
 	err := json.NewDecoder(r.Body).Decode(&req)

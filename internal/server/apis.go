@@ -15,12 +15,12 @@ import (
 type Apis struct {
 	MainHandler *web.MainHandler
 	UserApi     *user.UserApi
-	ChatApi     *chat.ChatApi
+	ChatApi     *chat.Api
 	LoginApi    *auth.AuthApi
-	RoleApi     *role.RoleApi
+	RoleApi     *role.Api
 	AuditLogApi *audit.Api
 	FileApi     *file.FileApi
-	FAQApi      *faq.FAQApi
+	FAQApi      *faq.Api
 }
 
 func newApis(infraSvc *Services) *Apis {
@@ -36,17 +36,17 @@ func newApis(infraSvc *Services) *Apis {
 		UserApi: user.NewUserApi(user.UserApiDeps{
 			Service: infraSvc.UserService,
 		}),
-		ChatApi: chat.NewChatApi(chat.ChatApiDeps{
+		ChatApi: chat.NewChatApi(chat.ApiDependency{
 			ChatService: infraSvc.ChatService,
 		}),
-		LoginApi: auth.NewLoginApi(auth.LoginApiDeps{
+		LoginApi: auth.NewAuthApi(auth.AuthApiDependency{
 			UserService:   infraSvc.UserService,
 			JWTService:    infraSvc.JWTService,
 			JWTSecret:     env.Get().Values.JWTSecret,
 			CookieService: infraSvc.CookieService,
 			JobQueue:      infraSvc.JobQueue,
 		}),
-		RoleApi: role.NewRoleApi(role.RoleApiDeps{
+		RoleApi: role.NewRoleApi(role.ApiDependency{
 			RoleService: infraSvc.RoleService,
 		}),
 		AuditLogApi: audit.NewAuditLogApi(audit.ApiDependency{
@@ -57,7 +57,7 @@ func newApis(infraSvc *Services) *Apis {
 			JobQueue:    infraSvc.JobQueue,
 			RagService:  infraSvc.RagService,
 		}),
-		FAQApi: faq.NewFAQApi(faq.FAQApiDependency{
+		FAQApi: faq.NewFAQApi(faq.ApiDependency{
 			FAQService: infraSvc.FAQService,
 		}),
 	}

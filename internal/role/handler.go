@@ -14,13 +14,13 @@ import (
 )
 
 // adapters
-type IRoleService interface {
+type RoleService interface {
 	FetchAll(ctx context.Context, param domain.FetchAllRoleParam) ([]domain.Role, *domain.FetchAllRoleParam, error)
 	Get(ctx context.Context, id int64) (*domain.Role, error)
 }
 
 // routes
-func SetupRoleApiRoutes(router chi.Router, h *RoleApi) {
+func SetupRoleApiRoutes(router chi.Router, h *Api) {
 	protectedEndpoints := []handler.EndpointWithMiddleware{
 		{
 			Endpoint: handler.Endpoint{
@@ -92,21 +92,21 @@ func RolesToListResponse(roles []domain.Role) []RoleResponse {
 }
 
 // handler
-type RoleApi struct {
-	RoleService IRoleService
+type Api struct {
+	RoleService RoleService
 }
 
-type RoleApiDeps struct {
-	RoleService IRoleService
+type ApiDependency struct {
+	RoleService RoleService
 }
 
-func NewRoleApi(dep RoleApiDeps) *RoleApi {
-	return &RoleApi{
+func NewRoleApi(dep ApiDependency) *Api {
+	return &Api{
 		RoleService: dep.RoleService,
 	}
 }
 
-func (h *RoleApi) FetchRoles(w http.ResponseWriter, r *http.Request) error {
+func (h *Api) FetchRoles(w http.ResponseWriter, r *http.Request) error {
 	pagination := handler.ParsePagination(r)
 
 	var req FindRoleRequest
@@ -124,7 +124,7 @@ func (h *RoleApi) FetchRoles(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (h *RoleApi) GetRole(w http.ResponseWriter, r *http.Request) error {
+func (h *Api) GetRole(w http.ResponseWriter, r *http.Request) error {
 	id, err := handler.ParseIDParam(r)
 	if err != nil {
 		return &xerror.ErrorNotFound{Message: "not found"}

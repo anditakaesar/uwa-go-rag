@@ -75,8 +75,8 @@ func registerAPIRoutes(r chi.Router, infraSvc *Services, apis *Apis) {
 	r.Use(middlewares.ResolveUser(infraSvc.UserService))
 
 	user.SetupUserApiRoutes(r, apis.UserApi)
-	chat.SetupChatApiRoutes(r, apis.ChatApi)
-	auth.SetupLoginApiRoutes(r, apis.LoginApi)
+	chat.SetupRoutes(r, apis.ChatApi)
+	auth.SetupAuthApiRoutes(r, apis.LoginApi)
 	role.SetupRoleApiRoutes(r, apis.RoleApi)
 	audit.SetupAuditLogApiRoutes(r, apis.AuditLogApi)
 	file.SetupFileApiRoutes(r, apis.FileApi)

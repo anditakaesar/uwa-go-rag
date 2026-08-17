@@ -72,7 +72,7 @@ type AnswerFAQRequest struct {
 }
 
 // routes
-func SetupFAQApiRoutes(router chi.Router, h *FAQApi) {
+func SetupFAQApiRoutes(router chi.Router, h *Api) {
 	endpoints := []handler.EndpointWithMiddleware{
 		{
 			Endpoint: handler.Endpoint{
@@ -118,21 +118,21 @@ func SetupFAQApiRoutes(router chi.Router, h *FAQApi) {
 }
 
 // handler
-type FAQApi struct {
+type Api struct {
 	FAQService FAQService
 }
 
-type FAQApiDependency struct {
+type ApiDependency struct {
 	FAQService FAQService
 }
 
-func NewFAQApi(dep FAQApiDependency) *FAQApi {
-	return &FAQApi{
+func NewFAQApi(dep ApiDependency) *Api {
+	return &Api{
 		FAQService: dep.FAQService,
 	}
 }
 
-func (h *FAQApi) List(w http.ResponseWriter, r *http.Request) error {
+func (h *Api) List(w http.ResponseWriter, r *http.Request) error {
 	status := strings.TrimSpace(r.URL.Query().Get("status"))
 	if status == "" {
 		status = string(domain.FAQStatusUnanswered)
@@ -155,7 +155,7 @@ func (h *FAQApi) List(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (h *FAQApi) Answer(w http.ResponseWriter, r *http.Request) error {
+func (h *Api) Answer(w http.ResponseWriter, r *http.Request) error {
 	id, err := handler.ParsePathParam[uuid.UUID](r, "uuid")
 	if err != nil {
 		return err
@@ -181,7 +181,7 @@ func (h *FAQApi) Answer(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (h *FAQApi) Delete(w http.ResponseWriter, r *http.Request) error {
+func (h *Api) Delete(w http.ResponseWriter, r *http.Request) error {
 	id, err := handler.ParsePathParam[uuid.UUID](r, "uuid")
 	if err != nil {
 		return err

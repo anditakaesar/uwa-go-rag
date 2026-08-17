@@ -25,7 +25,7 @@ type Services struct {
 	FileService   *file.Service
 	WebRenderer   *web.Renderer
 	ChatService   *chat.Service
-	RoleService   *role.RoleService
+	RoleService   *role.Service
 	RiverClient   *river.Client[pgx.Tx]
 	AuditService  *audit.AuditRecorder
 	RagService    *rag.Service

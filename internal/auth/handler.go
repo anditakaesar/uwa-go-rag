@@ -49,7 +49,7 @@ type AuthApi struct {
 	JobQueue      JobQueue
 }
 
-type LoginApiDeps struct {
+type AuthApiDependency struct {
 	UserService   UserService
 	JWTService    JWTService
 	JWTSecret     string
@@ -57,7 +57,7 @@ type LoginApiDeps struct {
 	JobQueue      JobQueue
 }
 
-func NewLoginApi(dep LoginApiDeps) *AuthApi {
+func NewAuthApi(dep AuthApiDependency) *AuthApi {
 	return &AuthApi{
 		UserService:   dep.UserService,
 		JWTService:    dep.JWTService,
@@ -72,7 +72,7 @@ type LoginReq struct {
 	Password string `json:"password"`
 }
 
-func SetupLoginApiRoutes(router chi.Router, h *AuthApi) {
+func SetupAuthApiRoutes(router chi.Router, h *AuthApi) {
 	endpoints := []handler.Endpoint{
 		{
 			HttpMethod: http.MethodPost,

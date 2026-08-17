@@ -36,7 +36,7 @@ func TestSendMessage_Success(t *testing.T) {
 		},
 	}, nil)
 
-	api := chat.NewChatApi(chat.ChatApiDeps{ChatService: svc})
+	api := chat.NewChatApi(chat.ApiDependency{ChatService: svc})
 	h := handler.MakeHandler(api.SendMessage)
 
 	body := strings.NewReader(`{"prompt":"Bagaimana cara setup autentikasi?"}`)
@@ -63,7 +63,7 @@ func TestSendMessage_Success(t *testing.T) {
 func TestSendMessage_EmptyPrompt(t *testing.T) {
 	svc := mocks.NewMockChatService(t)
 
-	api := chat.NewChatApi(chat.ChatApiDeps{ChatService: svc})
+	api := chat.NewChatApi(chat.ApiDependency{ChatService: svc})
 	h := handler.MakeHandler(api.SendMessage)
 
 	body := strings.NewReader(`{"prompt":"   "}`)
@@ -78,7 +78,7 @@ func TestSendMessage_EmptyPrompt(t *testing.T) {
 func TestSendMessage_DecodingError(t *testing.T) {
 	svc := mocks.NewMockChatService(t)
 
-	api := chat.NewChatApi(chat.ChatApiDeps{ChatService: svc})
+	api := chat.NewChatApi(chat.ApiDependency{ChatService: svc})
 	h := handler.MakeHandler(api.SendMessage)
 
 	body := strings.NewReader(`{invalid json`)
@@ -94,7 +94,7 @@ func TestSendMessage_ChatError(t *testing.T) {
 	svc := mocks.NewMockChatService(t)
 	svc.EXPECT().Chat(mock.Anything, "pertanyaan").Return(nil, errors.New("embed failed"))
 
-	api := chat.NewChatApi(chat.ChatApiDeps{ChatService: svc})
+	api := chat.NewChatApi(chat.ApiDependency{ChatService: svc})
 	h := handler.MakeHandler(api.SendMessage)
 
 	body := strings.NewReader(`{"prompt":"pertanyaan"}`)
