@@ -292,3 +292,30 @@ func isUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }
+
+func (r *FaqRepository) Update(ctx context.Context, id uuid.UUID, param *domain.UpdateFAQParam) (*domain.FAQ, error) {
+	faq, err := r.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	updateQuery := pgq.Update("faqs").Where("id = ?", id).Returning(faqColumns)
+	argCount := 0
+
+	if param.Status != nil {
+		updateQuery = updateQuery.Set("status", *param.Status)
+		argCount++
+	}
+
+	if argCount <= 0 {
+		return faq, nil
+	}
+
+	sql, args, err := updateQuery.SQL()
+	if err != nil {
+		return nil, err
+	}
+
+	row := Executor(ctx, r.db).QueryRow(ctx, sql, args...)
+	return scanFAQRow(row)
+}

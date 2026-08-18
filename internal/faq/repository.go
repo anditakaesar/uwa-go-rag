@@ -24,4 +24,5 @@ type Repository interface {
 	// rows cascade with the files row. Returns ErrorResourceNotFound when the
 	// FAQ does not exist.
 	Delete(ctx context.Context, id uuid.UUID) error
+	Update(ctx context.Context, id uuid.UUID, param *domain.UpdateFAQParam) (*domain.FAQ, error)
 }

@@ -104,3 +104,22 @@ func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
 
 	return s.queue.EnqueueDeleteFile(ctx, domain.FAQS3Key(id))
 }
+
+func (s *Service) Update(ctx context.Context, id uuid.UUID, param *domain.UpdateFAQParam) (*domain.FAQ, error) {
+	var result domain.FAQ
+	errUpdate := s.uow.Do(ctx, func(ctx context.Context) error {
+		faq, err := s.repo.Update(ctx, id, param)
+		if err != nil {
+			return err
+		}
+
+		result = *faq
+		return nil
+	})
+
+	if errUpdate != nil {
+		return nil, errUpdate
+	}
+
+	return &result, nil
+}

@@ -16,6 +16,15 @@ const (
 	FAQStatusDismissed  FAQStatus = "dismissed"
 )
 
+func (status FAQStatus) IsValid() bool {
+	switch status {
+	case FAQStatusUnanswered, FAQStatusAnswered, FAQStatusDismissed:
+		return true
+	default:
+		return false
+	}
+}
+
 // FAQS3Key is the derived object storage key for a FAQ's markdown file. It is
 // reproducible from the FAQ at any time, so the FAQ's files row can never be
 // orphaned or lost.
@@ -41,4 +50,8 @@ type FAQ struct {
 type FetchFAQParam struct {
 	Status     *FAQStatus        `json:"status"`
 	Pagination common.Pagination `json:"pagination"`
+}
+
+type UpdateFAQParam struct {
+	Status *FAQStatus
 }

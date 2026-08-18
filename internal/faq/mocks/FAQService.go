@@ -243,3 +243,77 @@ func (_c *MockFAQService_List_Call) RunAndReturn(run func(ctx context.Context, p
 	_c.Call.Return(run)
 	return _c
 }
+
+// Update provides a mock function for the type MockFAQService
+func (_mock *MockFAQService) Update(ctx context.Context, id uuid.UUID, param *domain.UpdateFAQParam) (*domain.FAQ, error) {
+	ret := _mock.Called(ctx, id, param)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 *domain.FAQ
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, *domain.UpdateFAQParam) (*domain.FAQ, error)); ok {
+		return returnFunc(ctx, id, param)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, *domain.UpdateFAQParam) *domain.FAQ); ok {
+		r0 = returnFunc(ctx, id, param)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.FAQ)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, *domain.UpdateFAQParam) error); ok {
+		r1 = returnFunc(ctx, id, param)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockFAQService_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type MockFAQService_Update_Call struct {
+	*mock.Call
+}
+
+// Update is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - param *domain.UpdateFAQParam
+func (_e *MockFAQService_Expecter) Update(ctx any, id any, param any) *MockFAQService_Update_Call {
+	return &MockFAQService_Update_Call{Call: _e.mock.On("Update", ctx, id, param)}
+}
+
+func (_c *MockFAQService_Update_Call) Run(run func(ctx context.Context, id uuid.UUID, param *domain.UpdateFAQParam)) *MockFAQService_Update_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 *domain.UpdateFAQParam
+		if args[2] != nil {
+			arg2 = args[2].(*domain.UpdateFAQParam)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFAQService_Update_Call) Return(fAQ *domain.FAQ, err error) *MockFAQService_Update_Call {
+	_c.Call.Return(fAQ, err)
+	return _c
+}
+
+func (_c *MockFAQService_Update_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, param *domain.UpdateFAQParam) (*domain.FAQ, error)) *MockFAQService_Update_Call {
+	_c.Call.Return(run)
+	return _c
+}
