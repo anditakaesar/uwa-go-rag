@@ -30,6 +30,7 @@ var loadOnce = sync.OnceValue(func() Config {
 			HostName:         os.Getenv("HOSTNAME"),
 			AIBaseURL:        os.Getenv("AI_BASE_URL"),
 			AIAPIKey:         os.Getenv("AI_API_KEY"),
+			AITextModel:      getAITextModel(),
 			AIEmbeddingModel: getAIEmbeddingModel(),
 			LogToFile:        getLogToFile(),
 		},
@@ -78,6 +79,7 @@ type Object struct {
 	HostName         string
 	AIBaseURL        string
 	AIAPIKey         string
+	AITextModel      string
 	AIEmbeddingModel string
 	LogToFile        bool
 }
@@ -140,6 +142,16 @@ func getAIEmbeddingModel() string {
 		return model
 	}
 	return DefaultAIEmbeddingModel
+}
+
+const DefaultAITextModel = "qwen/qwen3-8b"
+
+func getAITextModel() string {
+	if model := os.Getenv("AI_TEXT_MODEL"); model != "" {
+		return model
+	}
+
+	return DefaultAITextModel
 }
 
 func GetLogLevel() slog.Level {

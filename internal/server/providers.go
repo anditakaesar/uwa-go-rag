@@ -72,6 +72,7 @@ func newClientSet(infraStorage *storage.S3Client) *clientSet {
 			BaseURL:        env.Get().Values.AIBaseURL,
 			ApiKey:         env.Get().Values.AIAPIKey,
 			EmbeddingModel: env.Get().Values.AIEmbeddingModel,
+			TextChatModel:  env.Get().Values.AITextModel,
 		}),
 		riverQueue: queue.NewRiverQueue(),
 		tokenizer:  tokenization.NewSimpleTokenizer(),

@@ -12,6 +12,7 @@ import (
 type AIClient struct {
 	client         openai.Client
 	embeddingModel string
+	textChatModel  string
 	embeddingDims  int64
 }
 
@@ -22,7 +23,6 @@ const EmbeddingDimensions int64 = 1024
 
 // Chat generation settings shared by SendPrompt and SendContextPrompt.
 const (
-	chatModel       = "qwen/qwen3-8b"
 	chatMaxTokens   = 1024
 	chatTemperature = 0.5
 )
@@ -49,6 +49,7 @@ type ClientDependency struct {
 	BaseURL        string
 	ApiKey         string
 	EmbeddingModel string
+	TextChatModel  string
 }
 
 func NewClient(dep ClientDependency) *AIClient {
@@ -62,9 +63,15 @@ func NewClient(dep ClientDependency) *AIClient {
 		model = "text-embedding-bge-m3"
 	}
 
+	textModel := dep.TextChatModel
+	if textModel == "" {
+		textModel = "qwen/qwen3-8b"
+	}
+
 	return &AIClient{
 		client:         client,
 		embeddingModel: model,
+		textChatModel:  textModel,
 		embeddingDims:  EmbeddingDimensions,
 	}
 }
@@ -74,7 +81,7 @@ func (b *AIClient) SendPrompt(ctx context.Context, prompt string) (string, error
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String(prompt),
 		},
-		Model:           chatModel,
+		Model:           b.textChatModel,
 		Instructions:    openai.String(baseInstructions),
 		MaxOutputTokens: openai.Int(chatMaxTokens),
 		Temperature:     openai.Float(chatTemperature),
@@ -99,7 +106,7 @@ func (b *AIClient) SendContextPrompt(ctx context.Context, contextText string, qu
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String(question),
 		},
-		Model:           chatModel,
+		Model:           b.textChatModel,
 		Instructions:    openai.String(instructions),
 		MaxOutputTokens: openai.Int(chatMaxTokens),
 		Temperature:     openai.Float(chatTemperature),
