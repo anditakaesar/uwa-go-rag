@@ -57,19 +57,21 @@ func (m *ServiceManager) Start(ctx context.Context) error {
 
 // web-server
 type WebServer struct {
-	name   string
-	server *http.Server
-	config *env.WebServerConfig
+	name          string
+	server        *http.Server
+	config        *env.WebServerConfig
+	shutdownHooks []func()
 }
 
-func NewWebServer(name string, router *chi.Mux, config *env.WebServerConfig) *WebServer {
+func NewWebServer(name string, router *chi.Mux, config *env.WebServerConfig, shutdownHooks ...func()) *WebServer {
 	return &WebServer{
 		name: name,
 		server: &http.Server{
 			Addr:    config.Port,
 			Handler: router,
 		},
-		config: config,
+		config:        config,
+		shutdownHooks: shutdownHooks,
 	}
 }
 
@@ -94,6 +96,10 @@ func (w *WebServer) Run(ctx context.Context) error {
 }
 
 func (w *WebServer) Shutdown(ctx context.Context) error {
+	for _, hook := range w.shutdownHooks {
+		hook()
+	}
+
 	if w.server == nil {
 		return nil
 	}

@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.32
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.106.2
 	github.com/chai2010/webp v1.4.0
+	github.com/coder/websocket v1.8.15
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-chi/chi/v5 v5.3.1
 	github.com/go-chi/cors v1.2.2

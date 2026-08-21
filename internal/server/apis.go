@@ -16,6 +16,7 @@ type Apis struct {
 	MainHandler *web.MainHandler
 	UserApi     *user.UserApi
 	ChatApi     *chat.Api
+	ChatHub     *chat.Hub
 	LoginApi    *auth.AuthApi
 	RoleApi     *role.Api
 	AuditLogApi *audit.Api
@@ -24,6 +25,8 @@ type Apis struct {
 }
 
 func newApis(infraSvc *Services) *Apis {
+	chatHub := chat.NewHub()
+
 	return &Apis{
 		MainHandler: web.NewMainHandler(web.MainHandlerDeps{
 			UserService:   infraSvc.UserService,
@@ -38,7 +41,9 @@ func newApis(infraSvc *Services) *Apis {
 		}),
 		ChatApi: chat.NewChatApi(chat.ApiDependency{
 			ChatService: infraSvc.ChatService,
+			Hub:         chatHub,
 		}),
+		ChatHub: chatHub,
 		LoginApi: auth.NewAuthApi(auth.AuthApiDependency{
 			UserService:   infraSvc.UserService,
 			JWTService:    infraSvc.JWTService,

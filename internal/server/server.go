@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/anditakaesar/uwa-go-rag/internal/chat"
 	"github.com/anditakaesar/uwa-go-rag/internal/infra/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -25,6 +26,7 @@ type ServerDependency struct {
 type Executor struct {
 	Mux         *chi.Mux
 	RiverClient *river.Client[pgx.Tx]
+	ChatHub     *chat.Hub
 }
 
 func SetupServer(dep *ServerDependency) *Executor {
@@ -46,5 +48,6 @@ func SetupServer(dep *ServerDependency) *Executor {
 	return &Executor{
 		Mux:         router,
 		RiverClient: infraSvc.RiverClient,
+		ChatHub:     apis.ChatHub,
 	}
 }
